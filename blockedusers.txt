@@ -1,0 +1,2 @@
+# Add your username (without /u/) here to block the bot
+# Please note, this is Case Sensitive
