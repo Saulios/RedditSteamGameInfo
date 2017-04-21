@@ -37,17 +37,17 @@ def buildcommenttext(g):
                   ' * Currently costs ' + g.price + '\n' + \
                   ' * Has ' + str(g.achievements) + ' achievements\n'
 
-    if g.getcards > 0:
-        commenttext += ' * Has ' + g.getcards + ' total cards\n'
+    if int(g.cards) > 0:
+        commenttext += ' * Has ' + g.cards + ' total cards\n'
 
     # Begin footer here
-    commenttext += '\n\n***\n'
+    commenttext += '\n***\n'
     commenttext += 'Steam Game Info Bot by /u/HeroCC'
 
     return commenttext
 
 
-subreddit = reddit.subreddit('all')
+subreddit = reddit.subreddit('test')
 for submission in subreddit.stream.submissions():
     if submission.url.startswith('http://store.steampowered.com/app') or submission.url.startswith('https://store.steampowered.com/app'):
         firstNumber = re.search('\d+', submission.url).group(0)
