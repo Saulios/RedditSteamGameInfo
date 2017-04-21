@@ -42,7 +42,7 @@ def buildcommenttext(g):
 
     # Begin footer here
     commenttext += '\n***\n'
-    commenttext += 'Steam Game Info Bot by /u/HeroCC'
+    commenttext += 'I\'m the [Steam Game Info Bot](https://redd.it/66sqdc) | /r/GameInfoBot'
 
     return commenttext
 
