@@ -12,9 +12,9 @@ BLOCKED_SUBS_FILE = 'blockedsubs.txt'  # Will not comment in these subs
 
 BOT_USERNAME = os.getenv('RSGIB_USERNAME', 'SteamGameInfo')
 
-reddit = praw.Reddit(user_agent='SteamGameInfo Bot v1 by /u/HeroCC',
+reddit = praw.Reddit(user_agent='SteamGameInfo Bot by /u/HeroCC',
                      client_id=os.getenv('RSGIB_CLIENT_ID'), client_secret=os.getenv('RSGIB_CLIENT_SECRET'),
-                     username=BOT_USERNAME, password=os.getenv('RSIGB_PASSWORD'))
+                     username=BOT_USERNAME, password=os.getenv('RSGIB_PASSWORD'))
 
 
 def fitscriteria(s):
@@ -37,7 +37,8 @@ def buildcommenttext(g):
                   ' * Currently costs ' + g.price + '\n' + \
                   ' * Has ' + str(g.achievements) + ' achievements\n'
 
-    commenttext += (' * Has ' if g.hascards else " * Doesn't have ") + 'card drops\n'
+    if g.getcards > 0:
+        commenttext += ' * Has ' + g.getcards + ' total cards\n'
 
     # Begin footer here
     commenttext += '\n\n***\n'

@@ -1,7 +1,7 @@
+import re
+
 import requests
 from bs4 import BeautifulSoup
-
-import re
 
 
 class SteamGame:
@@ -14,7 +14,7 @@ class SteamGame:
         self.title = self.gamePage.title.string.replace(" on Steam", "")
         self.price = self.getprice()
         self.achievements = self.getachev()
-        self.hascards = self.hascards()
+        self.getcards = self.getcards()
 
     def getprice(self):
         price = self.gamePage.find("div", class_="price")
@@ -32,10 +32,13 @@ class SteamGame:
         else:
             return 0
 
-    def hascards(self):
+    def getcards(self):
         category_block = self.gamePage.find("div", id="category_block")
 
-        if category_block is None: return False
-        if "Steam Trading Cards" in category_block.text: return True
-        return False
+        if category_block is None: return 0
+        if "Steam Trading Cards" in category_block.text:
+            marketurl = 'https://steamcommunity.com/market/search?q=&category_753_Game%5B0%5D=tag_app_' + self.appID + '&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
+            marketpage = BeautifulSoup(requests.get(marketurl).text, "html.parser")
+            return marketpage.find("span", id="searchResults_total")
 
+        return 0
