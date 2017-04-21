@@ -1,19 +1,20 @@
 # Made by /u/HeroCC
 
-import praw
+import os
 import re
+
+import praw
 
 from SteamGameObject import SteamGame
 
 BLOCKED_USER_FILE = 'blockedusers.txt'  # Will not reply to these people
 BLOCKED_SUBS_FILE = 'blockedsubs.txt'  # Will not comment in these subs
 
-BOT_USERNAME = 'SteamGameInfo'
-BOT_PASSWORD = ''
+BOT_USERNAME = os.getenv('RSGIB_USERNAME', 'SteamGameInfo')
 
 reddit = praw.Reddit(user_agent='SteamGameInfo Bot v1 by /u/HeroCC',
-                     client_id='', client_secret="",
-                     username=BOT_USERNAME, password=BOT_PASSWORD)
+                     client_id=os.getenv('RSGIB_CLIENT_ID'), client_secret=os.getenv('RSGIB_CLIENT_SECRET'),
+                     username=BOT_USERNAME, password=os.getenv('RSIGB_PASSWORD'))
 
 
 def fitscriteria(s):
@@ -45,11 +46,11 @@ def buildcommenttext(g):
     return commenttext
 
 
-subreddit = reddit.subreddit('test')
+subreddit = reddit.subreddit('all')
 for submission in subreddit.stream.submissions():
     if submission.url.startswith('http://store.steampowered.com/app') or submission.url.startswith('https://store.steampowered.com/app'):
         firstNumber = re.search('\d+', submission.url).group(0)
-        print('Searching for Game with ID: ' + firstNumber + ' on post: ' + str(submission))
 
         if fitscriteria(submission):
             submission.reply(buildcommenttext(SteamGame(firstNumber)))
+            print('Commented on post ' + str(submission) + ' after finding game ' + firstNumber)
