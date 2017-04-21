@@ -47,7 +47,7 @@ def buildcommenttext(g):
     return commenttext
 
 
-subreddit = reddit.subreddit('test')
+subreddit = reddit.subreddit('all')
 for submission in subreddit.stream.submissions():
     if submission.url.startswith('http://store.steampowered.com/app') or submission.url.startswith('https://store.steampowered.com/app'):
         firstNumber = re.search('\d+', submission.url).group(0)

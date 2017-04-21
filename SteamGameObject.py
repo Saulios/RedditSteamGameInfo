@@ -9,12 +9,14 @@ class SteamGame:
     def __init__(self, appid):
         self.appID = appid
         self.url = 'http://store.steampowered.com/app/' + appid
-        self.gamePage = BeautifulSoup(requests.get(self.url).text, "html.parser")
+        self.gamePage = BeautifulSoup(
+            requests.get(self.url, cookies={'birthtime': '640584001', 'lastagecheckage': '20-April-1990'}).text,
+            "html.parser")
 
         self.title = self.gamePage.title.string.replace(" on Steam", "")
         self.price = self.getprice()
         self.achievements = self.getachev()
-        self.getcards = self.getcards()
+        self.cards = self.getcards()
 
     def getprice(self):
         price = self.gamePage.find("div", class_="price")
@@ -39,6 +41,6 @@ class SteamGame:
         if "Steam Trading Cards" in category_block.text:
             marketurl = 'https://steamcommunity.com/market/search?q=&category_753_Game%5B0%5D=tag_app_' + self.appID + '&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
             marketpage = BeautifulSoup(requests.get(marketurl).text, "html.parser")
-            return marketpage.find("span", id="searchResults_total")
+            return marketpage.find("span", id="searchResults_total").string.strip()
 
         return 0
