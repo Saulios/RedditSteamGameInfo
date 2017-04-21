@@ -1,0 +1,7 @@
+beautifulsoup4==4.5.3
+bs4==0.0.1
+praw==4.4.0
+prawcore==0.10.1
+requests==2.13.0
+update-checker==0.16
+urllib3==1.20
