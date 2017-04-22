@@ -6,6 +6,7 @@ import os
 import re
 
 import praw
+from praw.models.util import stream_generator
 
 from SteamGameObject import SteamGame
 
@@ -14,7 +15,7 @@ BLOCKED_SUBS_FILE = 'blockedsubs.txt'  # Will not comment in these subs
 
 BOT_USERNAME = os.getenv('RSGIB_USERNAME', 'SteamGameInfo')
 
-STEAM_APPURL_REGEX = '(^(https?:\/\/)?)(store.steampowered.com(\/agecheck)?\/app\/\d+)'
+STEAM_APPURL_REGEX = '((https?:\/\/)?)(store.steampowered.com(\/agecheck)?\/app\/\d+)'
 
 reddit = praw.Reddit(user_agent='SteamGameInfo Bot by /u/HeroCC',
                      client_id=os.getenv('RSGIB_CLIENT_ID'), client_secret=os.getenv('RSGIB_CLIENT_SECRET'),
@@ -30,8 +31,14 @@ def fitscriteria(s):
 
 
 def hasbotalreadyreplied(s):
-    for comment in s.comments:
-        if comment.author == BOT_USERNAME: return True
+    if type(s).__name__ == 'Submission':
+        for comment in s.comments:
+            if comment.author == BOT_USERNAME: return True
+    elif type(s).__name__ == 'Comment':
+        comment = reddit.comment(s.id)
+        comment.refresh()
+        for reply in comment.replies:
+            if reply.author == BOT_USERNAME: return True
 
     return False
 
@@ -60,20 +67,21 @@ def subwatch():
             appid = re.search('\d+', submission.url).group(0)
 
             if fitscriteria(submission):
+                print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
                 submission.reply(buildcommenttext(SteamGame(appid)))
-                print('Commented on post ' + str(submission) + ' after finding game ' + appid)
 
 
 def mentionwatch():
     print('Started watching mentions...')
-    for mention in reddit.inbox.stream.mentions():
-        urlregex = re.search(STEAM_APPURL_REGEX, mention.url)
+    for mention in stream_generator(reddit.inbox.mentions):
+        urlregex = re.search(STEAM_APPURL_REGEX, mention.body)
         if urlregex:
             url = urlregex.group(0)
             appid = re.search('\d+', url).group(0)
             if fitscriteria(mention):
+                print('Replying to mention ' + str(mention) + ' by ' + mention.author.name + ' with appid ' + appid)
                 mention.reply(buildcommenttext(SteamGame(appid)))
-                print('Replied to mention ' + str(mention) + ' by ' + mention.author.name + ' with appid ' + appid)
+                mention.mark_read()
 
 
 if __name__ == "__main__":
