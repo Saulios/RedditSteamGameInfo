@@ -8,7 +8,7 @@ import re
 import praw
 from praw.models.util import stream_generator
 
-from SteamGame import SteamGame
+from gameinfobot.SteamGame import SteamGame
 
 BLOCKED_USER_FILE = 'blockedusers.txt'  # Will not reply to these people
 BLOCKED_SUBS_FILE = 'blockedsubs.txt'  # Will not comment in these subs

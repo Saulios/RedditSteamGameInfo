@@ -4,7 +4,7 @@
 
 import unittest
 
-from SteamGame import SteamGame
+from gameinfobot.SteamGame import SteamGame
 
 
 class SteamGameValidate(unittest.TestCase):
