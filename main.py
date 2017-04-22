@@ -17,10 +17,6 @@ BOT_USERNAME = os.getenv('RSGIB_USERNAME', 'SteamGameInfo')
 
 STEAM_APPURL_REGEX = '((https?:\/\/)?)(store.steampowered.com(\/agecheck)?\/app\/\d+)'
 
-reddit = praw.Reddit(user_agent='SteamGameInfo Bot by /u/HeroCC',
-                     client_id=os.getenv('RSGIB_CLIENT_ID'), client_secret=os.getenv('RSGIB_CLIENT_SECRET'),
-                     username=BOT_USERNAME, password=os.getenv('RSGIB_PASSWORD'))
-
 
 def fitscriteria(s):
     if hasbotalreadyreplied(s): return False
@@ -85,4 +81,9 @@ def mentionwatch():
 
 
 if __name__ == "__main__":
+    reddit = praw.Reddit(user_agent='SteamGameInfo Bot by /u/HeroCC',
+                         client_id=os.getenv('RSGIB_CLIENT_ID'), client_secret=os.getenv('RSGIB_CLIENT_SECRET'),
+                         username=BOT_USERNAME, password=os.getenv('RSGIB_PASSWORD'))
+
     subwatch()
+    mentionwatch()
