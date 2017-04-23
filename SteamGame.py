@@ -17,6 +17,7 @@ class SteamGame:
         self.price = self.getprice()
         self.achievements = self.getachev()
         self.cards = self.getcards()
+        self.unreleased = self.isunreleased()
 
     def getprice(self):
         price = self.gamePage.find("div", class_="price")
@@ -44,3 +45,11 @@ class SteamGame:
             return marketpage.find("span", id="searchResults_total").string.strip()
 
         return 0
+
+    def isunreleased(self):
+        unreleased = self.gamePage.find("div", class_="game_area_comingsoon")
+
+        if unreleased is None:
+            return False
+        else:
+            return True

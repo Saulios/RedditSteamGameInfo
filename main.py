@@ -16,6 +16,7 @@ BLOCKED_SUBS_FILE = 'blockedsubs.txt'  # Will not comment in these subs
 BOT_USERNAME = os.getenv('RSGIB_USERNAME', 'SteamGameInfo')
 
 STEAM_APPURL_REGEX = '((https?:\/\/)?)(store.steampowered.com(\/agecheck)?\/app\/\d+)'
+SUBLIST = 'all'
 
 
 def fitscriteria(s):
@@ -40,12 +41,14 @@ def hasbotalreadyreplied(s):
 
 
 def buildcommenttext(g):
-    commenttext = '[' + g.title + '](' + g.url + ') (' + g.appID + ')\n\n' + \
-                  ' * Currently costs ' + g.price + '\n' + \
-                  ' * Has ' + str(g.achievements) + ' achievements\n'
-
-    if int(g.cards) > 0:
-        commenttext += ' * Has ' + g.cards + ' total cards\n'
+    commenttext = '[' + g.title + '](' + g.url + ') (' + g.appID + ')\n\n'
+    if g.unreleased:
+        commenttext += ' * Isn\'t released yet\n'
+    else:
+        commenttext += ' * Currently costs ' + g.price + '\n' + \
+                       ' * Has ' + str(g.achievements) + ' achievements\n'
+        if int(g.cards) > 0:
+            commenttext += ' * Has ' + g.cards + ' total cards\n'
 
     # Begin footer here
     commenttext += '\n***\n'
@@ -55,9 +58,8 @@ def buildcommenttext(g):
 
 
 def subwatch():
-    sublist = 'all'
-    print('Started watching subs: ' + sublist)
-    subreddit = reddit.subreddit(sublist)
+    print('Started watching subs: ' + SUBLIST)
+    subreddit = reddit.subreddit(SUBLIST)
     for submission in subreddit.stream.submissions():
         if re.search(STEAM_APPURL_REGEX, submission.url):
             appid = re.search('\d+', submission.url).group(0)
@@ -80,10 +82,23 @@ def mentionwatch():
                 mention.mark_read()
 
 
+def toplevelcommentwatch():
+    print('Watching top level comments on: ' + SUBLIST)
+    for comment in reddit.subreddit(SUBLIST).stream.comments():
+        urlregex = re.search(STEAM_APPURL_REGEX, comment.body)
+        if urlregex:
+            url = urlregex.group(0)
+            appid = re.search('\d+', url).group(0)
+            if fitscriteria(comment):
+                print('Replying to comment ' + str(comment) + ' after finding game ' + appid)
+                comment.reply(buildcommenttext(SteamGame(appid)))
+
+
 if __name__ == "__main__":
     reddit = praw.Reddit(user_agent='SteamGameInfo Bot by /u/HeroCC',
                          client_id=os.getenv('RSGIB_CLIENT_ID'), client_secret=os.getenv('RSGIB_CLIENT_SECRET'),
                          username=BOT_USERNAME, password=os.getenv('RSGIB_PASSWORD'))
 
     subwatch()
+    toplevelcommentwatch()
     mentionwatch()

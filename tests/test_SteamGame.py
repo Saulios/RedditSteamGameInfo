@@ -36,6 +36,9 @@ class SteamGameValidate(unittest.TestCase):
     def test_cards(self):
         self.assertEqual(self.game.cards, '8')
 
+    def test_unreleased(self):
+        self.assertFalse(self.game.unreleased)
+
 
 if __name__ == '__main__':
     unittest.main()
