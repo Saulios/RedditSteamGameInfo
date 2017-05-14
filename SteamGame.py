@@ -14,16 +14,28 @@ class SteamGame:
             "html.parser")
 
         self.title = self.gamePage.title.string.replace(" on Steam", "")
+        self.discountamount = self.discountamount()
         self.price = self.getprice()
         self.achievements = self.getachev()
         self.cards = self.getcards()
         self.unreleased = self.isunreleased()
 
+    def discountamount(self):
+        amount = self.gamePage.find("div", class_="discount_pct")
+
+        if amount is not None:
+            return amount.string.strip()
+        else:
+            return False
+
     def getprice(self):
-        price = self.gamePage.find("div", class_="price")
+        price = self.gamePage.find("div", class_="game_purchase_price")
+        discountprice = self.gamePage.find("div", class_="discount_final_price")
 
         if price is not None:
             return price.string.strip()
+        elif discountprice is not None:
+            return discountprice.string.strip()
         else:
             return "Free"
 

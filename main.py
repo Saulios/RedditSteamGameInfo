@@ -44,11 +44,12 @@ def buildcommenttext(g):
     commenttext = '[' + g.title + '](' + g.url + ') (' + g.appID + ')\n\n'
     if g.unreleased:
         commenttext += ' * Isn\'t released yet\n'
-    else:
-        commenttext += ' * Currently costs ' + g.price + '\n' + \
-                       ' * Has ' + str(g.achievements) + ' achievements\n'
-        if int(g.cards) > 0:
-            commenttext += ' * Has ' + g.cards + ' total cards\n'
+        return
+
+    commenttext += ' * Currently is ' + g.price + '\n'
+    if g.discountamount is not False: commenttext += ' * Is currently discounted ' + g.discountamount + '\n'
+    if str(g.achievements) is not '0': commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
+    if int(g.cards) > 0: commenttext += ' * Has ' + g.cards + ' total cards\n'
 
     # Begin footer here
     commenttext += '\n***\n'
