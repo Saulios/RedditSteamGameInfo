@@ -10,7 +10,8 @@ class SteamGame:
         self.appID = appid
         self.url = 'http://store.steampowered.com/app/' + appid
         self.gamePage = BeautifulSoup(
-            requests.get(self.url, cookies={'birthtime': '640584001', 'lastagecheckage': '20-April-1990'}).text,
+            requests.get(self.url, cookies={'birthtime': '640584001', 'lastagecheckage': '20-April-1990',
+                                            'mature_content': '1'}).text,
             "html.parser")
 
         self.title = self.gamePage.title.string.replace(" on Steam", "")
