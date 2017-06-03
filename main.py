@@ -95,6 +95,3 @@ if __name__ == "__main__":
 
     subwatch.start()
     commentwatch.start()
-
-    subwatch.join()
-    commentwatch.join()
