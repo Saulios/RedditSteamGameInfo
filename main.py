@@ -7,7 +7,6 @@ import re
 import threading
 
 import praw
-from praw.models.util import stream_generator
 
 from SteamGame import SteamGame
 
@@ -73,23 +72,9 @@ class SubWatch(threading.Thread):
                     submission.reply(buildcommenttext(SteamGame(appid)))
 
 
-class MentionWatch(threading.Thread):
+class CommentWatch(threading.Thread):
     def run(self):
-        print('Started watching mentions...')
-        for mention in stream_generator(reddit.inbox.mentions):
-            urlregex = re.search(STEAM_APPURL_REGEX, mention.body)
-            if urlregex:
-                url = urlregex.group(0)
-                appid = re.search('\d+', url).group(0)
-                if fitscriteria(mention):
-                    print('Replying to mention ' + str(mention) + ' by ' + mention.author.name + ' with appid ' + appid)
-                    mention.reply(buildcommenttext(SteamGame(appid)))
-                    mention.mark_read()
-
-
-class TopLevelCommentWatch(threading.Thread):
-    def run(self):
-        print('Watching top level comments on: ' + SUBLIST)
+        print('Watching all comments on: ' + SUBLIST)
         for comment in reddit.subreddit(SUBLIST).stream.comments():
             urlregex = re.search(STEAM_APPURL_REGEX, comment.body)
             if urlregex:
@@ -106,13 +91,10 @@ if __name__ == "__main__":
                          username=BOT_USERNAME, password=os.getenv('RSGIB_PASSWORD'))
 
     subwatch = SubWatch()
-    mentionwatch = MentionWatch()
-    toplevelcommentwatch = TopLevelCommentWatch()
+    commentwatch = CommentWatch()
 
     subwatch.start()
-    mentionwatch.start()
-    toplevelcommentwatch.start()
+    commentwatch.start()
 
     subwatch.join()
-    mentionwatch.join()
-    toplevelcommentwatch.join()
+    commentwatch.join()
