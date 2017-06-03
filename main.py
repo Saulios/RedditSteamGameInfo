@@ -4,6 +4,7 @@
 
 import os
 import re
+import threading
 
 import praw
 from praw.models.util import stream_generator
@@ -59,41 +60,44 @@ def buildcommenttext(g):
     return commenttext
 
 
-def subwatch():
-    print('Started watching subs: ' + SUBLIST)
-    subreddit = reddit.subreddit(SUBLIST)
-    for submission in subreddit.stream.submissions():
-        if re.search(STEAM_APPURL_REGEX, submission.url):
-            appid = re.search('\d+', submission.url).group(0)
+class SubWatch(threading.Thread):
+    def run(self):
+        print('Started watching subs: ' + SUBLIST)
+        subreddit = reddit.subreddit(SUBLIST)
+        for submission in subreddit.stream.submissions():
+            if re.search(STEAM_APPURL_REGEX, submission.url):
+                appid = re.search('\d+', submission.url).group(0)
 
-            if fitscriteria(submission):
-                print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
-                submission.reply(buildcommenttext(SteamGame(appid)))
-
-
-def mentionwatch():
-    print('Started watching mentions...')
-    for mention in stream_generator(reddit.inbox.mentions):
-        urlregex = re.search(STEAM_APPURL_REGEX, mention.body)
-        if urlregex:
-            url = urlregex.group(0)
-            appid = re.search('\d+', url).group(0)
-            if fitscriteria(mention):
-                print('Replying to mention ' + str(mention) + ' by ' + mention.author.name + ' with appid ' + appid)
-                mention.reply(buildcommenttext(SteamGame(appid)))
-                mention.mark_read()
+                if fitscriteria(submission):
+                    print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
+                    submission.reply(buildcommenttext(SteamGame(appid)))
 
 
-def toplevelcommentwatch():
-    print('Watching top level comments on: ' + SUBLIST)
-    for comment in reddit.subreddit(SUBLIST).stream.comments():
-        urlregex = re.search(STEAM_APPURL_REGEX, comment.body)
-        if urlregex:
-            url = urlregex.group(0)
-            appid = re.search('\d+', url).group(0)
-            if fitscriteria(comment):
-                print('Replying to comment ' + str(comment) + ' after finding game ' + appid)
-                comment.reply(buildcommenttext(SteamGame(appid)))
+class MentionWatch(threading.Thread):
+    def run(self):
+        print('Started watching mentions...')
+        for mention in stream_generator(reddit.inbox.mentions):
+            urlregex = re.search(STEAM_APPURL_REGEX, mention.body)
+            if urlregex:
+                url = urlregex.group(0)
+                appid = re.search('\d+', url).group(0)
+                if fitscriteria(mention):
+                    print('Replying to mention ' + str(mention) + ' by ' + mention.author.name + ' with appid ' + appid)
+                    mention.reply(buildcommenttext(SteamGame(appid)))
+                    mention.mark_read()
+
+
+class TopLevelCommentWatch(threading.Thread):
+    def run(self):
+        print('Watching top level comments on: ' + SUBLIST)
+        for comment in reddit.subreddit(SUBLIST).stream.comments():
+            urlregex = re.search(STEAM_APPURL_REGEX, comment.body)
+            if urlregex:
+                url = urlregex.group(0)
+                appid = re.search('\d+', url).group(0)
+                if fitscriteria(comment):
+                    print('Replying to comment ' + str(comment) + ' after finding game ' + appid)
+                    comment.reply(buildcommenttext(SteamGame(appid)))
 
 
 if __name__ == "__main__":
@@ -101,6 +105,14 @@ if __name__ == "__main__":
                          client_id=os.getenv('RSGIB_CLIENT_ID'), client_secret=os.getenv('RSGIB_CLIENT_SECRET'),
                          username=BOT_USERNAME, password=os.getenv('RSGIB_PASSWORD'))
 
-    subwatch()
-    toplevelcommentwatch()
-    mentionwatch()
+    subwatch = SubWatch()
+    mentionwatch = MentionWatch()
+    toplevelcommentwatch = TopLevelCommentWatch()
+
+    subwatch.start()
+    mentionwatch.start()
+    toplevelcommentwatch.start()
+
+    subwatch.join()
+    mentionwatch.join()
+    toplevelcommentwatch.join()
