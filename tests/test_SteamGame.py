@@ -24,6 +24,10 @@ class SteamGameValidate(unittest.TestCase):
     def test_regex_stringcontainsurl(self):
         self.assertTrue(re.search(STEAM_APPURL_REGEX, 'Test test http://store.steampowered.com/app/489830/ beep boop'))
 
+    def test_regex_trailingurl(self):
+        self.assertTrue(re.search(STEAM_APPURL_REGEX,
+                                  'http://store.steampowered.com/app/489830/The_Elder_Scrolls_V_Skyrim_Special_Edition/'))
+
     def test_gamename(self):
         self.assertEqual(self.game.title, "The Elder Scrolls V: Skyrim")
 
@@ -38,6 +42,10 @@ class SteamGameValidate(unittest.TestCase):
 
     def test_unreleased(self):
         self.assertFalse(self.game.unreleased)
+
+    def text_blurb(self):
+        self.assertEqual(self.game.blurb,
+                         "Winner of more than 200 Game of the Year Awards, Skyrim Special Edition brings the epic fantasy to life in stunning detail. The Special Edition includes the critically acclaimed game and add-ons with all-new features like remastered art and effects, volumetric god rays, dynamic depth of field, screen-space")
 
 
 if __name__ == '__main__':

@@ -43,6 +43,7 @@ def hasbotalreadyreplied(s):
 
 def buildcommenttext(g):
     commenttext = '[' + g.title + '](' + g.url + ') (' + g.appID + ')\n\n'
+    commenttext += g.blurb + '\n\n'
     if g.unreleased:
         commenttext += ' * Isn\'t released yet\n'
         return commenttext

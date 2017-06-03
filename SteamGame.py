@@ -20,6 +20,7 @@ class SteamGame:
         self.achievements = self.getachev()
         self.cards = self.getcards()
         self.unreleased = self.isunreleased()
+        self.blurb = self.getDescriptionSnippet()
 
     def discountamount(self):
         amount = self.gamePage.find("div", class_="discount_pct")
@@ -66,3 +67,8 @@ class SteamGame:
             return False
         else:
             return True
+
+    def getDescriptionSnippet(self):
+        snippet = self.gamePage.find("div", class_="game_description_snippet")
+
+        return snippet.string.strip()
