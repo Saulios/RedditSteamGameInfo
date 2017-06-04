@@ -20,9 +20,9 @@ SUBLIST = 'all'
 
 
 def fitscriteria(s):
-    if hasbotalreadyreplied(s): return False
     if s.author.name in open(BLOCKED_USER_FILE).read(): return False
     if s.subreddit.display_name in open(BLOCKED_SUBS_FILE).read(): return False
+    if hasbotalreadyreplied(s): return False
 
     return True
 
