@@ -7,6 +7,7 @@ import re
 import threading
 
 import praw
+import rollbar
 
 from SteamGame import SteamGame
 
@@ -93,6 +94,7 @@ class CommentWatch(threading.Thread):
 
 
 if __name__ == "__main__":
+    rollbar.init('f81e40647d0c4a598c9e9a1e91873b29')
     reddit = praw.Reddit(user_agent='SteamGameInfo Bot by /u/HeroCC',
                          client_id=os.getenv('RSGIB_CLIENT_ID'), client_secret=os.getenv('RSGIB_CLIENT_SECRET'),
                          username=BOT_USERNAME, password=os.getenv('RSGIB_PASSWORD'))
