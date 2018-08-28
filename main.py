@@ -47,17 +47,16 @@ def buildcommenttext(g):
     if g.unreleased:
         if g.getunreleasedtext() is None: commenttext += ' * Isn\'t released yet\n'
         else: commenttext += ' * ' + g.getunreleasedtext() + '\n'
-        return commenttext
-
-    commenttext += ' * Currently is ' + g.price
-    if not g.isfree(): commenttext += ' USD'
-    if g.price != g.getprice(True): commenttext += ' (from ' + g.getprice(True) + ')'
-    commenttext += '\n'
-    if g.isfree(): commenttext += ' * Can be added to ASF with `!addlicense asf ' + g.appID + '`\n'
-    if g.discountamount is not False: commenttext += ' * Is currently discounted ' + g.discountamount + '\n'
-    if g.isearlyaccess(): commenttext += ' * Is an Early Access Game\n'
-    if int(g.achievements) is not 0: commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
-    if int(g.cards) > 0: commenttext += ' * Has ' + g.cards + ' total cards\n'
+    else:
+        commenttext += ' * Currently is ' + g.price
+        if not g.isfree(): commenttext += ' USD'
+        if g.price != g.getprice(True): commenttext += ' (from ' + g.getprice(True) + ')'
+        commenttext += '\n'
+        if g.isfree(): commenttext += ' * Can be added to ASF with `!addlicense asf ' + g.appID + '`\n'
+        if g.discountamount is not False: commenttext += ' * Is currently discounted ' + g.discountamount + '\n'
+        if g.isearlyaccess(): commenttext += ' * Is an Early Access Game\n'
+        if int(g.achievements) is not 0: commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
+        if int(g.cards) > 0: commenttext += ' * Has ' + g.cards + ' total cards\n'
 
     # Begin footer here
     commenttext += '\n***\n'
