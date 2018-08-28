@@ -66,10 +66,15 @@ class SteamGame:
     def isunreleased(self):
         unreleased = self.gamePage.find("div", class_="game_area_comingsoon")
 
-        if unreleased is None:
-            return False
+        return unreleased is None
+
+    def getunreleasedtext(self):
+        unreleasedMajor = self.gamePage.find("div", class_="game_area_comingsoon").find("h1")
+
+        if unreleasedMajor is not None:
+            return unreleasedMajor.string.strip()
         else:
-            return True
+            return None
 
     def getDescriptionSnippet(self):
         snippet = self.gamePage.find("div", class_="game_description_snippet")

@@ -42,6 +42,7 @@ class SteamGameValidate(unittest.TestCase):
 
     def test_unreleased(self):
         self.assertFalse(self.game.unreleased)
+        self.assertIsNotNone(self.game.getunreleasedtext())
 
     def text_blurb(self):
         self.assertEqual(self.game.blurb,

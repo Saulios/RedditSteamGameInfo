@@ -45,10 +45,11 @@ def buildcommenttext(g):
     commenttext = '[' + g.title + '](' + g.url + ') (' + g.appID + ')\n\n'
     commenttext += g.blurb + '\n\n'
     if g.unreleased:
-        commenttext += ' * Isn\'t released yet\n'
+        if g.getunreleasedtext() is None: commenttext += ' * Isn\'t released yet\n'
+        else: commenttext += ' * ' + g.getunreleasedtext() + '\n'
         return commenttext
 
-    commenttext += ' * Currently is ' + g.price + 'USD'
+    commenttext += ' * Currently is ' + g.price + ' USD'
     if g.price != g.getprice(True): commenttext += ' (from ' + g.getprice(True) + ')'
     commenttext += '\n'
     if g.price == "Free" == "0": commenttext += ' * Can be added to ASF with `!addlicense asf ' + g.appID + '`\n'
