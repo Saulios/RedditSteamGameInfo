@@ -68,6 +68,9 @@ class SteamGame:
 
         return unreleased is None
 
+    def isearlyaccess(self):
+        return self.gamePage.find("div", class_="early_access_header") is not None
+
     def getunreleasedtext(self):
         unreleasedMajor = self.gamePage.find("div", class_="game_area_comingsoon").find("h1")
 

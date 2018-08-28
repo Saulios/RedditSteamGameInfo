@@ -54,6 +54,7 @@ def buildcommenttext(g):
     commenttext += '\n'
     if g.price == "Free" == "0": commenttext += ' * Can be added to ASF with `!addlicense asf ' + g.appID + '`\n'
     if g.discountamount is not False: commenttext += ' * Is currently discounted ' + g.discountamount + '\n'
+    if g.isearlyaccess(): commenttext += ' * Is an Early Access Game'
     if int(g.achievements) is not 0: commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
     if int(g.cards) > 0: commenttext += ' * Has ' + g.cards + ' total cards\n'
 
