@@ -3,6 +3,8 @@
 
 # Add your bot below this line, on one line, exactly as it is in the URL
 
+GameDeals
+
 # Originally populated from https://www.reddit.com/r/Bottiquette/wiki/robots_txt_json on 4/20/17
 anime
 asianamerican
