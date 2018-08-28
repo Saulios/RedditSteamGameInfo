@@ -66,16 +66,16 @@ class SteamGame:
     def isunreleased(self):
         unreleased = self.gamePage.find("div", class_="game_area_comingsoon")
 
-        return unreleased is None
+        return unreleased is not None
 
     def isearlyaccess(self):
         return self.gamePage.find("div", class_="early_access_header") is not None
 
     def getunreleasedtext(self):
-        unreleasedMajor = self.gamePage.find("div", class_="game_area_comingsoon").find("h1")
+        unreleasedMajor = self.gamePage.find("div", class_="game_area_comingsoon")
 
         if unreleasedMajor is not None:
-            return unreleasedMajor.string.strip()
+            return unreleasedMajor.find("h1").string.strip()
         else:
             return None
 
