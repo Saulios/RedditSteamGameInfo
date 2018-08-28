@@ -44,6 +44,11 @@ class SteamGame:
         else:
             return "Free"
 
+    def isfree(self):
+        cartButton = self.gamePage.find("div", class_="btn_addtocart")
+
+        return cartButton is not None and cartButton.string.strip() == "Play Game"
+
     def getachev(self):
         achblock = self.gamePage.find("div", id="achievement_block")
 
