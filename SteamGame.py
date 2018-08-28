@@ -70,5 +70,6 @@ class SteamGame:
 
     def getDescriptionSnippet(self):
         snippet = self.gamePage.find("div", class_="game_description_snippet")
+        if snippet is None: return ""
 
         return snippet.string.strip()
