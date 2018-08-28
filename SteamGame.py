@@ -48,7 +48,7 @@ class SteamGame:
         cartButton = self.gamePage.find("div", class_="btn_addtocart")
 
         if cartButton is not None:
-            return cartButton.string.strip() in ("Play Game", "Install now")
+            return cartButton.text.strip() in ("Play Game", "Install now")
 
     def getachev(self):
         achblock = self.gamePage.find("div", id="achievement_block")

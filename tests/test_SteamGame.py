@@ -11,6 +11,7 @@ from main import STEAM_APPURL_REGEX
 
 class SteamGameValidate(unittest.TestCase):
     game = SteamGame('72850')  # Use Skyrim as our test game
+    freeMod = SteamGame('317400')
 
     def test_regex_normalurl(self):
         self.assertTrue(re.search(STEAM_APPURL_REGEX, 'http://store.steampowered.com/app/489830/'))
@@ -44,9 +45,12 @@ class SteamGameValidate(unittest.TestCase):
         self.assertFalse(self.game.unreleased)
         self.assertIsNone(self.game.getunreleasedtext())
 
-    def text_blurb(self):
+    def test_blurb(self):
         self.assertEqual(self.game.blurb,
-                         "Winner of more than 200 Game of the Year Awards, Skyrim Special Edition brings the epic fantasy to life in stunning detail. The Special Edition includes the critically acclaimed game and add-ons with all-new features like remastered art and effects, volumetric god rays, dynamic depth of field, screen-space")
+                         "Winner of more than 200 Game of the Year Awards, Skyrim Special Edition brings the epic fantasy to life in stunning detail. The Special Edition includes the critically acclaimed game and add-ons with all-new features like remastered art and effects, volumetric god rays, dynamic depth of field, screen-space reflections, and more.")
+
+    def test_free(self):
+        self.assertTrue(self.freeMod.isfree())
 
 
 if __name__ == '__main__':
