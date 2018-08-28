@@ -49,13 +49,15 @@ def buildcommenttext(g):
         return commenttext
 
     commenttext += ' * Currently is ' + g.price + '\n'
+    if g.price is "Free" or "0": commenttext += ' * Can be added to ASF with `!addlicense asf ' + g.appID + '`\n'
     if g.discountamount is not False: commenttext += ' * Is currently discounted ' + g.discountamount + '\n'
     if int(g.achievements) is not 0: commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
     if int(g.cards) > 0: commenttext += ' * Has ' + g.cards + ' total cards\n'
 
     # Begin footer here
     commenttext += '\n***\n'
-    commenttext += 'I\'m the [Steam Game Info Bot](https://redd.it/66sqdc) | /r/GameInfoBot'
+    commenttext += "Comments? Complaints? Concerns? [Let me know](https://reddit.com/message/compose?to=%2Fr%2FGameInfoBot)"
+    #commenttext += 'I\'m the [Steam Game Info Bot](https://redd.it/66sqdc) | /r/GameInfoBot'
 
     return commenttext
 
