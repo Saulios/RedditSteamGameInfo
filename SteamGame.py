@@ -16,7 +16,7 @@ class SteamGame:
 
         self.title = self.gamePage.title.string.replace(" on Steam", "")
         self.discountamount = self.discountamount()
-        self.price = self.getprice()
+        self.price = self.getprice(False)
         self.achievements = self.getachev()
         self.cards = self.getcards()
         self.unreleased = self.isunreleased()
@@ -30,12 +30,15 @@ class SteamGame:
         else:
             return False
 
-    def getprice(self):
+    def getprice(self, withoutdiscount: bool):
         price = self.gamePage.find("div", class_="game_purchase_price")
+        ogPrice = self.gamePage.find("div", class_="discount_original_price")
         discountprice = self.gamePage.find("div", class_="discount_final_price")
 
         if price is not None:
             return price.string.strip()
+        elif withoutdiscount and ogPrice is not None:
+            return ogPrice.string.strip()
         elif discountprice is not None:
             return discountprice.string.strip()
         else:

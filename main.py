@@ -48,7 +48,9 @@ def buildcommenttext(g):
         commenttext += ' * Isn\'t released yet\n'
         return commenttext
 
-    commenttext += ' * Currently is ' + g.price + 'USD\n'
+    commenttext += ' * Currently is ' + g.price + 'USD'
+    if g.price != g.getprice(True): commenttext += ' (from ' + g.getprice(True) + ')'
+    commenttext += '\n'
     if g.price == "Free" == "0": commenttext += ' * Can be added to ASF with `!addlicense asf ' + g.appID + '`\n'
     if g.discountamount is not False: commenttext += ' * Is currently discounted ' + g.discountamount + '\n'
     if int(g.achievements) is not 0: commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
