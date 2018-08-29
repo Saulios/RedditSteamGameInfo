@@ -35,12 +35,12 @@ class SteamGame:
         ogPrice = self.gamePage.find("div", class_="discount_original_price")
         discountprice = self.gamePage.find("div", class_="discount_final_price")
 
-        if price is not None:
-            return price.string.strip()
+        if discountprice is not None:
+            return discountprice.string.strip()
         elif withoutdiscount and ogPrice is not None:
             return ogPrice.string.strip()
-        elif discountprice is not None:
-            return discountprice.string.strip()
+        elif price is not None:
+            return price.string.strip()
         else:
             return "Free"
 
