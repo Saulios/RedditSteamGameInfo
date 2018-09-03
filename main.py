@@ -53,7 +53,7 @@ def buildcommenttext(g):
         if not g.isfree(): commenttext += ' USD'
         if g.price != g.getprice(True): commenttext += ' (from ' + g.getprice(True) + ')'
         commenttext += '\n'
-        if g.isfree(): commenttext += ' * Can be added to ASF with `!addlicense asf ' + g.appID + '`\n'
+        if g.isfree(): commenttext += ' * Can be added to ASF clients with `!addlicense asf ' + g.appID + '`\n'
         if g.discountamount is not False: commenttext += ' * Is currently discounted ' + g.discountamount + '\n'
         if g.isearlyaccess(): commenttext += ' * Is an Early Access Game\n'
         if int(g.achievements) is not 0: commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
