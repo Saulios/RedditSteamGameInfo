@@ -1,4 +1,5 @@
 import re
+import json
 
 import requests
 from bs4 import BeautifulSoup
@@ -8,15 +9,17 @@ class SteamGame:
 
     def __init__(self, appid):
         self.appID = appid
-        self.url = 'http://store.steampowered.com/app/' + appid
+        self.url = 'https://store.steampowered.com/app/' + appid
         self.gamePage = BeautifulSoup(
             requests.get(self.url, cookies={'birthtime': '640584001', 'lastagecheckage': '20-April-1990',
                                             'mature_content': '1'}).text,
             "html.parser")
+        self.json = json.loads(requests.get("https://store.steampowered.com/api/appdetails/?appids=" + appid + "&cc=us")
+                               .text)[appid]["data"]
 
         self.title = self.gamePage.title.string.replace(" on Steam", "")
         self.discountamount = self.discountamount()
-        self.price = self.getprice(False)
+        self.price = self.getprice()
         self.achievements = self.getachev()
         self.cards = self.getcards()
         self.unreleased = self.isunreleased()
@@ -30,27 +33,18 @@ class SteamGame:
         else:
             return False
 
-    def getprice(self, withoutdiscount: bool):
-        price = self.gamePage.find("div", class_="game_purchase_price")
-        ogPrice = self.gamePage.find("div", class_="discount_original_price")
-        discountprice = self.gamePage.find("div", class_="discount_final_price")
-
-        if self.isfree(): return "Free"
-
-        if discountprice is not None:
-            return discountprice.string.strip()
-        elif withoutdiscount and ogPrice is not None:
-            return ogPrice.string.strip()
-        elif price is not None:
-            return price.string.strip()
-        else:
+    def getprice(self):
+        if len(self.json["package_groups"]) is 0:
             return "Free"
+        
+        return "$" + str(self.json["package_groups"]
+                         [0]
+                         ["subs"]
+                         [0]
+                         ["price_in_cents_with_discount"] / 100)
 
     def isfree(self):
-        cartButton = self.gamePage.find("div", class_="btn_addtocart")
-
-        if cartButton is not None:
-            return cartButton.text.strip() in ("Play Game", "Install now")
+        return self.json["is_free"]
 
     def getachev(self):
         achblock = self.gamePage.find("div", id="achievement_block")

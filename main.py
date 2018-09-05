@@ -51,7 +51,6 @@ def buildcommenttext(g):
     else:
         commenttext += ' * Currently is ' + g.price
         if not g.isfree(): commenttext += ' USD'
-        if g.price != g.getprice(True): commenttext += ' (from ' + g.getprice(True) + ')'
         commenttext += '\n'
         if g.isfree(): commenttext += ' * Can be added to ASF clients with `!addlicense asf ' + g.appID + '`\n'
         if g.discountamount is not False: commenttext += ' * Is currently discounted ' + g.discountamount + '\n'
