@@ -8,7 +8,7 @@ prawcore==0.10.1
 py==1.4.33
 pyparsing==2.2.0
 pytest==3.0.7
-requests==2.13.0
+requests==2.20.0
 six==1.10.0
 update-checker==0.16
 urllib3==1.24.2
