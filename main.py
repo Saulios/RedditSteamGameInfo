@@ -42,6 +42,11 @@ def hasbotalreadyreplied(s):
         comment.refresh()
         if comment.author == BOT_USERNAME:
             return True
+        submission_title = str(comment.submission.title)
+        megathread = submission_title.lower().replace(" ", "").find("megathread")
+        if megathread != -1:
+            # has not replied, but skip megathreads
+            return True
         for reply in comment.replies:
             if reply.author == BOT_USERNAME:
                 return True
