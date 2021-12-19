@@ -141,10 +141,10 @@ class SteamSearchGame:
                 # Check for Roman numeral variant if posted with number
                 if len(get_title.split(" ")) <= len(game_name_roman.split(" ")) + 1:
                     if (
-                        # target name is fully in search result
                         game_name_roman in get_title
-                        # target words are all in search result
                         or all(x in get_title for x in game_name_roman.split(" "))
+                        or game_name_number in get_title
+                        or all(x in get_title for x in game_name_number.split(" "))
                     ):
                         appid = game['data-ds-appid']
                         break
