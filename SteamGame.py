@@ -203,7 +203,7 @@ class SteamGame:
             def basegameisfree():
                 return basegame_data["is_free"]
 
-            def basegameprice(appid):
+            def basegameprice():
                 if len(basegame_data["package_groups"]) == 0:
                     return "Free"
 
@@ -226,7 +226,7 @@ class SteamGame:
                 else:
                     return False
 
-            price = basegameprice(appid)
+            price = basegameprice()
             free = basegameisfree()
             discount = discountamount()
             return appid, basegame["name"], price, free, discount
