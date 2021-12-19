@@ -165,7 +165,7 @@ class SubWatch(threading.Thread):
                 if fitscriteria(submission):
                     print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
                     submission.reply(buildcommenttext(SteamGame(appid)))
-            elif re.search(STEAM_TITLE_REGEX, submission.title):
+            elif re.search(STEAM_TITLE_REGEX, submission.title, re.IGNORECASE):
                 title_split = re.split(STEAM_TITLE_REGEX, submission.title)
                 game_name = title_split[-1].strip()
                 if fitscriteria(submission):
