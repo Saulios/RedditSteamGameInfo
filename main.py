@@ -5,8 +5,10 @@
 import os
 import re
 import threading
+import time
 
 import praw
+from prawcore.exceptions import PrawcoreException
 
 from SteamGame import SteamGame
 from SteamSearchGame import SteamSearchGame
@@ -70,30 +72,29 @@ def buildcommenttext(g):
         if g.gettype == "dlc" or g.gettype == "music":
             commenttext += '* **' + g.basegame[1] + '** links (base game): '
             commenttext += '[Store page](https://store.steampowered.com/app/' + g.basegame[0] + ') | [SteamDB](https://steamdb.info/app/' + g.basegame[0] + ')\n\n'
-        commenttext += 'Reviews: ' + g.reviewsummary + g.reviewdetails + '\n\n'
+        if not g.unreleased:
+            commenttext += 'Reviews: ' + g.reviewsummary + g.reviewdetails + '\n\n'
         if g.blurb != "":
             commenttext += '*' + g.blurb + '*\n\n'
         if g.unreleased:
             if g.getunreleasedtext() is None:
                 commenttext += " * Isn't released yet\n"
-                if g.genres is not False:
-                    commenttext += ' * Genre: ' + g.genres + '\n'
-                if g.usertags is not False:
-                    commenttext += ' * Tags: ' + g.usertags + '\n'
-                if g.isearlyaccess():
-                    commenttext += ' * Is an Early Access Game\n'
-                if g.islearning():
-                    commenttext += ' * Does not give +1 game count\n'
             else:
                 commenttext += ' * ' + g.getunreleasedtext() + '\n'
-                if g.genres is not False:
-                    commenttext += ' * Genre: ' + g.genres + '\n'
-                if g.usertags is not False:
-                    commenttext += ' * Tags: ' + g.usertags + '\n'
-                if g.isearlyaccess():
-                    commenttext += ' * Is an Early Access Game\n'
-                if g.islearning():
-                    commenttext += ' * Does not give +1 game count\n'
+            if g.isearlyaccess():
+                commenttext += ' * Is an Early Access Game\n'
+            if g.genres is not False:
+                commenttext += ' * Genre: ' + g.genres + '\n'
+            if g.usertags is not False:
+                commenttext += ' * Tags: ' + g.usertags + '\n'
+            if (
+                not g.islearning()
+                and not g.isfree()
+            ):
+                commenttext += ' * Will'
+            else:
+                commenttext += ' * Will not'
+            commenttext += ' give +1 game count ^([what is +1?](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F))\n'
         else:
             commenttext += ' * '
             if g.gettype == "dlc":
@@ -115,14 +116,14 @@ def buildcommenttext(g):
                 commenttext += '\n'
             if g.releasedate is not False:
                 commenttext += ' * Release date: ' + g.releasedate + '\n'
+            if g.isearlyaccess():
+                commenttext += ' * Is an Early Access Game\n'
             if g.genres is not False:
                 commenttext += ' * Genre: ' + g.genres + '\n'
             if g.usertags is not False:
                 commenttext += ' * Tags: ' + g.usertags + '\n'
             if g.isfree() or g.getprice() == "Free":
                 commenttext += ' * Can be added to ASF clients with `!addlicense asf ' + g.asf + '`\n'
-            if g.isearlyaccess():
-                commenttext += ' * Is an Early Access Game\n'
             if g.gettype == "game":
                 if (
                     not g.islearning()
@@ -132,9 +133,10 @@ def buildcommenttext(g):
                              and g.discountamount is False
                             )
                 ):
-                    commenttext += ' * Gives +1 game count\n'
+                    commenttext += ' * Gives'
                 else:
-                    commenttext += ' * Does not give +1 game count\n'
+                    commenttext += ' * Does not give'
+                commenttext += ' +1 game count ^([what is +1?](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F))\n'
                 if int(g.cards) > 0:
                     commenttext += ' * Has ' + g.cards + ' trading cards\n'
                 if not int(g.cards) > 0:
