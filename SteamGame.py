@@ -157,6 +157,7 @@ class SteamGame:
                 details = details_strip.replace("for this game ", "")
                 details = details.replace("- ", " (")
                 details = details.replace("positive.", "positive)")
+                details = details.replace(",","")
                 return details
             else:
                 return ""
@@ -181,9 +182,9 @@ class SteamGame:
     def genres(self):
         if "genres" in self.json:
             genres = self.json["genres"]
-            length = 4
+            length = 3
             genres_result = ""
-            if len(genres) < 4:
+            if len(genres) < 3:
                 length = len(genres)
             for genre in genres[0:length]:
                 genre_strip = genre["description"].strip()
