@@ -94,7 +94,7 @@ def buildcommenttext(g):
                 commenttext += ' * Will'
             else:
                 commenttext += ' * Will not'
-            commenttext += ' give +1 game count ^([what is +1?](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F))\n'
+            commenttext += ' give +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F)\n'
         else:
             commenttext += ' * '
             if g.gettype == "dlc":
@@ -136,7 +136,7 @@ def buildcommenttext(g):
                     commenttext += ' * Gives'
                 else:
                     commenttext += ' * Does not give'
-                commenttext += ' +1 game count ^([what is +1?](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F))\n'
+                commenttext += ' +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F)\n'
                 if int(g.cards) > 0:
                     commenttext += ' * Has ' + g.cards + ' trading cards\n'
                 if not int(g.cards) > 0:
