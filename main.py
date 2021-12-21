@@ -155,38 +155,48 @@ class SubWatch(threading.Thread):
     def run(self):
         print('Started watching subs: ' + SUBLIST)
         subreddit = reddit.subreddit(SUBLIST)
-        for submission in subreddit.stream.submissions(skip_existing=True):
-            if (
-                re.search(STEAM_APPURL_REGEX, submission.url)
-                or re.search(STEAMDB_APPURL_REGEX, submission.url)
-            ):
-                appid = re.search('\d+', submission.url).group(0)
+        while True:
+            try:
+                for submission in subreddit.stream.submissions(skip_existing=True):
+                    if (
+                        re.search(STEAM_APPURL_REGEX, submission.url)
+                        or re.search(STEAMDB_APPURL_REGEX, submission.url)
+                    ):
+                        appid = re.search('\d+', submission.url).group(0)
 
-                if fitscriteria(submission):
-                    print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
-                    submission.reply(buildcommenttext(SteamGame(appid)))
-            elif re.search(STEAM_TITLE_REGEX, submission.title, re.IGNORECASE):
-                title_split = re.split(STEAM_TITLE_REGEX, submission.title)
-                game_name = title_split[-1].strip()
-                if fitscriteria(submission):
-                    game = SteamSearchGame(game_name)
-                    appid = game.appid
-                    if appid != 0:
-                        print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
-                        submission.reply(buildcommenttext(SteamGame(appid)))
+                        if fitscriteria(submission):
+                            print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
+                            submission.reply(buildcommenttext(SteamGame(appid)))
+                    elif re.search(STEAM_TITLE_REGEX, submission.title, re.IGNORECASE):
+                        title_split = re.split(STEAM_TITLE_REGEX, submission.title)
+                        game_name = title_split[-1].strip()
+                        if fitscriteria(submission):
+                            game = SteamSearchGame(game_name)
+                            appid = game.appid
+                            if appid != 0:
+                                print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
+                                submission.reply(buildcommenttext(SteamGame(appid)))
+            except PrawcoreException:
+                print('Trying to reach Reddit')
+                time.sleep(30)
 
 
 class CommentWatch(threading.Thread):
     def run(self):
         print('Watching all comments on: ' + SUBLIST)
-        for comment in reddit.subreddit(SUBLIST).stream.comments(skip_existing=True):
-            urlregex = re.search(STEAM_APPURL_REGEX, comment.body)
-            if urlregex:
-                url = urlregex.group(0)
-                appid = re.search('\d+', url).group(0)
-                if fitscriteria(comment):
-                    print('Replying to comment ' + str(comment) + ' after finding game ' + appid)
-                    comment.reply(buildcommenttext(SteamGame(appid)))
+        while True:
+            try:
+                for comment in reddit.subreddit(SUBLIST).stream.comments(skip_existing=True):
+                    urlregex = re.search(STEAM_APPURL_REGEX, comment.body)
+                    if urlregex:
+                        url = urlregex.group(0)
+                        appid = re.search('\d+', url).group(0)
+                        if fitscriteria(comment):
+                            print('Replying to comment ' + str(comment) + ' after finding game ' + appid)
+                            comment.reply(buildcommenttext(SteamGame(appid)))
+            except PrawcoreException:
+                print('Trying to reach Reddit')
+                time.sleep(30)
 
 
 if __name__ == "__main__":
