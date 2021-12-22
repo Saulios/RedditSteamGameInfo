@@ -145,12 +145,14 @@ def buildcommenttext(g):
                     commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
                 if int(g.achievements) == 0:
                     commenttext += ' * Has no achievements\n'
+                commenttext += '\n***\n'
+            return commenttext
 
-        # Begin footer here
-        commenttext += '\n***\n'
-        commenttext += "^(I am a bot) Comments? Suggestions? [Let the FGF mods know!](https://www.reddit.com/message/compose?to=%2Fr%2FFreeGameFindings&subject=FGF%20bot) | [Source](https://github.com/Saulios/RedditSteamGameInfo)"
 
-        return commenttext
+def buildfootertext():
+    footertext = "^(I am a bot) Comments? Suggestions? [Let the FGF mods know!](https://www.reddit.com/message/compose?to=%2Fr%2FFreeGameFindings&subject=FGF%20bot) | [Source](https://github.com/Saulios/RedditSteamGameInfo)"
+
+    return footertext
 
 
 class SubWatch(threading.Thread):
@@ -167,8 +169,11 @@ class SubWatch(threading.Thread):
                         appid = re.search('\d+', submission.url).group(0)
 
                         if fitscriteria(submission):
-                            print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
-                            submission.reply(buildcommenttext(SteamGame(appid)))
+                            commenttext = buildcommenttext(SteamGame(appid))
+                            if commenttext is not None:
+                                commenttext += buildfootertext()
+                                print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
+                                submission.reply(commenttext)
                     elif re.search(STEAM_TITLE_REGEX, submission.title, re.IGNORECASE):
                         title_split = re.split(STEAM_TITLE_REGEX, submission.title)
                         game_name = title_split[-1].strip()
@@ -176,8 +181,11 @@ class SubWatch(threading.Thread):
                             game = SteamSearchGame(game_name)
                             appid = game.appid
                             if appid != 0:
-                                print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
-                                submission.reply(buildcommenttext(SteamGame(appid)))
+                                commenttext = buildcommenttext(SteamGame(appid))
+                                if commenttext is not None:
+                                    commenttext += buildfootertext()
+                                    print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
+                                    submission.reply(commenttext)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
@@ -190,12 +198,24 @@ class CommentWatch(threading.Thread):
             try:
                 for comment in reddit.subreddit(SUBLIST).stream.comments(skip_existing=True):
                     urlregex = re.search(STEAM_APPURL_REGEX, comment.body)
-                    if urlregex:
-                        url = urlregex.group(0)
-                        appid = re.search('\d+', url).group(0)
-                        if fitscriteria(comment):
-                            print('Replying to comment ' + str(comment) + ' after finding game ' + appid)
-                            comment.reply(buildcommenttext(SteamGame(appid)))
+                    if fitscriteria(comment) and urlregex:
+                        games = []
+                        for url in urlregex:
+                            games.append(url.group(0))
+                        # remove duplicates
+                        games = list(dict.fromkeys(games))
+                        appids = []
+                        commenttext = ""
+                        for i in range(len(games)):
+                            appid = re.search('\d+', games[i]).group(0)
+                            make_comment = buildcommenttext(SteamGame(appid))
+                            if make_comment is not None:
+                                commenttext += make_comment
+                                appids.append(appid)
+                        if commenttext is not None:
+                            commenttext += buildfootertext()
+                            print('Replying to comment ' + str(comment) + ' after finding game ' + ', '.join(appids))
+                            comment.reply(commenttext)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
