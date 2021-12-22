@@ -171,11 +171,11 @@ class SteamGame:
             length = 5
             if len(usertags_a) < 5:
                 length = len(usertags_a)
-            result_tags = ""
+            result_tags = []
             for tag in usertags_a[0:length]:
                 usertag_strip = tag.text.strip()
-                result_tags += usertag_strip + ", "
-            return result_tags.strip().removesuffix(",")
+                result_tags.append(usertag_strip)
+            return ", ".join(result_tags)
         else:
             return False
 
@@ -183,13 +183,13 @@ class SteamGame:
         if "genres" in self.json:
             genres = self.json["genres"]
             length = 3
-            genres_result = ""
+            genres_result = []
             if len(genres) < 3:
                 length = len(genres)
             for genre in genres[0:length]:
                 genre_strip = genre["description"].strip()
-                genres_result += genre_strip + ", "
-            return genres_result.strip().removesuffix(",")
+                genres_result.append(genre_strip)
+            return ", ".join(genres_result)
         else:
             return False
 
