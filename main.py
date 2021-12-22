@@ -197,9 +197,10 @@ class CommentWatch(threading.Thread):
         while True:
             try:
                 for comment in reddit.subreddit(SUBLIST).stream.comments(skip_existing=True):
-                    urlregex = re.finditer(STEAM_APPURL_REGEX, comment.body)
-                    if fitscriteria(comment) and urlregex:
+                    test_comment = re.match(STEAM_APPURL_REGEX, comment)
+                    if test_comment and fitscriteria(comment):
                         games = []
+                        urlregex = re.finditer(STEAM_APPURL_REGEX, comment.body)
                         for url in urlregex:
                             games.append(url.group(0))
                         # remove duplicates
