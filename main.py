@@ -197,7 +197,7 @@ class CommentWatch(threading.Thread):
         while True:
             try:
                 for comment in reddit.subreddit(SUBLIST).stream.comments(skip_existing=True):
-                    test_comment = re.match(STEAM_APPURL_REGEX, comment)
+                    test_comment = re.search(STEAM_APPURL_REGEX, comment.body)
                     if test_comment and fitscriteria(comment):
                         games = []
                         urlregex = re.finditer(STEAM_APPURL_REGEX, comment.body)
