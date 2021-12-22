@@ -213,7 +213,7 @@ class CommentWatch(threading.Thread):
                             if make_comment is not None:
                                 commenttext += make_comment
                                 appids.append(appid)
-                        if commenttext is not None:
+                        if commenttext != "":
                             commenttext += buildfootertext()
                             print('Replying to comment ' + str(comment) + ' after finding game ' + ', '.join(appids))
                             comment.reply(commenttext)
