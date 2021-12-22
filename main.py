@@ -145,7 +145,7 @@ def buildcommenttext(g):
                     commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
                 if int(g.achievements) == 0:
                     commenttext += ' * Has no achievements\n'
-                commenttext += '\n***\n'
+            commenttext += '\n***\n'
             return commenttext
 
 
