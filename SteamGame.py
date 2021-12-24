@@ -83,8 +83,9 @@ class SteamGame:
             len(self.json["package_groups"]) != 0
             and self.json["package_groups"][0]["subs"][0]["is_free_license"]
         ):
-            app_id = self.json["package_groups"][0]["subs"][0]["packageid"]
-        return str(app_id)
+            sub_id = self.json["package_groups"][0]["subs"][0]["packageid"]
+            return "s/" + str(sub_id)
+        return "a/" + str(app_id)
 
     def getachev(self):
         achblock = self.gamePage.find("div", id="achievement_block")
