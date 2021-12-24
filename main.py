@@ -146,7 +146,7 @@ def buildcommenttext(g):
                 if int(g.achievements) == 0:
                     commenttext += ' * Has no achievements\n'
             commenttext += '\n***\n'
-            return commenttext
+        return commenttext
 
 
 def buildfootertext():
