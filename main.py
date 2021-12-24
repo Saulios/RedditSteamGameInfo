@@ -123,7 +123,10 @@ def buildcommenttext(g):
             if g.usertags is not False:
                 commenttext += ' * Tags: ' + g.usertags + '\n'
             if g.isfree() or g.getprice() == "Free":
-                commenttext += ' * Can be added to ASF clients with `!addlicense asf ' + g.asf + '`\n'
+                commenttext += ' * Can be added to ASF clients with `!addlicense asf '
+                if not g.gettype == "game" and g.basegame[3]:
+                    commenttext += "a/" + g.basegame[0] + " "
+                commenttext += g.asf + '`\n'
             if g.gettype == "game":
                 if (
                     not g.islearning()
