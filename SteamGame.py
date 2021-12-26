@@ -22,8 +22,8 @@ class SteamGame:
         )
         self.json = json.loads(requests.get(
             "https://store.steampowered.com/api/appdetails/?appids=" + appid + "&cc=us")
-                               .text)
-        if self.json[appid]["success"] is not True:
+                               .content.decode('utf-8-sig'))
+        if self.json is None or self.json[appid]["success"] is not True:
             # appid invalid
             return None
         self.json = self.json[appid]["data"]
