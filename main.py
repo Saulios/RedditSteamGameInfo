@@ -11,6 +11,7 @@ import praw
 from prawcore.exceptions import PrawcoreException
 
 from SteamGame import SteamGame
+from SteamRemovedGame import SteamRemovedGame
 from SteamSearchGame import SteamSearchGame
 
 BLOCKED_USER_FILE = 'blockedusers.txt'  # Will not reply to these people
@@ -56,9 +57,12 @@ def hasbotalreadyreplied(s):
     return False
 
 
-def buildcommenttext(g):
+def buildcommenttext(g, removed):
     if isinstance(g.title, str):
-        commenttext = '**' + g.title + '**'
+        commenttext = ''
+        if removed is True:
+            commenttext += '*Appears to be removed/banned from Steam. This is information from ' + g.date + ':*\n\n'
+        commenttext += '**' + g.title + '**'
         if g.nsfw is not False:
             commenttext += ' *(NSFW)*'
         commenttext += '\n\n'
@@ -66,12 +70,20 @@ def buildcommenttext(g):
             commenttext += '* DLC links: '
         if g.gettype == "music":
             commenttext += '* Soundtrack links: '
-        commenttext += '[Store page](' + g.url + ') | [SteamDB](https://steamdb.info/app/' + g.appID + ')\n'
+        commenttext += '[Store Page'
+        if removed is True:
+            commenttext += ' (archived)'
         if g.gettype == "game":
-            commenttext += '\n'
+            commenttext += '](' + g.url + ') | [Community Hub](https://steamcommunity.com/app/' + g.appID + ') | [SteamDB](https://steamdb.info/app/' + g.appID + ')\n\n'
+        else:
+            commenttext += '](' + g.url + ') | [SteamDB](https://steamdb.info/app/' + g.appID + ')\n'
         if g.gettype == "dlc" or g.gettype == "music":
             commenttext += '* **' + g.basegame[1] + '** links (base game): '
-            commenttext += '[Store page](https://store.steampowered.com/app/' + g.basegame[0] + ') | [SteamDB](https://steamdb.info/app/' + g.basegame[0] + ')\n\n'
+            if removed:
+                commenttext += '[Store Page (archived)](' + g.basegame[5]
+            else:
+                commenttext += '[Store Page](https://store.steampowered.com/app/' + g.basegame[0]
+            commenttext += ') | [Community Hub](https://steamcommunity.com/app/' + g.basegame[0] + ') | [SteamDB](https://steamdb.info/app/' + g.basegame[0] + ')\n\n'
         if not g.unreleased:
             commenttext += 'Reviews: ' + g.reviewsummary + g.reviewdetails + '\n\n'
         if g.blurb != "":
@@ -87,33 +99,31 @@ def buildcommenttext(g):
                 commenttext += ' * Genre: ' + g.genres + '\n'
             if g.usertags is not False:
                 commenttext += ' * Tags: ' + g.usertags + '\n'
-            if (
-                not g.islearning()
-                and not g.isfree()
-            ):
+            if g.plusone:
                 commenttext += ' * Will'
             else:
                 commenttext += ' * Will not'
             commenttext += ' give +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F)\n'
         else:
-            commenttext += ' * '
-            if g.gettype == "dlc":
-                commenttext += 'DLC '
-            if g.gettype == "music":
-                commenttext += 'Soundtrack '
-            commenttext += 'Price: ' + g.price
-            if not g.isfree() and g.getprice() != "Free":
-                commenttext += ' USD'
-            if g.discountamount is not False:
-                commenttext += ' (' + g.discountamount + ')'
-            commenttext += '\n'
-            if g.gettype == "dlc" or g.gettype == "music":
-                commenttext += ' * Game Price: ' + g.basegame[2]
-                if not g.basegame[3] and g.basegame[2] != "Free":
+            if not removed:
+                commenttext += ' * '
+                if g.gettype == "dlc":
+                    commenttext += 'DLC '
+                if g.gettype == "music":
+                    commenttext += 'Soundtrack '
+                commenttext += 'Price: ' + g.price
+                if not g.isfree() and g.getprice() != ("Free" and "No price"):
                     commenttext += ' USD'
-                if g.basegame[4] is not False:
-                    commenttext += ' (' + g.basegame[4] + ')'
+                if g.discountamount is not False:
+                    commenttext += ' (' + g.discountamount + ')'
                 commenttext += '\n'
+                if g.gettype == "dlc" or g.gettype == "music":
+                    commenttext += ' * Game Price: ' + g.basegame[2]
+                    if not g.basegame[3] and g.basegame[2] != "Free":
+                        commenttext += ' USD'
+                    if g.basegame[4] is not False:
+                        commenttext += ' (' + g.basegame[4] + ')'
+                    commenttext += '\n'
             if g.releasedate is not False:
                 commenttext += ' * Release date: ' + g.releasedate + '\n'
             if g.isearlyaccess():
@@ -126,22 +136,20 @@ def buildcommenttext(g):
                 commenttext += ' * Can be added to ASF clients with `!addlicense asf '
                 if not g.gettype == "game" and g.basegame[3]:
                     commenttext += "a/" + g.basegame[0] + " "
-                commenttext += g.asf + '`\n'
+                commenttext += g.asf[0] + '`\n'
+                if g.asf[1] == "sub":
+                    commenttext += ' * Can be added in browsers with `javascript:AddFreeLicense(' + g.asf[0].strip("s/") +')`\n'
             if g.gettype == "game":
-                if (
-                    not g.islearning()
-                    and not g.isfree()
-                    and not (
-                             g.getprice() == "Free"
-                             and g.discountamount is False
-                            )
-                ):
+                if g.plusone:
                     commenttext += ' * Gives'
                 else:
                     commenttext += ' * Does not give'
                 commenttext += ' +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F)\n'
                 if int(g.cards) > 0:
-                    commenttext += ' * Has ' + g.cards + ' trading cards\n'
+                    commenttext += ' * Has ' + g.cards + ' trading cards'
+                    if removed:
+                        commenttext += ' (non-marketable)'
+                    commenttext += '\n'
                 if not int(g.cards) > 0:
                     commenttext += ' * Has no trading cards\n'
                 if int(g.achievements) != 0:
@@ -172,23 +180,39 @@ class SubWatch(threading.Thread):
                         appid = re.search('\d+', submission.url).group(0)
 
                         if fitscriteria(submission):
-                            commenttext = buildcommenttext(SteamGame(appid))
+                            commenttext = buildcommenttext(SteamGame(appid), False)
                             if commenttext is not None:
                                 commenttext += buildfootertext()
-                                print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
-                                submission.reply(commenttext)
+                                if len(commenttext) < 10000:
+                                    print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
+                                    submission.reply(commenttext)
                     elif re.search(STEAM_TITLE_REGEX, submission.title, re.IGNORECASE):
                         title_split = re.split(STEAM_TITLE_REGEX, submission.title)
                         game_name = title_split[-1].strip()
                         if fitscriteria(submission):
-                            game = SteamSearchGame(game_name)
+                            game = SteamSearchGame(game_name, False)
                             appid = game.appid
                             if appid != 0:
-                                commenttext = buildcommenttext(SteamGame(appid))
+                                commenttext = buildcommenttext(SteamGame(appid), False)
                                 if commenttext is not None:
                                     commenttext += buildfootertext()
-                                    print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
-                                    submission.reply(commenttext)
+                                    if len(commenttext) < 10000:
+                                        print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
+                                        submission.reply(commenttext)
+                            else:
+                                game = SteamSearchGame(game_name, True)
+                                appid = game.appid
+                                if appid != 0:
+                                    # try for only removed store page
+                                    commenttext = buildcommenttext(SteamGame(appid), False)
+                                    if commenttext is None:
+                                        # not available on Steam
+                                        commenttext = buildcommenttext(SteamRemovedGame(appid), True)
+                                    if commenttext is not None:
+                                        commenttext += buildfootertext()
+                                        if len(commenttext) < 10000:
+                                            print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name)
+                                            submission.reply(commenttext)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
@@ -218,8 +242,9 @@ class CommentWatch(threading.Thread):
                                 appids.append(appid)
                         if commenttext != "":
                             commenttext += buildfootertext()
-                            print('Replying to comment ' + str(comment) + ' after finding game ' + ', '.join(appids))
-                            comment.reply(commenttext)
+                            if len(commenttext) < 10000:
+                                print('Replying to comment ' + str(comment) + ' after finding game ' + ', '.join(appids))
+                                comment.reply(commenttext)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
