@@ -1,17 +1,35 @@
 import re
-
 import requests
+import time
+
 from bs4 import BeautifulSoup
 from collections import OrderedDict
 
 
 class SteamSearchGame:
 
-    def __init__(self, game_name):
+    def __init__(self, game_name, removed):
         self.game_name = self.game_name_searchable(game_name)
-        self.url = 'https://store.steampowered.com/search/?term=' + self.game_name + '&ignore_preferences=1'
-        self.gamePage = BeautifulSoup(requests.get(self.url).text, "html.parser")
-        self.appid = self.appid()
+        if removed:
+            self.url = 'https://steam.madjoki.com/search?q=' + self.game_name
+            self.urlbackup = 'https://steam-tracker.com/apps/banned'
+            try:
+                self.gamePage = BeautifulSoup(requests.get(self.url, timeout=30).text, "html.parser")
+            except requests.exceptions.RequestException:
+                print("Timeout: try backup url")
+                self.appid = self.appidbackup()
+            else:
+                self.appid = self.appid(removed)
+        else:
+            self.url = 'https://store.steampowered.com/search/?term=' + self.game_name + '&ignore_preferences=1'
+            while True:
+                try:
+                    self.gamePage = BeautifulSoup(requests.get(self.url, timeout=30).text, "html.parser")
+                    break
+                except requests.exceptions.RequestException:
+                    print("Steam store timeout: sleep for 30 seconds and try again")
+                    time.sleep(30)
+            self.appid = self.appid(removed)
 
     def game_name_searchable(self, game_name):
         # Put a space after a dash otherwise the word is excluded from search
@@ -78,9 +96,12 @@ class SteamSearchGame:
         else:
             return roman_num
 
-    def appid(self):
-        search_data = self.gamePage.find("div", id="search_result_container")
-        games = search_data.find_all('a', {'class': 'search_result_row'})
+    def appid(self, removed):
+        if removed:
+            games = self.gamePage.select('tr[data-type="app"]')
+        else:
+            search_data = self.gamePage.find("div", id="search_result_container")
+            games = search_data.find_all('a', {'class': 'search_result_row'})
         appid = 0
 
         def repl_roman(match):
@@ -91,7 +112,10 @@ class SteamSearchGame:
 
         for game in games:
             # Find search result with the same name as target and get appid
-            get_title = game.find('span', {"class": "title"}).text
+            if removed:
+                get_title = game.find('a').text.strip()
+            else:
+                get_title = game.find('span', {"class": "title"}).text
             # Get rid of commas to avoid number issues
             get_title = get_title.replace(",", "")
             game_name = self.game_name.replace(",", "")
@@ -108,7 +132,10 @@ class SteamSearchGame:
                 # words are the same but different order
                 or set(get_title.split(" ")) == set(game_name.split(" "))
             ):
-                appid = game['data-ds-appid']
+                if removed:
+                    appid = game['data-id']
+                else:
+                    appid = game['data-ds-appid']
                 break
             # Check for Roman numeral variant if posted with number
             game_name_roman = re.compile(r"\b\d+\b").sub(repl_roman, game_name)
@@ -119,9 +146,15 @@ class SteamSearchGame:
                 or get_title == game_name_number
                 or set(get_title.split(" ")) == set(game_name_number.split(" "))
             ):
-                appid = game['data-ds-appid']
+                if removed:
+                    appid = game['data-id']
+                else:
+                    appid = game['data-ds-appid']
                 break
-        if appid == 0:
+        if removed and appid == 0:
+            # Try backup site
+            appid = self.appidbackup()
+        if not removed and appid == 0:
             # If nothing found, try again but allow one word to be missing from target
             for game in games:
                 # game_name is used from previous loop
@@ -150,3 +183,58 @@ class SteamSearchGame:
                         break
 
         return appid
+
+    def appidbackup(self):
+        try:
+            self.gamePage = BeautifulSoup(requests.get(self.urlbackup, timeout=30).text, "html.parser")
+        except requests.exceptions.RequestException:
+            print('removed game backup request timeout')
+            return 0
+        else:
+            games = self.gamePage.find_all("a", string=re.compile(str(self.game_name.split(" ")[0])))
+            appid = 0
+
+            def repl_roman(match):
+                return self.write_roman(int(match.group(0)))
+
+            def repl_num(match):
+                return self.write_num(match.group(0))
+
+            for game in games:
+                # Find search result with the same name as target and get appid
+                get_title = game.text.strip()
+                # Get rid of commas to avoid number issues
+                get_title = get_title.replace(",", "")
+                game_name = self.game_name.replace(",", "")
+                # Get rid of all non-alphanumerics and convert to lowercase
+                get_title = re.sub(r'[\W_]+', u' ', get_title, flags=re.UNICODE).lower()
+                game_name = re.sub(r'[\W_]+', u' ', game_name, flags=re.UNICODE).lower()
+                # Some dlc have the word DLC in the name
+                get_title = get_title.replace("dlc", "").replace("  ", " ")
+                game_name = game_name.replace("dlc", "").replace("  ", " ")
+
+                if (
+                    # exactly the same
+                    get_title == game_name
+                    # words are the same but different order
+                    or set(get_title.split(" ")) == set(game_name.split(" "))
+                ):
+                    href = game.get('href').split("/")
+                    app = href.index("app") + 1
+                    appid = href[app]
+                    break
+                # Check for Roman numeral variant if posted with number
+                game_name_roman = re.compile(r"\b\d+\b").sub(repl_roman, game_name)
+                game_name_number = re.compile(r"\b(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})\b").sub(repl_num, game_name)
+                if (
+                    get_title == game_name_roman
+                    or set(get_title.split(" ")) == set(game_name_roman.split(" "))
+                    or get_title == game_name_number
+                    or set(get_title.split(" ")) == set(game_name_number.split(" "))
+                ):
+                    href = game.get('href').split("/")
+                    app = href.index("app") + 1
+                    appid = href[app]
+                    break
+
+            return appid
