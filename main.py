@@ -100,7 +100,7 @@ def buildcommenttext(g, removed):
             if g.usertags is not False:
                 commenttext += ' * Tags: ' + g.usertags + '\n'
             if g.plusone:
-                commenttext += ' * Will'
+                commenttext += ' * Full game license (no beta testing) will'
             else:
                 commenttext += ' * Will not'
             commenttext += ' give +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F)\n'
@@ -117,7 +117,7 @@ def buildcommenttext(g, removed):
                 if g.discountamount is not False:
                     commenttext += ' (' + g.discountamount + ')'
                 commenttext += '\n'
-                if g.gettype == "dlc" or g.gettype == "music":
+                if (g.gettype == "dlc" or g.gettype == "music") and len(g.basegame) > 2:
                     commenttext += ' * Game Price: ' + g.basegame[2]
                     if not g.basegame[3] and g.basegame[2] != "Free":
                         commenttext += ' USD'
@@ -134,11 +134,11 @@ def buildcommenttext(g, removed):
                 commenttext += ' * Tags: ' + g.usertags + '\n'
             if g.isfree() or g.getprice() == "Free":
                 commenttext += ' * Can be added to ASF clients with `!addlicense asf '
-                if not g.gettype == "game" and g.basegame[3]:
+                if not g.gettype == "game" and len(g.basegame) > 2 and g.basegame[3]:
                     commenttext += "a/" + g.basegame[0] + " "
                 commenttext += g.asf[0] + '`\n'
                 if g.asf[1] == "sub":
-                    commenttext += ' * Can be added in browsers with `javascript:AddFreeLicense(' + g.asf[0].strip("s/") +')`\n'
+                    commenttext += ' * Can be added in browsers with `javascript:AddFreeLicense(' + g.asf[0].strip("s/") + ')`\n'
             if g.gettype == "game":
                 if g.plusone:
                     commenttext += ' * Gives'
