@@ -1,7 +1,8 @@
 import re
 import json
-
+import time
 import requests
+
 from bs4 import BeautifulSoup
 
 
@@ -10,19 +11,38 @@ class SteamGame:
     def __init__(self, appid):
         self.appID = appid
         self.url = 'https://store.steampowered.com/app/' + appid
-        self.gamePage = BeautifulSoup(
-            requests.get(
-                self.url,
-                cookies={
-                    "birthtime": "640584001",
-                    "lastagecheckage": "20-April-1990",
-                    "mature_content": "1",
-                }).text,
-            "html.parser",
-        )
-        self.json = json.loads(requests.get(
-            "https://store.steampowered.com/api/appdetails/?appids=" + appid + "&cc=us")
-                               .content.decode('utf-8-sig'))
+        while True:
+            try:
+                self.gamePage = BeautifulSoup(
+                    requests.get(
+                        self.url,
+                        cookies={
+                            "birthtime": "640584001",
+                            "lastagecheckage": "20-April-1990",
+                            "mature_content": "1",
+                        },
+                        timeout=30).text,
+                    "html.parser",
+                )
+                break
+            except requests.exceptions.RequestException:
+                print("Steam store timeout: sleep for 30 seconds and try again")
+                time.sleep(30)
+        while True:
+            try:
+                steam_json = requests.get(
+                    "https://store.steampowered.com/api/appdetails/?appids=" + appid + "&cc=us",
+                    timeout=30)
+                break
+            except requests.exceptions.RequestException:
+                print("Steam api timeout: sleep for 30 seconds and try again")
+                time.sleep(30)
+
+        if 'json' in steam_json.headers.get('Content-Type'):
+            self.json = json.loads(steam_json.content.decode('utf-8-sig'))
+        else:
+            return None
+
         if self.json is None or self.json[appid]["success"] is not True:
             # appid invalid
             return None
@@ -44,6 +64,7 @@ class SteamGame:
         self.basegame = self.basegame()
         self.releasedate = self.releasedate()
         self.nsfw = self.nsfw()
+        self.plusone = self.plusone()
 
     def title(self):
         return self.json["name"]
@@ -84,8 +105,8 @@ class SteamGame:
             and self.json["package_groups"][0]["subs"][0]["is_free_license"]
         ):
             sub_id = self.json["package_groups"][0]["subs"][0]["packageid"]
-            return "s/" + str(sub_id)
-        return "a/" + str(app_id)
+            return "s/" + str(sub_id), "sub"
+        return "a/" + str(app_id), "app"
 
     def getachev(self):
         achblock = self.gamePage.find("div", id="achievement_block")
@@ -106,8 +127,18 @@ class SteamGame:
             return 0
         if "Steam Trading Cards" in category_block.text:
             marketurl = 'https://steamcommunity.com/market/search?q=&category_753_Game%5B0%5D=tag_app_' + self.appID + '&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
-            marketpage = BeautifulSoup(requests.get(marketurl).text, "html.parser")
-            return marketpage.find("span", id="searchResults_total").string.strip()
+            while True:
+                try:
+                    marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
+                    break
+                except requests.exceptions.RequestException:
+                    print("Steam market timeout: sleep for 30 seconds and try again")
+                    time.sleep(30)
+            total = marketpage.find("span", id="searchResults_total")
+            if total is not None:
+                return total.string.strip()
+            else:
+                return 0
 
         return 0
 
@@ -133,7 +164,7 @@ class SteamGame:
         if snippet is None:
             return ""
 
-        return snippet.strip()
+        return snippet.strip().replace("*", "\*")
 
     def islearning(self):
         return self.gamePage.find("div", class_="learning_about") is not None
@@ -158,7 +189,7 @@ class SteamGame:
                 details = details_strip.replace("for this game ", "")
                 details = details.replace("- ", " (")
                 details = details.replace("positive.", "positive)")
-                details = details.replace(",","")
+                details = details.replace(",", "")
                 return details
             else:
                 return ""
@@ -198,9 +229,20 @@ class SteamGame:
         if "fullgame" in self.json:
             basegame = self.json["fullgame"]
             appid = basegame["appid"]
-            basegame_data = json.loads(requests.get(
-                "https://store.steampowered.com/api/appdetails/?appids=" + appid + "&cc=us")
-                            .text)[appid]["data"]
+            while True:
+                try:
+                    basegame_json = requests.get(
+                        "https://store.steampowered.com/api/appdetails/?appids=" + appid + "&cc=us",
+                        timeout=30)
+                    break
+                except requests.exceptions.RequestException:
+                    print("Steam api timeout: sleep for 30 seconds and try again")
+                    time.sleep(30)
+
+            if 'json' in basegame_json.headers.get('Content-Type'):
+                basegame_data = json.loads(basegame_json.content.decode('utf-8-sig'))[appid]["data"]
+            else:
+                return appid, basegame["name"]
 
             def basegameisfree():
                 return basegame_data["is_free"]
@@ -247,5 +289,25 @@ class SteamGame:
         nsfw = self.gamePage.find("div", class_="mature_content_notice")
         if nsfw is not None:
             return True
+        else:
+            return False
+
+    def plusone(self):
+        if (
+            not self.islearning()
+            and not self.isfree()
+        ):
+            if (
+                not self.unreleased
+                and not (
+                         self.getprice() == "Free"
+                         and self.discountamount is False
+                        )
+            ):
+                return True
+            if self.unreleased:
+                return True
+            else:
+                return False
         else:
             return False
