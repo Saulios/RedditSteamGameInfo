@@ -236,7 +236,7 @@ class CommentWatch(threading.Thread):
                         commenttext = ""
                         for i in range(len(games)):
                             appid = re.search('\d+', games[i]).group(0)
-                            make_comment = buildcommenttext(SteamGame(appid))
+                            make_comment = buildcommenttext(SteamGame(appid), False)
                             if make_comment is not None:
                                 commenttext += make_comment
                                 appids.append(appid)
