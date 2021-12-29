@@ -70,20 +70,24 @@ def buildcommenttext(g, removed):
             commenttext += '* DLC links: '
         if g.gettype == "music":
             commenttext += '* Soundtrack links: '
+        if g.gettype == "mod":
+            commenttext += '* Mod links: '
         commenttext += '[Store Page'
         if removed is True:
             commenttext += ' (archived)'
-        if g.gettype == "game":
-            commenttext += '](' + g.url + ') | [Community Hub](https://steamcommunity.com/app/' + g.appID + ') | [SteamDB](https://steamdb.info/app/' + g.appID + ')\n\n'
-        else:
-            commenttext += '](' + g.url + ') | [SteamDB](https://steamdb.info/app/' + g.appID + ')\n'
-        if g.gettype == "dlc" or g.gettype == "music":
+        commenttext += '](' + g.url + ') | '
+        if g.gettype == "game" or g.gettype == "mod":
+            commenttext += '[Community Hub](https://steamcommunity.com/app/' + g.appID + ') | '
+        commenttext += '[SteamDB](https://steamdb.info/app/' + g.appID + ')\n'
+        if not g.gettype == "game" and g.basegame is not None:
             commenttext += '* **' + g.basegame[1] + '** links (base game): '
             if removed:
                 commenttext += '[Store Page (archived)](' + g.basegame[5]
             else:
                 commenttext += '[Store Page](https://store.steampowered.com/app/' + g.basegame[0]
             commenttext += ') | [Community Hub](https://steamcommunity.com/app/' + g.basegame[0] + ') | [SteamDB](https://steamdb.info/app/' + g.basegame[0] + ')\n\n'
+        else:
+            commenttext += '\n'
         if not g.unreleased:
             commenttext += 'Reviews: ' + g.reviewsummary + g.reviewdetails + '\n\n'
         if g.blurb != "":
@@ -117,7 +121,7 @@ def buildcommenttext(g, removed):
                 if g.discountamount is not False:
                     commenttext += ' (' + g.discountamount + ')'
                 commenttext += '\n'
-                if (g.gettype == "dlc" or g.gettype == "music") and len(g.basegame) > 2:
+                if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2:
                     commenttext += ' * Game Price: ' + g.basegame[2]
                     if not g.basegame[3] and g.basegame[2] != "Free":
                         commenttext += ' USD'
@@ -134,7 +138,7 @@ def buildcommenttext(g, removed):
                 commenttext += ' * Tags: ' + g.usertags + '\n'
             if g.isfree() or g.getprice() == "Free":
                 commenttext += ' * Can be added to ASF clients with `!addlicense asf '
-                if not g.gettype == "game" and len(g.basegame) > 2 and g.basegame[3]:
+                if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[3]:
                     commenttext += "a/" + g.basegame[0] + " "
                 commenttext += g.asf[0] + '`\n'
                 if g.asf[1] == "sub":
