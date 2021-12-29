@@ -116,17 +116,17 @@ def buildcommenttext(g, removed):
                 if g.gettype == "music":
                     commenttext += 'Soundtrack '
                 commenttext += 'Price: ' + g.price
-                if not g.isfree() and g.getprice() != ("Free" and "No price"):
+                if not g.isfree() and g.price != ("Free" and "No price found"):
                     commenttext += ' USD'
-                if g.discountamount is not False:
-                    commenttext += ' (' + g.discountamount + ')'
+                    if g.discountamount is not False:
+                        commenttext += ' (' + g.discountamount + ')'
                 commenttext += '\n'
                 if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2:
                     commenttext += ' * Game Price: ' + g.basegame[2]
-                    if not g.basegame[3] and g.basegame[2] != "Free":
+                    if not g.basegame[3] and g.basegame[2] != ("Free" and "No price found"):
                         commenttext += ' USD'
-                    if g.basegame[4] is not False:
-                        commenttext += ' (' + g.basegame[4] + ')'
+                        if g.basegame[4] is not False:
+                            commenttext += ' (' + g.basegame[4] + ')'
                     commenttext += '\n'
             if g.releasedate is not False:
                 commenttext += ' * Release date: ' + g.releasedate + '\n'
@@ -136,7 +136,7 @@ def buildcommenttext(g, removed):
                 commenttext += ' * Genre: ' + g.genres + '\n'
             if g.usertags is not False:
                 commenttext += ' * Tags: ' + g.usertags + '\n'
-            if g.isfree() or g.getprice() == "Free":
+            if g.isfree() or g.price == "Free":
                 commenttext += ' * Can be added to ASF clients with `!addlicense asf '
                 if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[3]:
                     commenttext += "a/" + g.basegame[0] + " "
