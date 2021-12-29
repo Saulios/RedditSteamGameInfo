@@ -73,27 +73,48 @@ class SteamGame:
         return self.json["type"]
 
     def discountamount(self):
-        if len(self.json["package_groups"]) != 0:
+        if "price_overview" in self.json and self.json["price_overview"] is not None:
+            amount = self.json["price_overview"]["discount_percent"]
+            if amount != 0:
+                return "-" + str(amount) + "%"
+        elif len(self.json["package_groups"]) != 0:
             amount = self.json["package_groups"][0]["subs"][0]["percent_savings_text"]
             amount = amount.strip()
             if amount != "":
                 return amount
             else:
                 return False
-        else:
-            return False
+        elif len(self.json["package_groups"]) == 0 and not self.isfree():
+            # check bundles
+            bundles = self.gamePage.find_all("div", {"class": "game_area_purchase_game"})
+            for bundle in bundles:
+                title = bundle.find("h1").next_element
+                title = title.text.replace("Buy", "").strip()
+                if title == self.title:
+                    discount = self.gamePage.find("div", {"class": "discount_pct"})
+                    if discount is not None:
+                        return discount.string.strip()
+        return False
 
     def getprice(self):
-        if len(self.json["package_groups"]) == 0:
+        if "price_overview" in self.json and self.json["price_overview"] is not None:
+            price = self.json["price_overview"]["final_formatted"]
+            return price
+        if self.isfree():
             return "Free"
-
-        price = self.json["package_groups"][0]["subs"][0]["price_in_cents_with_discount"] / 100
-        if price == 0:
-            return "Free"
-        elif self.isfree():
-            return "Free"
-        else:
-            return "$" + str(price)
+        if len(self.json["package_groups"]) == 0 and not self.isfree():
+            # check bundles
+            bundles = self.gamePage.find_all("div", {"class": "game_area_purchase_game"})
+            for bundle in bundles:
+                title = bundle.find("h1").next_element
+                title = title.text.replace("Buy", "").strip()
+                if title == self.title:
+                    price = bundle.find("div", {"class": "game_purchase_price"})
+                    if price is None:
+                        price = self.gamePage.find("div", {"class": "discount_final_price"})
+                    if price is not None:
+                        return price.string.strip()
+        return "No price found"
 
     def isfree(self):
         return self.json["is_free"]
@@ -103,6 +124,7 @@ class SteamGame:
         if (
             len(self.json["package_groups"]) != 0
             and self.json["package_groups"][0]["subs"][0]["is_free_license"]
+            and self.json["package_groups"][0]["subs"][0]["can_get_free_license"] == "1"
         ):
             sub_id = self.json["package_groups"][0]["subs"][0]["packageid"]
             return "s/" + str(sub_id), "sub"
@@ -229,6 +251,8 @@ class SteamGame:
         if "fullgame" in self.json:
             basegame = self.json["fullgame"]
             appid = basegame["appid"]
+            name = basegame["name"]
+            basegameurl = 'https://store.steampowered.com/app/' + appid
             while True:
                 try:
                     basegame_json = requests.get(
@@ -242,38 +266,76 @@ class SteamGame:
             if 'json' in basegame_json.headers.get('Content-Type'):
                 basegame_data = json.loads(basegame_json.content.decode('utf-8-sig'))[appid]["data"]
             else:
-                return appid, basegame["name"]
+                return appid, name
 
             def basegameisfree():
                 return basegame_data["is_free"]
 
             def basegameprice():
-                if len(basegame_data["package_groups"]) == 0:
+                if "price_overview" in basegame_data and basegame_data["price_overview"] is not None:
+                    price = basegame_data["price_overview"]["final_formatted"]
+                    return price
+                if basegameisfree():
                     return "Free"
 
-                price = basegame_data["package_groups"][0]["subs"][0]["price_in_cents_with_discount"] / 100
-                if price == 0:
-                    return "Free"
-                elif basegameisfree():
-                    return "Free"
-                else:
-                    return "$" + str(price)
-
-            def discountamount():
-                if len(basegame_data["package_groups"]) != 0:
-                    amount = basegame_data["package_groups"][0]["subs"][0]["percent_savings_text"]
-                    amount = amount.strip()
-                    if amount != "":
-                        return amount
-                    else:
-                        return False
-                else:
+                def discountamount():
+                    if "price_overview" in basegame_data and basegame_data["price_overview"] is not None:
+                        amount = basegame_data["price_overview"]["discount_percent"]
+                        if amount != 0:
+                            return "-" + str(amount) + "%"
+                    elif len(basegame_data["package_groups"]) != 0:
+                        amount = basegame_data["package_groups"][0]["subs"][0]["percent_savings_text"]
+                        amount = amount.strip()
+                        if amount != "":
+                            return amount
+                        else:
+                            return False
+                    elif len(basegame_data["package_groups"]) == 0 and not basegameisfree():
+                        # check bundles
+                        bundles = basegamePage.find_all("div", {"class": "game_area_purchase_game"})
+                        for bundle in bundles:
+                            title = bundle.find("h1").next_element
+                            title = title.text.replace("Buy", "").strip()
+                            if title == name:
+                                discount = basegamePage.find("div", {"class": "discount_pct"})
+                                if discount is not None:
+                                    return discount.string.strip()
+                                    break
                     return False
+                if len(basegame_data["package_groups"]) == 0 and not basegameisfree():
+                    # check bundles
+                    while True:
+                        try:
+                            basegamePage = BeautifulSoup(
+                                requests.get(
+                                    basegameurl,
+                                    cookies={
+                                        "birthtime": "640584001",
+                                        "lastagecheckage": "20-April-1990",
+                                        "mature_content": "1",
+                                    },
+                                    timeout=30).text,
+                                "html.parser",
+                            )
+                            break
+                        except requests.exceptions.RequestException:
+                            print("Steam store timeout: sleep for 30 seconds and try again")
+                            time.sleep(30)
+                    bundles = basegamePage.find_all("div", {"class": "game_area_purchase_game"})
+                    for bundle in bundles:
+                        title = bundle.find("h1").next_element
+                        title = title.text.replace("Buy", "").strip()
+                        if title == name:
+                            price = bundle.find("div", {"class": "game_purchase_price"})
+                            if price is None:
+                                price = basegamePage.find("div", {"class": "discount_final_price"})
+                            if price is not None:
+                                return price.string.strip(), discountamount()
+                return "No price found", False
 
-            price = basegameprice()
+            price, discount = basegameprice()
             free = basegameisfree()
-            discount = discountamount()
-            return appid, basegame["name"], price, free, discount
+            return appid, name, price, free, discount
 
     def releasedate(self):
         if "release_date" in self.json:
@@ -293,6 +355,10 @@ class SteamGame:
             return False
 
     def plusone(self):
+        exceptions = [346290, 863550, 247120, 397720, 272060, 351940, 319830, 8650, 845070, 1515950, 232770, 608990, 769920, 252150, 583950, 584210, 802240]
+        if int(self.appID) in exceptions:
+            # some apps marked as free still give +1
+            return True
         if (
             not self.islearning()
             and not self.isfree()
