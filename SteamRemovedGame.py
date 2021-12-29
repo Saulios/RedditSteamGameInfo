@@ -21,7 +21,7 @@ class SteamRemovedGame:
             return None
         else:
             if 'json' in archive_json.headers.get('Content-Type'):
-                self.json = json.loads(archive_json.text)
+                self.json = self.filterjson(archive_json)
             else:
                 return None
 
@@ -63,15 +63,25 @@ class SteamRemovedGame:
                 self.nsfw = self.nsfw()
                 self.plusone = self.plusone()
 
+    def filterjson(self, archive_json):
+        archive_json = json.loads(archive_json.text)
+        if len(archive_json) > 0:
+            del archive_json[0]
+            # remove agecheck pages
+            archive_json = [entry for entry in archive_json if not re.search("(agecheck)", entry[0])]
+            # keep only english pages
+            archive_json = [entry for entry in archive_json if not re.search("(\?l=)(?!english)", entry[0])]
+            return archive_json
+        else:
+            return []
+
     def urldate(self):
         newest_date = ''
         newest_url = ''
-        for entry in self.json[1:]:
-            # Only english pages
-            if not re.search("(\?l=)(?!english)", entry[0]):
-                if newest_date == '' or entry[1] > newest_date:
-                    newest_date = entry[1]
-                    newest_url = entry[0]
+        for entry in self.json:
+            if newest_date == '' or entry[1] > newest_date:
+                newest_date = entry[1]
+                newest_url = entry[0]
         archive_url = "https://web.archive.org/web/" + newest_date + "/" + newest_url
         year = newest_date[0:4]
         month = newest_date[4:6]
