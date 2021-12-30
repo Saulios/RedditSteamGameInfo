@@ -98,10 +98,12 @@ class SteamGame:
 
     def getprice(self):
         if "price_overview" in self.json and self.json["price_overview"] is not None:
-            price = self.json["price_overview"]["final_formatted"]
-            return price
+            finalprice = self.json["price_overview"]["final_formatted"]
+            fullprice = self.json["price_overview"]["initial_formatted"]
+            return finalprice, fullprice
         if self.isfree():
-            return "Free"
+            finalprice = "Free"
+            return finalprice, ""
         if len(self.json["package_groups"]) == 0 and not self.isfree():
             # check bundles
             bundles = self.gamePage.find_all("div", {"class": "game_area_purchase_game"})
@@ -111,10 +113,14 @@ class SteamGame:
                 if title == self.title:
                     price = bundle.find("div", {"class": "game_purchase_price"})
                     if price is None:
-                        price = self.gamePage.find("div", {"class": "discount_final_price"})
-                    if price is not None:
-                        return price.string.strip()
-        return "No price found"
+                        finalprice = self.gamePage.find("div", {"class": "discount_final_price"})
+                        fullprice = self.gamePage.find("div", {"class": "discount_original_price"})
+                    if fullprice is None:
+                        return finalprice.string.strip(), ""
+                    else:
+                        return finalprice.string.strip(), fullprice.string.strip()
+        finalprice = "No price found"
+        return finalprice, ""
 
     def isfree(self):
         return self.json["is_free"]
@@ -272,12 +278,6 @@ class SteamGame:
                 return basegame_data["is_free"]
 
             def basegameprice():
-                if "price_overview" in basegame_data and basegame_data["price_overview"] is not None:
-                    price = basegame_data["price_overview"]["final_formatted"]
-                    return price
-                if basegameisfree():
-                    return "Free"
-
                 def discountamount():
                     if "price_overview" in basegame_data and basegame_data["price_overview"] is not None:
                         amount = basegame_data["price_overview"]["discount_percent"]
@@ -302,6 +302,13 @@ class SteamGame:
                                     return discount.string.strip()
                                     break
                     return False
+                if "price_overview" in basegame_data and basegame_data["price_overview"] is not None:
+                    finalprice = basegame_data["price_overview"]["final_formatted"]
+                    fullprice = basegame_data["price_overview"]["initial_formatted"]
+                    return finalprice, fullprice, discountamount()
+                if basegameisfree():
+                    finalprice = "Free"
+                    return finalprice, "", False
                 if len(basegame_data["package_groups"]) == 0 and not basegameisfree():
                     # check bundles
                     while True:
@@ -328,14 +335,18 @@ class SteamGame:
                         if title == name:
                             price = bundle.find("div", {"class": "game_purchase_price"})
                             if price is None:
-                                price = basegamePage.find("div", {"class": "discount_final_price"})
-                            if price is not None:
-                                return price.string.strip(), discountamount()
-                return "No price found", False
+                                finalprice = basegamePage.find("div", {"class": "discount_final_price"})
+                                fullprice = basegamePage.find("div", {"class": "discount_original_price"})
+                            if finalprice is not None:
+                                if fullprice is None:
+                                    return finalprice.string.strip(), "", discountamount()
+                                else:
+                                    return finalprice.string.strip(), fullprice.string.strip(), discountamount()
+                return "No price found", "", False
 
-            price, discount = basegameprice()
+            finalprice, fullprice, discount = basegameprice()
             free = basegameisfree()
-            return appid, name, price, free, discount
+            return appid, name, finalprice, fullprice, free, discount
 
     def releasedate(self):
         if "release_date" in self.json:
