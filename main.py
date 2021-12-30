@@ -115,18 +115,24 @@ def buildcommenttext(g, removed):
                     commenttext += 'DLC '
                 if g.gettype == "music":
                     commenttext += 'Soundtrack '
-                commenttext += 'Price: ' + g.price
-                if not g.isfree() and g.price != ("Free" and "No price found"):
+                commenttext += 'Price: '
+                if g.price[1] != "":
+                    commenttext += '~~' + g.price[1] + '~~ '
+                commenttext += g.price[0]
+                if not g.isfree() and g.price[0] != ("Free" and "No price found"):
                     commenttext += ' USD'
                     if g.discountamount is not False:
                         commenttext += ' (' + g.discountamount + ')'
                 commenttext += '\n'
                 if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2:
-                    commenttext += ' * Game Price: ' + g.basegame[2]
-                    if not g.basegame[3] and g.basegame[2] != ("Free" and "No price found"):
+                    commenttext += ' * Game Price: '
+                    if g.basegame[3] != "":
+                        commenttext += '~~' + g.basegame[3] + '~~ '
+                    commenttext += g.basegame[2]
+                    if not g.basegame[4] and g.basegame[2] != ("Free" and "No price found"):
                         commenttext += ' USD'
-                        if g.basegame[4] is not False:
-                            commenttext += ' (' + g.basegame[4] + ')'
+                        if g.basegame[5] is not False:
+                            commenttext += ' (' + g.basegame[5] + ')'
                     commenttext += '\n'
             if g.releasedate is not False:
                 commenttext += ' * Release date: ' + g.releasedate + '\n'
@@ -138,7 +144,7 @@ def buildcommenttext(g, removed):
                 commenttext += ' * Tags: ' + g.usertags + '\n'
             if g.isfree() or g.price == "Free":
                 commenttext += ' * Can be added to ASF clients with `!addlicense asf '
-                if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[3]:
+                if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4]:
                     commenttext += "a/" + g.basegame[0] + " "
                 commenttext += g.asf[0] + '`\n'
                 if g.asf[1] == "sub":
