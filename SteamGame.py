@@ -10,7 +10,7 @@ class SteamGame:
 
     def __init__(self, appid):
         self.appID = appid
-        self.url = 'https://store.steampowered.com/app/' + appid
+        self.url = 'https://store.steampowered.com/app/' + appid + "?cc=us"
         while True:
             try:
                 self.gamePage = BeautifulSoup(
@@ -258,7 +258,7 @@ class SteamGame:
             basegame = self.json["fullgame"]
             appid = basegame["appid"]
             name = basegame["name"]
-            basegameurl = 'https://store.steampowered.com/app/' + appid
+            basegameurl = 'https://store.steampowered.com/app/' + appid + "?cc=us"
             while True:
                 try:
                     basegame_json = requests.get(
