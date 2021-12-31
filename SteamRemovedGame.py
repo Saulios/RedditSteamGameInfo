@@ -1,10 +1,10 @@
 import re
 import json
 import requests
-import time
 import calendar
 
 from bs4 import BeautifulSoup
+from SteamGame import SteamGame
 
 
 class SteamRemovedGame:
@@ -50,17 +50,19 @@ class SteamRemovedGame:
                 self.discountamount = self.discountamount()
                 self.price = self.getprice()
                 self.asf = self.getasf()
-                self.achievements = self.getachev()
-                self.cards = self.getcards()
-                self.unreleased = self.isunreleased()
+                self.achievements = SteamGame.getachev(self)
+                self.cards = SteamGame.getcards(self)
+                self.unreleased = SteamGame.isunreleased(self)
+                self.isearlyaccess = SteamGame.isearlyaccess(self)
+                self.unreleasedtext = SteamGame.getunreleasedtext(self)
                 self.blurb = self.getDescriptionSnippet()
-                self.reviewsummary = self.reviewsummary()
-                self.reviewdetails = self.reviewdetails()
+                self.reviewsummary = SteamGame.reviewsummary(self)
+                self.reviewdetails = SteamGame.reviewdetails(self)
                 self.genres = self.genres()
-                self.usertags = self.usertags()
+                self.usertags = SteamGame.usertags(self)
                 self.basegame = self.basegame()
                 self.releasedate = self.releasedate()
-                self.nsfw = self.nsfw()
+                self.nsfw = SteamGame.nsfw(self)
                 self.plusone = self.plusone()
 
     def filterjson(self, archive_json):
@@ -124,55 +126,6 @@ class SteamRemovedGame:
         app_id = self.appID
         return "a/" + str(app_id)
 
-    def getachev(self):
-        achblock = self.gamePage.find("div", id="achievement_block")
-
-        if achblock is not None:
-            ach_number = re.sub(r"\D", "", achblock.contents[1].string).strip()  # Remove all non numbers
-            if ach_number == "":
-                return 0
-            else:
-                return ach_number
-        else:
-            return 0
-
-    def getcards(self):
-        category_block = self.gamePage.find("div", id="category_block")
-
-        if category_block is None:
-            return 0
-        if "Steam Trading Cards" in category_block.text:
-            marketurl = 'https://steamcommunity.com/market/search?q=&category_753_Game%5B0%5D=tag_app_' + self.appID + '&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
-            while True:
-                try:
-                    marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
-                except requests.exceptions.RequestException:
-                    print("Steam market timeout: sleep for 30 seconds and try again")
-                    time.sleep(30)
-            total = marketpage.find("span", id="searchResults_total")
-            if total is not None:
-                return total.string.strip()
-            else:
-                return 0
-
-        return 0
-
-    def isunreleased(self):
-        unreleased = self.gamePage.find("div", class_="game_area_comingsoon")
-
-        return unreleased is not None
-
-    def isearlyaccess(self):
-        return self.gamePage.find("div", class_="early_access_header") is not None
-
-    def getunreleasedtext(self):
-        unreleasedMajor = self.gamePage.find("div", class_="game_area_comingsoon")
-
-        if unreleasedMajor is not None:
-            return unreleasedMajor.find("h1").text.strip()
-        else:
-            return None
-
     def getDescriptionSnippet(self):
         snippet = self.gamePage.find("div", class_="game_description_snippet")
 
@@ -186,36 +139,6 @@ class SteamRemovedGame:
 
         return snippet.string.strip()
 
-    def islearning(self):
-        return self.gamePage.find("div", class_="learning_about") is not None
-
-    def reviewsummary(self):
-        review_div = self.gamePage.find("div", {"class": "user_reviews"})
-        review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
-        summary = review_div_agg.find("span", {"class": "game_review_summary"})
-        if summary is not None:
-            return summary.string
-        else:
-            return "No user reviews"
-
-    def reviewdetails(self):
-        review_div = self.gamePage.find("div", {"class": "user_reviews"})
-        review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
-        details_span = review_div_agg.select('span[class*="responsive_reviewdesc"]')
-        details = next(iter(details_span), None)
-        if details is not None:
-            details_strip = details.contents[0].strip()
-            if details_strip != "- Need more user reviews to generate a score":
-                details = details_strip.replace("for this game ", "")
-                details = details.replace("- ", " (")
-                details = details.replace("positive.", "positive)")
-                details = details.replace(",", "")
-                return details
-            else:
-                return ""
-        else:
-            return ""
-
     def genres(self):
         details = self.gamePage.find("div", class_="details_block")
         details_a = details.find_all("a")
@@ -225,23 +148,6 @@ class SteamRemovedGame:
                 genres.append(link.text.strip())
         if len(genres) != 0:
             return ", ".join(genres[:3])
-        else:
-            return False
-
-    def usertags(self):
-        usertags = self.gamePage.find("div", class_="popular_tags")
-        usertags_a = usertags.find_all("a", {"class": "app_tag"})
-        if len(usertags_a) != 0:
-            result_tags = []
-            tags_num = 0
-            for tag in usertags_a:
-                usertag_strip = tag.text.strip()
-                if usertag_strip not in self.genres:
-                    result_tags.append(usertag_strip)
-                    tags_num += 1
-                    if tags_num == 5:
-                        break
-            return ", ".join(result_tags)
         else:
             return False
 
@@ -263,7 +169,7 @@ class SteamRemovedGame:
                 return None
 
             if 'json' in basegame_json.headers.get('Content-Type'):
-                basegame_data = json.loads(basegame_json.text)
+                basegame_data = self.filterjson(basegame_json)
             else:
                 return None
             if not self.json:
@@ -273,12 +179,10 @@ class SteamRemovedGame:
             def basegameurl():
                 newest_date = ''
                 newest_url = ''
-                for entry in basegame_data[1:]:
-                    # Only english pages
-                    if not re.search("(\?l=)(?!english)", entry[0]):
-                        if newest_date == '' or entry[1] > newest_date:
-                            newest_date = entry[1]
-                            newest_url = entry[0]
+                for entry in basegame_data:
+                    if newest_date == '' or entry[1] > newest_date:
+                        newest_date = entry[1]
+                        newest_url = entry[0]
                 archive_url = "https://web.archive.org/web/" + newest_date + "/" + newest_url
                 return archive_url
 
@@ -332,13 +236,6 @@ class SteamRemovedGame:
             release_date = release.find("span", {"class": "date"})
 
         return release_date.string
-
-    def nsfw(self):
-        nsfw = self.gamePage.find("div", class_="mature_content_notice")
-        if nsfw is not None:
-            return True
-        else:
-            return False
 
     def plusone(self):
         return False
