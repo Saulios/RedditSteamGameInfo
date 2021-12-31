@@ -59,8 +59,8 @@ class SteamGame:
         self.blurb = self.getDescriptionSnippet()
         self.reviewsummary = self.reviewsummary()
         self.reviewdetails = self.reviewdetails()
-        self.usertags = self.usertags()
         self.genres = self.genres()
+        self.usertags = self.usertags()
         self.basegame = self.basegame()
         self.releasedate = self.releasedate()
         self.nsfw = self.nsfw()
@@ -91,7 +91,7 @@ class SteamGame:
                 title = bundle.find("h1").next_element
                 title = title.text.replace("Buy", "").strip()
                 if title == self.title:
-                    discount = self.gamePage.find("div", {"class": "discount_pct"})
+                    discount = bundle.find("div", {"class": "discount_pct"})
                     if discount is not None:
                         return discount.string.strip()
         return False
@@ -113,8 +113,8 @@ class SteamGame:
                 if title == self.title:
                     price = bundle.find("div", {"class": "game_purchase_price"})
                     if price is None:
-                        finalprice = self.gamePage.find("div", {"class": "discount_final_price"})
-                        fullprice = self.gamePage.find("div", {"class": "discount_original_price"})
+                        finalprice = bundle.find("div", {"class": "discount_final_price"})
+                        fullprice = bundle.find("div", {"class": "discount_original_price"})
                     if fullprice is None:
                         return finalprice.string.strip(), ""
                     else:
@@ -224,21 +224,6 @@ class SteamGame:
         else:
             return ""
 
-    def usertags(self):
-        usertags = self.gamePage.find("div", class_="popular_tags")
-        usertags_a = usertags.find_all("a", {"class": "app_tag"})
-        if len(usertags_a) != 0:
-            length = 5
-            if len(usertags_a) < 5:
-                length = len(usertags_a)
-            result_tags = []
-            for tag in usertags_a[0:length]:
-                usertag_strip = tag.text.strip()
-                result_tags.append(usertag_strip)
-            return ", ".join(result_tags)
-        else:
-            return False
-
     def genres(self):
         if "genres" in self.json:
             genres = self.json["genres"]
@@ -250,6 +235,23 @@ class SteamGame:
                 genre_strip = genre["description"].strip()
                 genres_result.append(genre_strip)
             return ", ".join(genres_result)
+        else:
+            return False
+
+    def usertags(self):
+        usertags = self.gamePage.find("div", class_="popular_tags")
+        usertags_a = usertags.find_all("a", {"class": "app_tag"})
+        if len(usertags_a) != 0:
+            result_tags = []
+            tags_num = 0
+            for tag in usertags_a:
+                usertag_strip = tag.text.strip()
+                if usertag_strip not in self.genres:
+                    result_tags.append(usertag_strip)
+                    tags_num += 1
+                    if tags_num == 5:
+                        break
+            return ", ".join(result_tags)
         else:
             return False
 
