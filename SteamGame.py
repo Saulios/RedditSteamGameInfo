@@ -56,6 +56,8 @@ class SteamGame:
         self.achievements = self.getachev()
         self.cards = self.getcards()
         self.unreleased = self.isunreleased()
+        self.isearlyaccess = self.isearlyaccess()
+        self.unreleasedtext = self.getunreleasedtext()
         self.blurb = self.getDescriptionSnippet()
         self.reviewsummary = self.reviewsummary()
         self.reviewdetails = self.reviewdetails()
@@ -198,7 +200,9 @@ class SteamGame:
         return self.gamePage.find("div", class_="learning_about") is not None
 
     def reviewsummary(self):
-        review_div = self.gamePage.find("div", {"id": "userReviews"})
+        review_div = self.gamePage.find("div", {"class": "user_reviews"})
+        if review_div is None:
+            review_div = self.gamePage.find("div", {"id": "userReviews"})
         review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
         summary = review_div_agg.find("span", {"class": "game_review_summary"})
         if summary is not None:
@@ -207,7 +211,9 @@ class SteamGame:
             return "No user reviews"
 
     def reviewdetails(self):
-        review_div = self.gamePage.find("div", {"id": "userReviews"})
+        review_div = self.gamePage.find("div", {"class": "user_reviews"})
+        if review_div is None:
+            review_div = self.gamePage.find("div", {"id": "userReviews"})
         review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
         details_span = review_div_agg.select('span[class*="responsive_reviewdesc"]')
         details = next(iter(details_span), None)
