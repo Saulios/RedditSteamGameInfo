@@ -75,7 +75,12 @@ def buildcommenttext(g, removed):
         commenttext += '[Store Page'
         if removed is True:
             commenttext += ' (archived)'
-        commenttext += '](' + g.url + ') | '
+        commenttext += ']('
+        if removed is not True:
+            commenttext += g.url.replace("?cc=us", "")
+        else:
+            commenttext += g.url
+        commenttext += ') | '
         if g.gettype == "game" or g.gettype == "mod":
             commenttext += '[Community Hub](https://steamcommunity.com/app/' + g.appID + ') | '
         commenttext += '[SteamDB](https://steamdb.info/app/' + g.appID + ')\n'
@@ -135,12 +140,15 @@ def buildcommenttext(g, removed):
                             commenttext += ' (' + g.basegame[5] + ')'
                     commenttext += '\n'
             if g.releasedate is not False:
-                commenttext += ' * Release date: ' + g.releasedate + '\n'
+                commenttext += ' * Release Date: ' + g.releasedate + '\n'
             if g.isearlyaccess():
                 commenttext += ' * Is an Early Access Game\n'
             if g.genres is not False:
-                commenttext += ' * Genre: ' + g.genres + '\n'
-            if g.usertags is not False:
+                commenttext += ' * Genre'
+                if g.usertags == "":
+                    commenttext += '/Tags'
+                commenttext += ': ' + g.genres + '\n'
+            if g.usertags is not False and g.usertags != "":
                 commenttext += ' * Tags: ' + g.usertags + '\n'
             if g.isfree() or g.price == "Free":
                 commenttext += ' * Can be added to ASF clients with `!addlicense asf '
