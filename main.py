@@ -98,11 +98,11 @@ def buildcommenttext(g, removed):
         if g.blurb != "":
             commenttext += '*' + g.blurb + '*\n\n'
         if g.unreleased:
-            if g.getunreleasedtext() is None:
+            if g.unreleasedtext is None:
                 commenttext += " * Isn't released yet\n"
             else:
-                commenttext += ' * ' + g.getunreleasedtext() + '\n'
-            if g.isearlyaccess():
+                commenttext += ' * ' + g.unreleasedtext + '\n'
+            if g.isearlyaccess:
                 commenttext += ' * Is an Early Access Game\n'
             if g.genres is not False:
                 commenttext += ' * Genre: ' + g.genres + '\n'
@@ -141,7 +141,7 @@ def buildcommenttext(g, removed):
                     commenttext += '\n'
             if g.releasedate is not False:
                 commenttext += ' * Release Date: ' + g.releasedate + '\n'
-            if g.isearlyaccess():
+            if g.isearlyaccess:
                 commenttext += ' * Is an Early Access Game\n'
             if g.genres is not False:
                 commenttext += ' * Genre'
