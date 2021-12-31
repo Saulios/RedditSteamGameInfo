@@ -56,8 +56,8 @@ class SteamRemovedGame:
                 self.blurb = self.getDescriptionSnippet()
                 self.reviewsummary = self.reviewsummary()
                 self.reviewdetails = self.reviewdetails()
-                self.usertags = self.usertags()
                 self.genres = self.genres()
+                self.usertags = self.usertags()
                 self.basegame = self.basegame()
                 self.releasedate = self.releasedate()
                 self.nsfw = self.nsfw()
@@ -216,21 +216,6 @@ class SteamRemovedGame:
         else:
             return ""
 
-    def usertags(self):
-        usertags = self.gamePage.find("div", class_="popular_tags")
-        usertags_a = usertags.find_all("a", {"class": "app_tag"})
-        if len(usertags_a) != 0:
-            length = 5
-            if len(usertags_a) < 5:
-                length = len(usertags_a)
-            result_tags = []
-            for tag in usertags_a[0:length]:
-                usertag_strip = tag.text.strip()
-                result_tags.append(usertag_strip)
-            return ", ".join(result_tags)
-        else:
-            return False
-
     def genres(self):
         details = self.gamePage.find("div", class_="details_block")
         details_a = details.find_all("a")
@@ -240,6 +225,23 @@ class SteamRemovedGame:
                 genres.append(link.text.strip())
         if len(genres) != 0:
             return ", ".join(genres[:3])
+        else:
+            return False
+
+    def usertags(self):
+        usertags = self.gamePage.find("div", class_="popular_tags")
+        usertags_a = usertags.find_all("a", {"class": "app_tag"})
+        if len(usertags_a) != 0:
+            result_tags = []
+            tags_num = 0
+            for tag in usertags_a:
+                usertag_strip = tag.text.strip()
+                if usertag_strip not in self.genres:
+                    result_tags.append(usertag_strip)
+                    tags_num += 1
+                    if tags_num == 5:
+                        break
+            return ", ".join(result_tags)
         else:
             return False
 
