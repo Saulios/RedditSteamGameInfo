@@ -277,13 +277,7 @@ class SteamGame:
                 details = details.replace("positive.", "positive)")
                 details = details.replace(",", "")
                 return details
-            else:
-                return self.lowreviews()
-        else:
-            lowreviews = self.lowreviews()
-            if lowreviews == "":
-                print('geen reviews gevonden')
-            return lowreviews
+        return self.lowreviews()
 
     def genres(self):
         if "genres" in self.json:
