@@ -206,9 +206,61 @@ class SteamGame:
         review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
         summary = review_div_agg.find("span", {"class": "game_review_summary"})
         if summary is not None:
+            if "reviews" in summary.string:
+                return ""
             return summary.string
         else:
             return "No user reviews"
+
+    def lowreviews(self):
+        # gives better review text when at low review amounts
+        reviews_url = 'https://store.steampowered.com/appreviews/' + self.appID + '?json=1&filter=summary&review_type=all&purchase_type=all&language=all'
+        while True:
+            try:
+                appreviews = requests.get(reviews_url, timeout=30)
+                break
+            except requests.exceptions.RequestException:
+                print("Steam store timeout: sleep for 30 seconds and try again")
+                time.sleep(30)
+        if 'json' in appreviews.headers.get('Content-Type'):
+            appreviews_json = json.loads(appreviews.content.decode('utf-8-sig'))
+        else:
+            return ""
+        if appreviews_json is None or appreviews_json["success"] != 1:
+            return ""
+        if appreviews_json["success"] == 1:
+            positive = appreviews_json["query_summary"]["total_positive"]
+            negative = appreviews_json["query_summary"]["total_negative"]
+            total = positive + negative
+            lowreviews = ""
+            if total == 0:
+                return lowreviews
+            percentage = positive / total * 100
+            reviewscore = [[80, "Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Negative"]]
+            reviewscore_50 = [[80, "Very Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Very Negative"]]
+            if 1 < total < 10:
+                if positive == total:
+                    lowreviews = "All of the " + str(total) + " user reviews are positive"
+                else:
+                    lowreviews = str(positive) + " of the " + str(total) + " user reviews are positive"
+            elif total >= 10:
+                lowreviews = ""
+                if total >= 50:
+                    for score in reviewscore_50:
+                        if round(percentage) >= score[0]:
+                            lowreviews += score[1]
+                            break
+                else:
+                    for score in reviewscore:
+                        if round(percentage) >= score[0]:
+                            lowreviews += score[1]
+                            break
+                lowreviews += " (" + str(round(percentage)) + "% of the " + str(total) + " user reviews are positive)"
+            elif positive > 0:
+                lowreviews = "1 user review (positive)"
+            elif negative > 0:
+                lowreviews = "1 user review (negative)"
+            return lowreviews
 
     def reviewdetails(self):
         review_div = self.gamePage.find("div", {"class": "user_reviews"})
@@ -226,9 +278,12 @@ class SteamGame:
                 details = details.replace(",", "")
                 return details
             else:
-                return ""
+                return self.lowreviews()
         else:
-            return ""
+            lowreviews = self.lowreviews()
+            if lowreviews == "":
+                print('geen reviews gevonden')
+            return lowreviews
 
     def genres(self):
         if "genres" in self.json:
