@@ -94,7 +94,14 @@ def buildcommenttext(g, removed):
         else:
             commenttext += '\n'
         if not g.unreleased:
-            commenttext += 'Reviews: ' + g.reviewsummary + g.reviewdetails + '\n\n'
+            commenttext += 'Reviews: '
+            if g.reviewsummary == "No user reviews" and g.reviewdetails != "":
+                commenttext += g.reviewdetails
+            elif g.reviewdetails != "":
+                commenttext += g.reviewsummary + g.reviewdetails
+            else:
+                commenttext += g.reviewsummary
+            commenttext += '\n\n'
         if g.blurb != "":
             commenttext += '*' + g.blurb + '*\n\n'
         if g.unreleased:
