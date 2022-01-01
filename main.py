@@ -93,7 +93,7 @@ def buildcommenttext(g, removed):
             commenttext += ') | [Community Hub](https://steamcommunity.com/app/' + g.basegame[0] + ') | [SteamDB](https://steamdb.info/app/' + g.basegame[0] + ')\n\n'
         else:
             commenttext += '\n'
-        if not g.unreleased:
+        if not g.unreleased and (g.reviewsummary != "" or g.reviewdetails != ""):
             commenttext += 'Reviews: '
             if g.reviewsummary == "No user reviews" and g.reviewdetails != "":
                 commenttext += g.reviewdetails
