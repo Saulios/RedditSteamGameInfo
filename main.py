@@ -175,12 +175,15 @@ def buildcommenttext(g, removed):
                     if removed:
                         commenttext += ' (non-marketable)'
                     commenttext += '\n'
+                    if int(g.achievements) == 0:
+                        commenttext += ' * Has no achievements\n'
                 if not int(g.cards) > 0:
-                    commenttext += ' * Has no trading cards\n'
+                    commenttext += ' * Has no trading cards'
+                    if int(g.achievements) == 0:
+                        commenttext += ' or achievements'
+                    commenttext += '\n'
                 if int(g.achievements) != 0:
                     commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
-                if int(g.achievements) == 0:
-                    commenttext += ' * Has no achievements\n'
         commenttext += '\n***\n'
         return commenttext
 
