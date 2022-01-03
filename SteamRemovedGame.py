@@ -1,8 +1,8 @@
 import re
 import json
-import requests
 import calendar
 
+import requests
 from bs4 import BeautifulSoup
 from SteamGame import SteamGame
 
@@ -26,8 +26,20 @@ class SteamRemovedGame:
                 return None
 
             if not self.json:
-                # invalid
-                return None
+                # invalid, try for old Steam layout
+                try:
+                    archive_json = requests.get(
+                        "https://web.archive.org/cdx/search/cdx?url=store.steampowered.com/app/" + appid + "/&fl=original,timestamp&filter=statuscode:200&output=json",
+                        timeout=30)
+                except requests.exceptions.RequestException:
+                    print('archive request timeout')
+                    return None
+                if 'json' in archive_json.headers.get('Content-Type'):
+                    self.json = self.filterjson(archive_json)
+                else:
+                    return None
+                if not self.json:
+                    return None
             self.url, self.date = self.urldate()
             try:
                 self.gamePage = BeautifulSoup(
@@ -47,7 +59,6 @@ class SteamRemovedGame:
             else:
                 self.title = self.title()
                 self.gettype = self.gettype()
-                self.discountamount = self.discountamount()
                 self.price = self.getprice()
                 self.asf = self.getasf()
                 self.achievements = SteamGame.getachev(self)
@@ -63,19 +74,19 @@ class SteamRemovedGame:
                 self.basegame = self.basegame()
                 self.releasedate = self.releasedate()
                 self.nsfw = SteamGame.nsfw(self)
-                self.plusone = self.plusone()
+                self.plusone = False
 
-    def filterjson(self, archive_json):
+    @classmethod
+    def filterjson(cls, archive_json):
         archive_json = json.loads(archive_json.text)
         if len(archive_json) > 0:
             del archive_json[0]
             # remove agecheck pages
             archive_json = [entry for entry in archive_json if not re.search("(agecheck)", entry[0])]
             # keep only english pages
-            archive_json = [entry for entry in archive_json if not re.search("(\?l=)(?!english)", entry[0])]
+            archive_json = [entry for entry in archive_json if not re.search(r"(\?l=)(?!english)", entry[0])]
             return archive_json
-        else:
-            return []
+        return []
 
     def urldate(self):
         newest_date = ''
@@ -97,34 +108,29 @@ class SteamRemovedGame:
         return re.sub(r"Save\s[0-9]+%\son\s", "", title)
 
     def gettype(self):
-        type = "game"
+        gettype = "game"
         description = self.gamePage.find("div", {"class": "glance_details"})
         if description is not None:
             if "requires the base game" in description.text:
-                type = "dlc"
+                gettype = "dlc"
             elif "additional content for" in description.text:
-                type = "music"
-        return type
-
-    def discountamount(self):
-        return False
+                gettype = "music"
+        return gettype
 
     def getprice(self):
         price = self.gamePage.find("div", {"class": "game_purchase_price"})
         if price is None:
             price = self.gamePage.find("div", {"class": "discount_original_price"})
-
         if price is not None:
             return price.string.strip()
-        else:
-            return "Free"
+        return "Free"
 
     def isfree(self):
         return False
 
     def getasf(self):
         app_id = self.appID
-        return "a/" + str(app_id)
+        return "a/" + str(app_id), "app"
 
     def getDescriptionSnippet(self):
         snippet = self.gamePage.find("div", class_="game_description_snippet")
@@ -134,9 +140,7 @@ class SteamRemovedGame:
             get_description = list(snippet.strings)[2].strip()
             if get_description != "":
                 return get_description
-            else:
-                return ""
-
+            return ""
         return snippet.string.strip()
 
     def genres(self):
@@ -148,8 +152,7 @@ class SteamRemovedGame:
                 genres.append(link.text.strip())
         if len(genres) != 0:
             return ", ".join(genres[:3])
-        else:
-            return False
+        return False
 
     def basegame(self):
         if self.gettype != "game":
@@ -204,20 +207,18 @@ class SteamRemovedGame:
                 return None
             else:
                 def basegameisfree():
+                    price = basegamePage.find("div", {"class": "game_purchase_price"})
+                    if price is not None and "Free" in price.string.strip():
+                        return True
                     return False
 
                 def basegameprice():
                     price = basegamePage.find("div", {"class": "game_purchase_price"})
                     if price is None:
                         price = basegamePage.find("div", {"class": "discount_original_price"})
-
                     if price is not None:
                         return price.string.strip()
-                    else:
-                        return "Free"
-
-                def discountamount():
-                    return False
+                    return "Free"
 
                 def basegamename():
                     title = basegamePage.title.string.replace(" on Steam", "")
@@ -225,17 +226,20 @@ class SteamRemovedGame:
 
                 price = basegameprice()
                 free = basegameisfree()
-                discount = discountamount()
+                discount = False
                 name = basegamename()
-                return appid, name, price, free, discount, url
+                return appid, name, price, "", free, discount, url
 
     def releasedate(self):
-        release = self.gamePage.find("div", class_="release_date")
-        release_date = release.find("div", {"class": "date"})
-        if release_date is None:
-            release_date = release.find("span", {"class": "date"})
-
-        return release_date.string
-
-    def plusone(self):
+        release_divs = self.gamePage.find_all("div", class_="release_date")
+        for div in release_divs:
+            if div is not None:
+                release_date = div.find("div", {"class": "date"})
+                if release_date is None:
+                    release_date = div.find("span", {"class": "date"})
+                if release_date is not None:
+                    return release_date.string
+        details = self.gamePage.find("div", class_="details_block")
+        if details is not None:
+            return details.find(text=re.compile('Release Date')).next_element.strip()
         return False
