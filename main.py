@@ -19,9 +19,9 @@ SUBLIST = "FreeGameFindings"
 
 BOT_USERNAME = os.getenv("RSGIB_USERNAME")
 
-STEAM_APPURL_REGEX = "((https?:\/\/)?)(store.steampowered.com(\/agecheck)?\/app\/\d+)"
-STEAMDB_APPURL_REGEX = "((https?:\/\/)?)(steamdb.info\/app\/\d+)"
-STEAM_TITLE_REGEX = "\[.*(Steam).*\]\s*\(.*(Game|DLC|Beta|Alpha).*\)"
+STEAM_APPURL_REGEX = r"((https?:\/\/)?)(store.steampowered.com(\/agecheck)?\/app\/\d+)"
+STEAMDB_APPURL_REGEX = r"((https?:\/\/)?)(steamdb.info\/app\/\d+)"
+STEAM_TITLE_REGEX = r"\[.*(Steam).*\]\s*\(.*(Game|DLC|Beta|Alpha).*\)"
 
 
 def fitscriteria(s):
@@ -60,23 +60,23 @@ def hasbotalreadyreplied(s):
 def buildcommenttext(g, removed):
     if isinstance(g.title, str):
         commenttext = ''
-        if removed is True:
+        if removed:
             commenttext += '*Appears to be removed/banned from Steam. This is information from ' + g.date + ':*\n\n'
         commenttext += '**' + g.title + '**'
-        if g.nsfw is not False:
+        if g.nsfw:
             commenttext += ' *(NSFW)*'
         commenttext += '\n\n'
         if g.gettype == "dlc":
             commenttext += '* DLC links: '
-        if g.gettype == "music":
+        elif g.gettype == "music":
             commenttext += '* Soundtrack links: '
-        if g.gettype == "mod":
+        elif g.gettype == "mod":
             commenttext += '* Mod links: '
         commenttext += '[Store Page'
-        if removed is True:
+        if removed:
             commenttext += ' (archived)'
         commenttext += ']('
-        if removed is not True:
+        if not removed:
             commenttext += g.url.replace("?cc=us", "")
         else:
             commenttext += g.url
@@ -87,7 +87,7 @@ def buildcommenttext(g, removed):
         if not g.gettype == "game" and g.basegame is not None:
             commenttext += '* **' + g.basegame[1] + '** links (base game): '
             if removed:
-                commenttext += '[Store Page (archived)](' + g.basegame[5]
+                commenttext += '[Store Page (archived)](' + g.basegame[6]
             else:
                 commenttext += '[Store Page](https://store.steampowered.com/app/' + g.basegame[0]
             commenttext += ') | [Community Hub](https://steamcommunity.com/app/' + g.basegame[0] + ') | [SteamDB](https://steamdb.info/app/' + g.basegame[0] + ')\n\n'
@@ -111,9 +111,12 @@ def buildcommenttext(g, removed):
                 commenttext += ' * ' + g.unreleasedtext + '\n'
             if g.isearlyaccess:
                 commenttext += ' * Is an Early Access Game\n'
-            if g.genres is not False:
-                commenttext += ' * Genre: ' + g.genres + '\n'
-            if g.usertags is not False:
+            if g.genres:
+                commenttext += ' * Genre'
+                if g.usertags == "":
+                    commenttext += '/Tags'
+                commenttext += ': ' + g.genres + '\n'
+            if g.usertags and g.usertags != "":
                 commenttext += ' * Tags: ' + g.usertags + '\n'
             if g.plusone:
                 commenttext += ' * Full game license (no beta testing) will'
@@ -125,7 +128,7 @@ def buildcommenttext(g, removed):
                 commenttext += ' * '
                 if g.gettype == "dlc":
                     commenttext += 'DLC '
-                if g.gettype == "music":
+                elif g.gettype == "music":
                     commenttext += 'Soundtrack '
                 commenttext += 'Price: '
                 if g.price[1] != "":
@@ -133,7 +136,7 @@ def buildcommenttext(g, removed):
                 commenttext += g.price[0]
                 if not g.isfree() and g.price[0] != ("Free" and "No price found"):
                     commenttext += ' USD'
-                    if g.discountamount is not False:
+                    if g.discountamount:
                         commenttext += ' (' + g.discountamount + ')'
                 commenttext += '\n'
                 if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2:
@@ -143,19 +146,19 @@ def buildcommenttext(g, removed):
                     commenttext += g.basegame[2]
                     if not g.basegame[4] and g.basegame[2] != ("Free" and "No price found"):
                         commenttext += ' USD'
-                        if g.basegame[5] is not False:
+                        if g.basegame[5]:
                             commenttext += ' (' + g.basegame[5] + ')'
                     commenttext += '\n'
-            if g.releasedate is not False:
+            if g.releasedate:
                 commenttext += ' * Release Date: ' + g.releasedate + '\n'
             if g.isearlyaccess:
                 commenttext += ' * Is an Early Access Game\n'
-            if g.genres is not False:
+            if g.genres:
                 commenttext += ' * Genre'
                 if g.usertags == "":
                     commenttext += '/Tags'
                 commenttext += ': ' + g.genres + '\n'
-            if g.usertags is not False and g.usertags != "":
+            if g.usertags and g.usertags != "":
                 commenttext += ' * Tags: ' + g.usertags + '\n'
             if g.isfree() or g.price == "Free":
                 commenttext += ' * Can be added to ASF clients with `!addlicense asf '
@@ -177,7 +180,7 @@ def buildcommenttext(g, removed):
                     commenttext += '\n'
                     if int(g.achievements) == 0:
                         commenttext += ' * Has no achievements\n'
-                if not int(g.cards) > 0:
+                if int(g.cards) <= 0:
                     commenttext += ' * Has no trading cards'
                     if int(g.achievements) == 0:
                         commenttext += ' or achievements'
@@ -215,7 +218,7 @@ class SubWatch(threading.Thread):
                                     print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
                                     submission.reply(commenttext)
                     elif re.search(STEAM_TITLE_REGEX, submission.title, re.IGNORECASE):
-                        title_split = re.split(STEAM_TITLE_REGEX, submission.title)
+                        title_split = re.split(STEAM_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
                         game_name = title_split[-1].strip()
                         if fitscriteria(submission):
                             game = SteamSearchGame(game_name, False)
