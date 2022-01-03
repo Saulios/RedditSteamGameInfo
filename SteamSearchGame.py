@@ -1,9 +1,9 @@
 import re
-import requests
 import time
-
-from bs4 import BeautifulSoup
 from collections import OrderedDict
+
+import requests
+from bs4 import BeautifulSoup
 
 
 class SteamSearchGame:
@@ -31,12 +31,14 @@ class SteamSearchGame:
                     time.sleep(30)
             self.appid = self.appid(removed)
 
-    def game_name_searchable(self, game_name):
+    @classmethod
+    def game_name_searchable(cls, game_name):
         # Put a space after a dash otherwise the word is excluded from search
         game_name = game_name.strip()
         return re.sub(r'-(\w)', r'- \1', game_name)
 
-    def write_roman(self, num):
+    @classmethod
+    def write_roman(cls, num):
         # Change number into roman numeral
         if num <= 999:
             roman = OrderedDict()
@@ -62,10 +64,10 @@ class SteamSearchGame:
                         break
 
             return "".join([a for a in roman_num(num)])
-        else:
-            return str(num)
+        return str(num)
 
-    def write_num(self, roman_num):
+    @classmethod
+    def write_num(cls, roman_num):
         # Change roman numeral into number
         if roman_num != "":
             roman = OrderedDict()
@@ -93,8 +95,7 @@ class SteamSearchGame:
                     num += roman[roman_num[pos]]
                     pos += 1
             return str(num)
-        else:
-            return roman_num
+        return roman_num
 
     def appid(self, removed):
         if removed:
