@@ -1,8 +1,8 @@
 import re
 import json
 import time
-import requests
 
+import requests
 from bs4 import BeautifulSoup
 
 
@@ -28,6 +28,9 @@ class SteamGame:
             except requests.exceptions.RequestException:
                 print("Steam store timeout: sleep for 30 seconds and try again")
                 time.sleep(30)
+        if self.gamePage.title is not None and self.gamePage.title.string == "Welcome to Steam":
+            # redirected to Steam homepage
+            return None
         while True:
             try:
                 steam_json = requests.get(
@@ -41,7 +44,17 @@ class SteamGame:
         if 'json' in steam_json.headers.get('Content-Type'):
             self.json = json.loads(steam_json.content.decode('utf-8-sig'))
         else:
-            return None
+            # try once more
+            try:
+                steam_json = requests.get(
+                    "https://store.steampowered.com/api/appdetails/?appids=" + appid + "&cc=us",
+                    timeout=30)
+            except requests.exceptions.RequestException:
+                return None
+            if 'json' in steam_json.headers.get('Content-Type'):
+                self.json = json.loads(steam_json.content.decode('utf-8-sig'))
+            else:
+                return None
 
         if self.json is None or self.json[appid]["success"] is not True:
             # appid invalid
@@ -84,8 +97,6 @@ class SteamGame:
             amount = amount.strip()
             if amount != "":
                 return amount
-            else:
-                return False
         elif len(self.json["package_groups"]) == 0 and not self.isfree():
             # check bundles
             bundles = self.gamePage.find_all("div", {"class": "game_area_purchase_game"})
@@ -119,8 +130,7 @@ class SteamGame:
                         fullprice = bundle.find("div", {"class": "discount_original_price"})
                     if fullprice is None:
                         return finalprice.string.strip(), ""
-                    else:
-                        return finalprice.string.strip(), fullprice.string.strip()
+                    return finalprice.string.strip(), fullprice.string.strip()
         finalprice = "No price found"
         return finalprice, ""
 
@@ -145,10 +155,8 @@ class SteamGame:
             ach_number = re.sub(r"\D", "", achblock.contents[1].string).strip()  # Remove all non numbers
             if ach_number == "":
                 return 0
-            else:
-                return ach_number
-        else:
-            return 0
+            return ach_number
+        return 0
 
     def getcards(self):
         category_block = self.gamePage.find("div", id="category_block")
@@ -167,9 +175,6 @@ class SteamGame:
             total = marketpage.find("span", id="searchResults_total")
             if total is not None:
                 return total.string.strip()
-            else:
-                return 0
-
         return 0
 
     def isunreleased(self):
@@ -185,8 +190,7 @@ class SteamGame:
 
         if unreleasedMajor is not None:
             return unreleasedMajor.find("h1").text.strip()
-        else:
-            return None
+        return None
 
     def getDescriptionSnippet(self):
         snippet = self.json["short_description"]
@@ -194,7 +198,7 @@ class SteamGame:
         if snippet is None:
             return ""
 
-        return snippet.strip().replace("*", "\*")
+        return snippet.strip().replace("*", r"\*")
 
     def islearning(self):
         return self.gamePage.find("div", class_="learning_about") is not None
@@ -203,14 +207,14 @@ class SteamGame:
         review_div = self.gamePage.find("div", {"class": "user_reviews"})
         if review_div is None:
             review_div = self.gamePage.find("div", {"id": "userReviews"})
-        review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
-        summary = review_div_agg.find("span", {"class": "game_review_summary"})
-        if summary is not None:
-            if "reviews" in summary.string:
-                return ""
-            return summary.string
-        else:
-            return "No user reviews"
+        if review_div is not None:
+            review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
+            summary = review_div_agg.find("span", {"class": "game_review_summary"})
+            if summary is not None:
+                if "reviews" in summary.string:
+                    return ""
+                return summary.string
+        return "No user reviews"
 
     def lowreviews(self):
         # gives better review text when at low review amounts
@@ -225,59 +229,66 @@ class SteamGame:
         if 'json' in appreviews.headers.get('Content-Type'):
             appreviews_json = json.loads(appreviews.content.decode('utf-8-sig'))
         else:
-            return ""
+            # try once more
+            try:
+                appreviews = requests.get(reviews_url, timeout=30)
+            except requests.exceptions.RequestException:
+                return ""
+            if 'json' in appreviews.headers.get('Content-Type'):
+                appreviews_json = json.loads(appreviews.content.decode('utf-8-sig'))
+            else:
+                return ""
         if appreviews_json is None or appreviews_json["success"] != 1:
             return ""
-        if appreviews_json["success"] == 1:
-            positive = appreviews_json["query_summary"]["total_positive"]
-            negative = appreviews_json["query_summary"]["total_negative"]
-            total = positive + negative
-            lowreviews = ""
-            if total == 0:
-                return lowreviews
-            percentage = positive / total * 100
-            reviewscore = [[80, "Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Negative"]]
-            reviewscore_50 = [[80, "Very Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Very Negative"]]
-            if 1 < total < 10:
-                if positive == total:
-                    lowreviews = "All of the " + str(total) + " user reviews are positive"
-                else:
-                    lowreviews = str(positive) + " of the " + str(total) + " user reviews are positive"
-            elif total >= 10:
-                lowreviews = ""
-                if total >= 50:
-                    for score in reviewscore_50:
-                        if round(percentage) >= score[0]:
-                            lowreviews += score[1]
-                            break
-                else:
-                    for score in reviewscore:
-                        if round(percentage) >= score[0]:
-                            lowreviews += score[1]
-                            break
-                lowreviews += " (" + str(round(percentage)) + "% of the " + str(total) + " user reviews are positive)"
-            elif positive > 0:
-                lowreviews = "1 user review (positive)"
-            elif negative > 0:
-                lowreviews = "1 user review (negative)"
+        positive = appreviews_json["query_summary"]["total_positive"]
+        negative = appreviews_json["query_summary"]["total_negative"]
+        total = positive + negative
+        lowreviews = ""
+        if total == 0:
             return lowreviews
+        percentage = positive / total * 100
+        reviewscore = [[80, "Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Negative"]]
+        reviewscore_50 = [[80, "Very Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Very Negative"]]
+        if 1 < total < 10:
+            if positive == total:
+                lowreviews = "All of the " + str(total) + " user reviews are positive"
+            else:
+                lowreviews = str(positive) + " of the " + str(total) + " user reviews are positive"
+        elif total >= 10:
+            if total >= 50:
+                for score in reviewscore_50:
+                    if round(percentage) >= score[0]:
+                        lowreviews += score[1]
+                        break
+            else:
+                for score in reviewscore:
+                    if round(percentage) >= score[0]:
+                        lowreviews += score[1]
+                        break
+            lowreviews += " (" + str(round(percentage)) + "% of the " + str(total) + " user reviews are positive)"
+        elif positive > 0:
+            lowreviews = "1 user review (positive)"
+        elif negative > 0:
+            lowreviews = "1 user review (negative)"
+        return lowreviews
 
     def reviewdetails(self):
         review_div = self.gamePage.find("div", {"class": "user_reviews"})
         if review_div is None:
             review_div = self.gamePage.find("div", {"id": "userReviews"})
-        review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
-        details_span = review_div_agg.select('span[class*="responsive_reviewdesc"]')
-        details = next(iter(details_span), None)
-        if details is not None:
-            details_strip = details.contents[0].strip()
-            if details_strip != "- Need more user reviews to generate a score":
-                details = details_strip.replace("for this game ", "")
-                details = details.replace("- ", " (")
-                details = details.replace("positive.", "positive)")
-                details = details.replace(",", "")
-                return details
-        return self.lowreviews()
+        if review_div is not None:
+            review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
+            details_span = review_div_agg.select('span[class*="responsive_reviewdesc"]')
+            details = next(iter(details_span), None)
+            if details is not None:
+                details_strip = details.contents[0].strip()
+                if details_strip != "- Need more user reviews to generate a score":
+                    details = details_strip.replace("for this game ", "")
+                    details = details.replace("- ", " (")
+                    details = details.replace("positive.", "positive)")
+                    details = details.replace(",", "")
+                    return details
+        return SteamGame.lowreviews(self)
 
     def genres(self):
         if "genres" in self.json:
@@ -290,25 +301,24 @@ class SteamGame:
                 genre_strip = genre["description"].strip()
                 genres_result.append(genre_strip)
             return ", ".join(genres_result)
-        else:
-            return False
+        return False
 
     def usertags(self):
         usertags = self.gamePage.find("div", class_="popular_tags")
-        usertags_a = usertags.find_all("a", {"class": "app_tag"})
-        if len(usertags_a) != 0:
-            result_tags = []
-            tags_num = 0
-            for tag in usertags_a:
-                usertag_strip = tag.text.strip()
-                if usertag_strip not in self.genres:
-                    result_tags.append(usertag_strip)
-                    tags_num += 1
-                    if tags_num == 5:
-                        break
-            return ", ".join(result_tags)
-        else:
-            return False
+        if usertags is not None:
+            usertags_a = usertags.find_all("a", {"class": "app_tag"})
+            if len(usertags_a) != 0:
+                result_tags = []
+                tags_num = 0
+                for tag in usertags_a:
+                    usertag_strip = tag.text.strip()
+                    if usertag_strip not in self.genres:
+                        result_tags.append(usertag_strip)
+                        tags_num += 1
+                        if tags_num == 5:
+                            break
+                return ", ".join(result_tags)
+        return False
 
     def basegame(self):
         if "fullgame" in self.json:
@@ -345,8 +355,7 @@ class SteamGame:
                         amount = amount.strip()
                         if amount != "":
                             return amount
-                        else:
-                            return False
+                        return False
                     elif len(basegame_data["package_groups"]) == 0 and not basegameisfree():
                         # check bundles
                         bundles = basegamePage.find_all("div", {"class": "game_area_purchase_game"})
@@ -397,8 +406,7 @@ class SteamGame:
                             if finalprice is not None:
                                 if fullprice is None:
                                     return finalprice.string.strip(), "", discountamount()
-                                else:
-                                    return finalprice.string.strip(), fullprice.string.strip(), discountamount()
+                                return finalprice.string.strip(), fullprice.string.strip(), discountamount()
                 return "No price found", "", False
 
             finalprice, fullprice, discount = basegameprice()
@@ -410,17 +418,13 @@ class SteamGame:
             date = self.json["release_date"]
             if date["coming_soon"] is False and date["date"] != "":
                 return date["date"]
-            else:
-                return False
-        else:
-            return False
+        return False
 
     def nsfw(self):
         nsfw = self.gamePage.find("div", class_="mature_content_notice")
         if nsfw is not None:
             return True
-        else:
-            return False
+        return False
 
     def plusone(self):
         exceptions = [346290, 863550, 247120, 397720, 272060, 351940, 319830, 8650, 845070, 1515950, 232770, 608990, 769920, 252150, 583950, 584210, 802240]
@@ -431,17 +435,8 @@ class SteamGame:
             not self.islearning()
             and not self.isfree()
         ):
-            if (
-                not self.unreleased
-                and not (
-                         self.getprice() == "Free"
-                         and self.discountamount is False
-                        )
-            ):
-                return True
             if self.unreleased:
                 return True
-            else:
-                return False
-        else:
-            return False
+            elif not self.price == "Free" and self.discountamount is not False:
+                return True
+        return False
