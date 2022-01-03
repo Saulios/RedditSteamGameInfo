@@ -110,13 +110,13 @@ class SteamGame:
         return False
 
     def getprice(self):
+        if self.isfree():
+            finalprice = "Free"
+            return finalprice, ""
         if "price_overview" in self.json and self.json["price_overview"] is not None:
             finalprice = self.json["price_overview"]["final_formatted"]
             fullprice = self.json["price_overview"]["initial_formatted"]
             return finalprice, fullprice
-        if self.isfree():
-            finalprice = "Free"
-            return finalprice, ""
         if len(self.json["package_groups"]) == 0 and not self.isfree():
             # check bundles
             bundles = self.gamePage.find_all("div", {"class": "game_area_purchase_game"})
@@ -142,10 +142,23 @@ class SteamGame:
         if (
             len(self.json["package_groups"]) != 0
             and self.json["package_groups"][0]["subs"][0]["is_free_license"]
-            and self.json["package_groups"][0]["subs"][0]["can_get_free_license"] == "1"
         ):
             sub_id = self.json["package_groups"][0]["subs"][0]["packageid"]
             return "s/" + str(sub_id), "sub"
+        elif self.isfree():
+            while True:
+                try:
+                    get_subid = requests.get(
+                        "https://store.steampowered.com/broadcast/ajaxgetappinfoforcap?appid=" + self.appID,
+                        timeout=30)
+                    break
+                except requests.exceptions.RequestException:
+                    print("Steam store timeout: sleep for 30 seconds and try again")
+                    time.sleep(30)
+            subid_json = get_subid.json()
+            if subid_json["is_free"]:
+                sub_id = subid_json["subid"]
+                return "s/" + str(sub_id), "sub"
         return "a/" + str(app_id), "app"
 
     def getachev(self):
