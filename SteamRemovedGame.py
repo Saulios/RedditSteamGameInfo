@@ -1,6 +1,7 @@
 import re
 import json
 import calendar
+import time
 
 import requests
 from bs4 import BeautifulSoup
@@ -15,10 +16,10 @@ class SteamRemovedGame:
         try:
             archive_json = requests.get(
                 "https://web.archive.org/cdx/search/cdx?url=store.steampowered.com/app/" + appid + "/*&fl=original,timestamp&filter=statuscode:200&output=json",
-                timeout=30)
+                timeout=15)
         except requests.exceptions.RequestException:
-            print('archive request timeout')
-            return None
+            print("Archive.org request timeout: sleep for 10 seconds and try again")
+            time.sleep(10)
         else:
             if 'json' in archive_json.headers.get('Content-Type'):
                 self.json = self.filterjson(archive_json)
@@ -30,10 +31,10 @@ class SteamRemovedGame:
                 try:
                     archive_json = requests.get(
                         "https://web.archive.org/cdx/search/cdx?url=store.steampowered.com/app/" + appid + "/&fl=original,timestamp&filter=statuscode:200&output=json",
-                        timeout=30)
+                        timeout=15)
                 except requests.exceptions.RequestException:
-                    print('archive request timeout')
-                    return None
+                    print("Archive.org request timeout: sleep for 10 seconds and try again")
+                    time.sleep(10)
                 if 'json' in archive_json.headers.get('Content-Type'):
                     self.json = self.filterjson(archive_json)
                 else:
@@ -54,8 +55,8 @@ class SteamRemovedGame:
                     "html.parser",
                 )
             except requests.exceptions.RequestException:
-                print('archive request timeout')
-                return None
+                print("Archive.org request timeout: sleep for 10 seconds and try again")
+                time.sleep(10)
             else:
                 self.title = self.title()
                 self.gettype = self.gettype()
@@ -166,10 +167,10 @@ class SteamRemovedGame:
             try:
                 basegame_json = requests.get(
                     "https://web.archive.org/cdx/search/cdx?url=store.steampowered.com/app/" + appid + "/*&fl=original,timestamp&filter=statuscode:200&output=json",
-                    timeout=30)
+                    timeout=15)
             except requests.exceptions.RequestException:
-                print('archive request timeout')
-                return None
+                print("Archive.org request timeout: sleep for 10 seconds and try again")
+                time.sleep(10)
 
             if 'json' in basegame_json.headers.get('Content-Type'):
                 basegame_data = self.filterjson(basegame_json)
@@ -199,12 +200,12 @@ class SteamRemovedGame:
                             "lastagecheckage": "20-April-1990",
                             "mature_content": "1",
                         },
-                        timeout=30).text,
+                        timeout=15).text,
                     "html.parser",
                 )
             except requests.exceptions.RequestException:
-                print('archive request timeout')
-                return None
+                print("Archive.org request timeout: sleep for 10 seconds and try again")
+                time.sleep(10)
             else:
                 def basegameisfree():
                     price = basegamePage.find("div", {"class": "game_purchase_price"})
