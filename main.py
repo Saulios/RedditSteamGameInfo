@@ -160,6 +160,26 @@ def buildcommenttext(g, removed):
                 commenttext += ': ' + g.genres + '\n'
             if g.usertags and g.usertags != "":
                 commenttext += ' * Tags: ' + g.usertags + '\n'
+            if g.gettype == "game":
+                if int(g.achievements) != 0:
+                    commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
+                if not type(g.cards) == int:
+                    if int(g.achievements) == 0:
+                        commenttext += ' * Has no achievements\n'
+                    commenttext += ' * Has ' + str(g.cards[0]) + ' trading cards (drops ' + str(g.cards[1]) + ')'
+                    if removed:
+                        commenttext += ' [non-marketable]'
+                    commenttext += ' [^(view on Steam Market)](' + g.cards[2] + ')\n'
+                if type(g.cards) == int:
+                    commenttext += ' * Has no trading cards'
+                    if int(g.achievements) == 0:
+                        commenttext += ' or achievements'
+                    commenttext += '\n'
+                if g.plusone:
+                    commenttext += ' * Gives'
+                else:
+                    commenttext += ' * Does not give'
+                commenttext += ' +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F)\n'
             if g.isfree() or g.price == "Free":
                 commenttext += ' * Can be added to ASF clients with `!addlicense asf '
                 if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4]:
@@ -167,26 +187,6 @@ def buildcommenttext(g, removed):
                 commenttext += g.asf[0] + '`\n'
                 if g.asf[1] == "sub":
                     commenttext += ' * Can be added in browsers with `javascript:AddFreeLicense(' + g.asf[0].strip("s/") + ')`\n'
-            if g.gettype == "game":
-                if g.plusone:
-                    commenttext += ' * Gives'
-                else:
-                    commenttext += ' * Does not give'
-                commenttext += ' +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F)\n'
-                if int(g.cards) > 0:
-                    commenttext += ' * Has ' + g.cards + ' trading cards'
-                    if removed:
-                        commenttext += ' (non-marketable)'
-                    commenttext += '\n'
-                    if int(g.achievements) == 0:
-                        commenttext += ' * Has no achievements\n'
-                if int(g.cards) <= 0:
-                    commenttext += ' * Has no trading cards'
-                    if int(g.achievements) == 0:
-                        commenttext += ' or achievements'
-                    commenttext += '\n'
-                if int(g.achievements) != 0:
-                    commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
         commenttext += '\n***\n'
         return commenttext
 
