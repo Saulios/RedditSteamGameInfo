@@ -158,7 +158,8 @@ class SteamGame:
             subid_json = get_subid.json()
             if subid_json["is_free"]:
                 sub_id = subid_json["subid"]
-                return "s/" + str(sub_id), "sub"
+                if sub_id != 0:
+                    return "s/" + str(sub_id), "sub"
         return "a/" + str(app_id), "app"
 
     def getachev(self):
@@ -187,7 +188,9 @@ class SteamGame:
                     time.sleep(30)
             total = marketpage.find("span", id="searchResults_total")
             if total is not None:
-                return total.string.strip()
+                total = int(total.string.strip())
+                drops = total//2 + (total % 2 > 0)
+                return total, drops, marketurl
         return 0
 
     def isunreleased(self):
