@@ -453,6 +453,6 @@ class SteamGame:
         ):
             if self.unreleased:
                 return True
-            elif not self.price == "Free" and self.discountamount is not False:
+            elif not self.price[0] == "Free" and self.discountamount is False:
                 return True
         return False
