@@ -433,7 +433,13 @@ class SteamGame:
         if "release_date" in self.json:
             date = self.json["release_date"]
             if date["coming_soon"] is False and date["date"] != "":
-                return date["date"]
+                try:
+                    date_abbr = time.strptime(date["date"], '%b %d, %Y')
+                    date_full = time.strftime('%B %#d, %Y', date_abbr)
+                except (ValueError, TypeError):
+                    return date["date"]
+                else:
+                    return date_full
         return False
 
     def nsfw(self):
