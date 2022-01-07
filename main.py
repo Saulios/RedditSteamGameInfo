@@ -184,7 +184,7 @@ def buildcommenttext(g, removed):
                 else:
                     commenttext += ' * Does not give'
                 commenttext += ' +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F)\n'
-            if g.isfree() or g.price == "Free":
+            if g.isfree() or g.price[0] == "Free":
                 commenttext += ' * Can be added to ASF clients with `!addlicense asf '
                 if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4]:
                     commenttext += "a/" + g.basegame[0] + ","
