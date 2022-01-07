@@ -239,8 +239,20 @@ class SteamRemovedGame:
                 if release_date is None:
                     release_date = div.find("span", {"class": "date"})
                 if release_date is not None:
-                    return release_date.string
+                    try:
+                        date_abbr = time.strptime(release_date.string, '%b %d, %Y')
+                        date_full = time.strftime('%B %#d, %Y', date_abbr)
+                    except (ValueError, TypeError):
+                        return release_date.string
+                    else:
+                        return date_full
         details = self.gamePage.find("div", class_="details_block")
         if details is not None:
-            return details.find(text=re.compile('Release Date')).next_element.strip()
+            try:
+                date_abbr = time.strptime(details.find(text=re.compile('Release Date')).next_element.strip(), '%b %d, %Y')
+                date_full = time.strftime('%B %#d, %Y', date_abbr)
+            except (ValueError, TypeError):
+                return details.find(text=re.compile('Release Date')).next_element.strip()
+            else:
+                return date_full
         return False
