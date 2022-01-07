@@ -126,6 +126,8 @@ def buildcommenttext(g, removed):
         else:
             if not removed:
                 commenttext += ' * '
+                if g.price[0] == "Free" and g.basegame is not None and g.basegame[2] == "Free":
+                    commenttext += 'Game & '
                 if g.gettype == "dlc":
                     commenttext += 'DLC '
                 elif g.gettype == "music":
@@ -139,7 +141,7 @@ def buildcommenttext(g, removed):
                     if g.discountamount:
                         commenttext += ' (' + g.discountamount + ')'
                 commenttext += '\n'
-                if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2:
+                if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and g.price[0] != "Free" and g.basegame[2] != "Free":
                     commenttext += ' * Game Price: '
                     if g.basegame[3] != "":
                         commenttext += '~~' + g.basegame[3] + '~~ '
@@ -169,7 +171,9 @@ def buildcommenttext(g, removed):
                     commenttext += ' * Has ' + str(g.cards[0]) + ' trading cards (drops ' + str(g.cards[1]) + ')'
                     if removed:
                         commenttext += ' [non-marketable]'
-                    commenttext += ' [^(view on Steam Market)](' + g.cards[2] + ')\n'
+                    if not removed:
+                        commenttext += ' [^(view on Steam Market)](' + g.cards[2] + ')'
+                    commenttext += '\n'
                 if type(g.cards) == int:
                     commenttext += ' * Has no trading cards'
                     if int(g.achievements) == 0:
@@ -183,10 +187,10 @@ def buildcommenttext(g, removed):
             if g.isfree() or g.price == "Free":
                 commenttext += ' * Can be added to ASF clients with `!addlicense asf '
                 if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4]:
-                    commenttext += "a/" + g.basegame[0] + " "
+                    commenttext += "a/" + g.basegame[0] + ","
                 commenttext += g.asf[0] + '`\n'
                 if g.asf[1] == "sub":
-                    commenttext += ' * Can be added in browsers with `javascript:AddFreeLicense(' + g.asf[0].strip("s/") + ')`\n'
+                    commenttext += ' * Can be added in browsers/mobile with `javascript:AddFreeLicense(' + g.asf[0].strip("s/") + ')`\n'
         commenttext += '\n***\n'
         return commenttext
 
