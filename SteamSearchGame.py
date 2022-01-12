@@ -159,7 +159,9 @@ class SteamSearchGame:
                 break
         if removed and appid == 0:
             # Try backup site
-            appid = self.appidbackup()
+            appid = self.appidbackup(self.urlbackup_banned)
+            if appid == 0:
+                self.appid = self.appidbackup(self.urlbackup_delisted)
         if not removed and appid == 0:
             # If nothing found, try again but allow one word to be missing from target
             for game in games:
@@ -190,9 +192,9 @@ class SteamSearchGame:
 
         return appid
 
-    def appidbackup(self):
+    def appidbackup(self, url):
         try:
-            self.gamePage = BeautifulSoup(requests.get(self.urlbackup, timeout=30).text, "html.parser")
+            self.gamePage = BeautifulSoup(requests.get(url, timeout=30).text, "html.parser")
         except requests.exceptions.RequestException:
             print('removed game backup request timeout')
             return 0
