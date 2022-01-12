@@ -4,6 +4,8 @@ import calendar
 import time
 
 import requests
+import dateutil.parser
+from dateutil.parser import ParserError
 from bs4 import BeautifulSoup
 from SteamGame import SteamGame
 
@@ -240,19 +242,26 @@ class SteamRemovedGame:
                     release_date = div.find("span", {"class": "date"})
                 if release_date is not None:
                     try:
-                        date_abbr = time.strptime(release_date.string, '%b %d, %Y')
-                        date_full = time.strftime('%B %#d, %Y', date_abbr)
-                    except (ValueError, TypeError):
+                        date_abbr = dateutil.parser.parse(release_date.string)
+                    except ParserError:
+                        return release_date.string
+                    try:
+                        date_full = time.strftime('%B %#d, %Y', date_abbr.timetuple())
+                    except TypeError:
                         return release_date.string
                     else:
                         return date_full
         details = self.gamePage.find("div", class_="details_block")
         if details is not None:
+            release_date = details.find(text=re.compile('Release Date')).next_element.strip()
             try:
-                date_abbr = time.strptime(details.find(text=re.compile('Release Date')).next_element.strip(), '%b %d, %Y')
-                date_full = time.strftime('%B %#d, %Y', date_abbr)
-            except (ValueError, TypeError):
-                return details.find(text=re.compile('Release Date')).next_element.strip()
+                date_abbr = dateutil.parser.parse(release_date)
+            except ParserError:
+                return release_date
+            try:
+                date_full = time.strftime('%B %#d, %Y', date_abbr.timetuple())
+            except TypeError:
+                return release_date
             else:
                 return date_full
         return False
