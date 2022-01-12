@@ -328,7 +328,7 @@ class SteamGame:
                 tags_num = 0
                 for tag in usertags_a:
                     usertag_strip = tag.text.strip()
-                    if usertag_strip not in self.genres:
+                    if self.genres is False or usertag_strip not in self.genres:
                         result_tags.append(usertag_strip)
                         tags_num += 1
                         if tags_num == 5:
