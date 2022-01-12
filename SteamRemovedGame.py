@@ -147,14 +147,16 @@ class SteamRemovedGame:
         return snippet.string.strip()
 
     def genres(self):
-        details = self.gamePage.find("div", class_="details_block")
-        details_a = details.find_all("a")
-        genres = []
-        for link in details_a:
-            if "/genre/" in link.get('href'):
-                genres.append(link.text.strip())
-        if len(genres) != 0:
-            return ", ".join(genres[:3])
+        details_blocks = self.gamePage.find_all("div", class_="details_block")
+        for block in details_blocks:
+            details_a = block.find_all("a")
+            genres = []
+            if len(details_a) != 0:
+                for link in details_a:
+                    if "/genre/" in link.get('href'):
+                        genres.append(link.text.strip())
+                if len(genres) != 0:
+                    return ", ".join(genres[:3])
         return False
 
     def basegame(self):
