@@ -12,13 +12,18 @@ class SteamSearchGame:
         self.game_name = self.game_name_searchable(game_name)
         if removed:
             self.url = 'https://steam.madjoki.com/search?q=' + self.game_name
-            self.urlbackup = 'https://steam-tracker.com/apps/banned'
+            self.urlbackup_banned = 'https://steam-tracker.com/apps/banned'
+            self.urlbackup_delisted = 'https://steam-tracker.com/apps/delisted'
             try:
-                self.gamePage = BeautifulSoup(requests.get(self.url, timeout=30).text, "html.parser")
-            except requests.exceptions.RequestException:
-                print("Timeout: try backup url")
-                self.appid = self.appidbackup()
+                request = requests.get(self.url, timeout=30)
+                request.raise_for_status()
+            except (requests.exceptions.RequestException, requests.exceptions.HTTPError):
+                print("Timeout: try backup urls")
+                self.appid = self.appidbackup(self.urlbackup_banned)
+                if self.appid == 0:
+                    self.appid = self.appidbackup(self.urlbackup_delisted)
             else:
+                self.gamePage = BeautifulSoup(request.text, "html.parser")
                 self.appid = self.appid(removed)
         else:
             self.url = 'https://store.steampowered.com/search/?term=' + self.game_name + '&ignore_preferences=1'
