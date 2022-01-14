@@ -309,9 +309,9 @@ class SteamGame:
     def genres(self):
         if "genres" in self.json:
             genres = self.json["genres"]
-            length = 3
+            length = 2
             genres_result = []
-            if len(genres) < 3:
+            if len(genres) < 2:
                 length = len(genres)
             for genre in genres[0:length]:
                 genre_strip = genre["description"].strip()
@@ -326,12 +326,59 @@ class SteamGame:
             if len(usertags_a) != 0:
                 result_tags = []
                 tags_num = 0
+                if self.genres is not False:
+                    genre_list = self.genres.split(", ")
+                    for i in range(len(genre_list)):
+                        result_tags.append(genre_list[i])
+                        tags_num += 1
                 for tag in usertags_a:
                     usertag_strip = tag.text.strip()
-                    if self.genres is False or usertag_strip not in self.genres:
+                    if not any(usertag_strip in s for s in result_tags):
                         result_tags.append(usertag_strip)
                         tags_num += 1
-                        if tags_num == 5:
+                        # combine action and adventure tags
+                        if set(['Action', 'Adventure']).issubset(result_tags):
+                            insert_position = result_tags.index('Action')
+                            del result_tags[insert_position]
+                            del result_tags[result_tags.index('Adventure')]
+                            if 'Action-Adventure' in result_tags:
+                                result_tags.remove('Action-Adventure')
+                                result_tags.insert(insert_position, 'Action-Adventure')
+                                tags_num -= 2
+                            else:
+                                result_tags.insert(insert_position, "Action-Adventure")
+                                tags_num -= 1
+                        elif set(['Action', 'Action-Adventure']).issubset(result_tags):
+                            insert_position = result_tags.index('Action')
+                            del result_tags[insert_position]
+                            del result_tags[result_tags.index('Action-Adventure')]
+                            result_tags.insert(insert_position, "Action-Adventure")
+                            tags_num -= 1
+                        elif set(['Adventure', 'Action-Adventure']).issubset(result_tags):
+                            insert_position = result_tags.index('Adventure')
+                            del result_tags[insert_position]
+                            del result_tags[result_tags.index('Action-Adventure')]
+                            result_tags.insert(insert_position, "Action-Adventure")
+                            tags_num -= 1
+                        # filter double information
+                        tag_split = usertag_strip.split(" ")
+                        if len(tag_split) > 1 and set(tag_split).issubset(result_tags):
+                            insert_position = result_tags.index(tag_split[0])
+                            del result_tags[insert_position]
+                            to_subtract = 1
+                            for string in tag_split[1:]:
+                                result_tags.remove(string)
+                                to_subtract += 1
+                            result_tags.remove(usertag_strip)
+                            result_tags.insert(insert_position, usertag_strip)
+                            tags_num -= to_subtract
+                        if 'Early Access' in result_tags and self.isearlyaccess:
+                            result_tags.remove('Early Access')
+                            tags_num -= 1
+                        if 'Free to Play' in result_tags and self.isfree:
+                            result_tags.remove('Free to Play')
+                            tags_num -= 1
+                        if tags_num == 6:
                             break
                 return ", ".join(result_tags)
         return False
