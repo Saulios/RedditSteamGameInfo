@@ -15,17 +15,17 @@ Original bot modified specifically for r/FreeGameFindings, with added functional
     - Delisted: get the Steam store link using the appid
     - Removed: search [archive.org/web](https://archive.org/web) for the most recent archived store link and get details from there
 
-## What information does the bot provide?
+## What information will the bot provide?
 
-|                |  Steam  | Removed Steam | Epic/Indiegala |
-|:--------------:|:-------:|:-------------:|:--------------:|
-|      Links     | &#9745; |    &#9745;    |     &#9745;    |
-|     Reviews    | &#9745; |    &#9745;    |     &#9745;    |
-|   Description  | &#9745; |    &#9745;    |     &#9745;    |
-|      Price     | &#9745; |    &#9744;    |     &#9745;    |
-|  Release Date  | &#9745; |    &#9745;    |     &#9745;    |
-|   Genre/Tags   | &#9745; |    &#9745;    |     &#9745;    |
-|  Achievements  | &#9745; |    &#9745;    |     &#9744;    |
-|  Trading Cards | &#9745; |    &#9745;    |     &#9744;    |
-|   Game Count   | &#9745; |    &#9745;    |     &#9744;    |
-| ASF/addlicense | &#9745; |    &#9744;    |     &#9744;    |
+|                |   Steam  | Removed from Steam | Unreleased on Steam | Epic/Indiegala |
+|:--------------:|:--------:|:------------------:|:-------------------:|:--------------:|
+|      Links     | &#10004; |      &#10004;      |       &#10004;      |    &#10004;    |
+|     Reviews    | &#10004; |      &#10004;      |       &#10060;      |    &#10004;    |
+|   Description  | &#10004; |      &#10004;      |       &#10004;      |    &#10004;    |
+|      Price     | &#10004; |      &#10060;      |       &#10004;      |    &#10004;    |
+|  Release Date  | &#10004; |      &#10004;      |       &#10004;      |    &#10004;    |
+|   Genre/Tags   | &#10004; |      &#10004;      |       &#10004;      |    &#10004;    |
+|  Achievements  | &#10004; |      &#10004;      |       &#10060;      |    &#10060;    |
+|  Trading Cards | &#10004; |      &#10004;      |       &#10060;      |    &#10060;    |
+|   Game Count   | &#10004; |      &#10004;      |       &#10004;      |    &#10060;    |
+| ASF/addlicense | &#10004; |      &#10060;      |       &#10060;      |    &#10060;    |
