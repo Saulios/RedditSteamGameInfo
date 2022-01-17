@@ -263,7 +263,7 @@ class SteamRemovedGame:
             except ParserError:
                 return release_date
             try:
-                date_full = time.strftime('%B %#d, %Y', date_abbr.timetuple())
+                date_full = time.strftime('%B%e, %Y', date_abbr.timetuple())
             except TypeError:
                 return release_date
             else:
