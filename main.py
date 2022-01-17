@@ -22,6 +22,10 @@ BOT_USERNAME = os.getenv("RSGIB_USERNAME")
 STEAM_APPURL_REGEX = r"((https?:\/\/)?)(store.steampowered.com(\/agecheck)?\/app\/\d+)"
 STEAMDB_APPURL_REGEX = r"((https?:\/\/)?)(steamdb.info\/app\/\d+)"
 STEAM_TITLE_REGEX = r"\[.*(Steam).*\]\s*\(.*(Game|DLC|Beta|Alpha).*\)"
+INDIEGALA_URL_REGEX = r"((https?:\/\/)?)(freebies.indiegala.com\/)"
+INDIEGALA_TITLE_REGEX = r"\[.*(Indiegala).*\]\s*\(.*(Game).*\)"
+EPIC_URL_REGEX = r"((https?:\/\/)?)(epicgames.com\/)"
+EPIC_TITLE_REGEX = r"\[.*(Epic).*\]\s*\(.*(Game).*\)"
 
 
 def fitscriteria(s):
@@ -57,9 +61,11 @@ def hasbotalreadyreplied(s):
     return False
 
 
-def buildcommenttext(g, removed):
+def buildcommenttext(g, removed, source):
     if isinstance(g.title, str):
         commenttext = ''
+        if source == "Indiegala" or source == "Epic":
+            commenttext += '*Game with the same name on Steam:* '
         if removed:
             commenttext += '*Removed/banned from Steam - this is information from ' + g.date + ':*\n\n'
         commenttext += '**' + g.title + '**'
@@ -144,7 +150,7 @@ def buildcommenttext(g, removed):
             commenttext += ' * Genre/Tags: ' + g.usertags + '\n'
         elif g.genres:
             commenttext += ' * Genre: ' + g.genres + '\n'
-        if g.gettype == "game":
+        if g.gettype == "game" and source == "Steam":
             if not g.unreleased:
                 if int(g.achievements) != 0:
                     commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
@@ -152,9 +158,9 @@ def buildcommenttext(g, removed):
                     if int(g.achievements) == 0:
                         commenttext += ' * Has no achievements\n'
                     commenttext += ' * Has ' + str(g.cards[0]) + ' trading cards (drops ' + str(g.cards[1]) + ')'
-                    if removed:
+                    if g.cards[3]:
                         commenttext += ' [non-marketable]'
-                    if not removed:
+                    if not g.cards[3]:
                         commenttext += ' [^(view on Steam Market)](' + g.cards[2] + ')'
                     commenttext += '\n'
                 if type(g.cards) == int:
@@ -169,7 +175,7 @@ def buildcommenttext(g, removed):
             else:
                 commenttext += ' * Does not give'
             commenttext += ' +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F)\n'
-        if (g.isfree() or g.price[0] == "Free") and not g.unreleased:
+        if (g.isfree() or g.price[0] == "Free") and not g.unreleased and source == "Steam":
             commenttext += ' * Can be added to ASF clients with `!addlicense asf '
             if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4]:
                 commenttext += "a/" + g.basegame[0] + ","
@@ -198,9 +204,9 @@ class SubWatch(threading.Thread):
                         or re.search(STEAMDB_APPURL_REGEX, submission.url)
                     ):
                         appid = re.search('\d+', submission.url).group(0)
-
+                        source_platform = "Steam"
                         if fitscriteria(submission):
-                            commenttext = buildcommenttext(SteamGame(appid), False)
+                            commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
                             if commenttext is not None:
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
@@ -212,8 +218,9 @@ class SubWatch(threading.Thread):
                         if fitscriteria(submission):
                             game = SteamSearchGame(game_name, False)
                             appid = game.appid
+                            source_platform = "Steam"
                             if appid != 0:
-                                commenttext = buildcommenttext(SteamGame(appid), False)
+                                commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
                                 if commenttext is not None:
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
@@ -224,15 +231,38 @@ class SubWatch(threading.Thread):
                                 appid = game.appid
                                 if appid != 0:
                                     # try for only removed store page
-                                    commenttext = buildcommenttext(SteamGame(appid), False)
+                                    commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
                                     if commenttext is None:
                                         # not available on Steam
-                                        commenttext = buildcommenttext(SteamRemovedGame(appid), True)
+                                        commenttext = buildcommenttext(SteamRemovedGame(appid), True, source_platform)
                                     if commenttext is not None:
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name)
                                             submission.reply(commenttext)
+                    elif (
+                        (indiegala := re.search(INDIEGALA_TITLE_REGEX, submission.title, re.IGNORECASE)
+                            and re.search(INDIEGALA_URL_REGEX, submission.url))
+                        or (epic := re.search(EPIC_TITLE_REGEX, submission.title, re.IGNORECASE)
+                            and re.search(EPIC_URL_REGEX, submission.url))
+                    ):
+                        if indiegala is not None:
+                            title_split = re.split(INDIEGALA_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
+                            source_platform = "Indiegala"
+                        elif epic is not None:
+                            title_split = re.split(EPIC_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
+                            source_platform = "Epic"
+                        game_name = title_split[-1].strip()
+                        if fitscriteria(submission):
+                            game = SteamSearchGame(game_name, False)
+                            appid = game.appid
+                            if appid != 0:
+                                commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
+                                if commenttext is not None:
+                                    commenttext += buildfootertext()
+                                    if len(commenttext) < 10000:
+                                        print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
+                                        submission.reply(commenttext)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
@@ -254,9 +284,20 @@ class CommentWatch(threading.Thread):
                         games = list(dict.fromkeys(games))
                         appids = []
                         commenttext = ""
+                        source_platform = "Steam"
+                        if (
+                            (indiegala := re.search(INDIEGALA_TITLE_REGEX, comment.submission.title, re.IGNORECASE)
+                                and re.search(INDIEGALA_URL_REGEX, comment.submission.url))
+                            or (epic := re.search(EPIC_TITLE_REGEX, comment.submission.title, re.IGNORECASE)
+                                and re.search(EPIC_URL_REGEX, comment.submission.url))
+                        ):
+                            if indiegala is not None:
+                                source_platform = "Indiegala"
+                            elif epic is not None:
+                                source_platform = "Epic"
                         for i in range(len(games)):
                             appid = re.search('\d+', games[i]).group(0)
-                            make_comment = buildcommenttext(SteamGame(appid), False)
+                            make_comment = buildcommenttext(SteamGame(appid), False, source_platform)
                             if make_comment is not None:
                                 commenttext += make_comment
                                 appids.append(appid)
