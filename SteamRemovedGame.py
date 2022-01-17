@@ -121,12 +121,14 @@ class SteamRemovedGame:
         return gettype
 
     def getprice(self):
-        price = self.gamePage.find("div", {"class": "game_purchase_price"})
-        if price is None:
-            price = self.gamePage.find("div", {"class": "discount_original_price"})
-        if price is not None:
-            return price.string.strip()
-        return "Free"
+        finalprice = self.gamePage.find("div", {"class": "game_purchase_price"})
+        if finalprice is not None:
+            finalprice = finalprice.string.strip()
+            if finalprice == "Free" or finalprice == "Free to Play":
+                finalprice = "Free"
+                return finalprice, ""
+        finalprice = "No price found"
+        return finalprice, ""
 
     def isfree(self):
         return False
