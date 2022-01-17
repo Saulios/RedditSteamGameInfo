@@ -498,11 +498,11 @@ class SteamGame:
                 except ParserError:
                     return release_date
                 try:
-                    date_full = time.strftime('%B%e, %Y', date_abbr.timetuple())
+                    date_full = time.strftime('%B %e, %Y', date_abbr.timetuple())
                 except TypeError:
                     return release_date
                 else:
-                    return date_full
+                    return date_full.replace("  ", " ")
         return False
 
     def nsfw(self):
