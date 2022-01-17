@@ -195,11 +195,10 @@ class SteamGame:
             total = marketpage.find("span", id="searchResults_total")
             if total is not None:
                 nonmarketable = marketable_check.find("span", id="searchResults_total")
+                marketable = True
                 if nonmarketable is not None:
                     if int(nonmarketable.string.strip()) != 0:
                         marketable = False
-                else:
-                    marketable = True
                 total = int(total.string.strip())
                 drops = total//2 + (total % 2 > 0)
                 return total, drops, marketurl, marketable
