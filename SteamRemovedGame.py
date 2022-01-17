@@ -250,11 +250,11 @@ class SteamRemovedGame:
                     except ParserError:
                         return release_date.string
                     try:
-                        date_full = time.strftime('%B %#d, %Y', date_abbr.timetuple())
+                        date_full = time.strftime('%B %e, %Y', date_abbr.timetuple())
                     except TypeError:
                         return release_date.string
                     else:
-                        return date_full
+                        return date_full.replace("  ", " ")
         details = self.gamePage.find("div", class_="details_block")
         if details is not None:
             release_date = details.find(text=re.compile('Release Date')).next_element.strip()
@@ -263,9 +263,9 @@ class SteamRemovedGame:
             except ParserError:
                 return release_date
             try:
-                date_full = time.strftime('%B%e, %Y', date_abbr.timetuple())
+                date_full = time.strftime('%B %e, %Y', date_abbr.timetuple())
             except TypeError:
                 return release_date
             else:
-                return date_full
+                return date_full.replace("  ", " ")
         return False
