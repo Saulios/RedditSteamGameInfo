@@ -158,9 +158,9 @@ def buildcommenttext(g, removed, source):
                     if int(g.achievements) == 0:
                         commenttext += ' * Has no achievements\n'
                     commenttext += ' * Has ' + str(g.cards[0]) + ' trading cards (drops ' + str(g.cards[1]) + ')'
-                    if g.cards[3]:
-                        commenttext += ' [non-marketable]'
                     if not g.cards[3]:
+                        commenttext += ' [non-marketable]'
+                    if g.cards[3]:
                         commenttext += ' [^(view on Steam Market)](' + g.cards[2] + ')'
                     commenttext += '\n'
                 if type(g.cards) == int:
