@@ -3,6 +3,8 @@ import json
 import time
 
 import requests
+import dateutil.parser
+from dateutil.parser import ParserError
 from bs4 import BeautifulSoup
 
 
@@ -139,12 +141,14 @@ class SteamGame:
 
     def getasf(self):
         app_id = self.appID
-        if (
-            len(self.json["package_groups"]) != 0
-            and self.json["package_groups"][0]["subs"][0]["is_free_license"]
-        ):
-            sub_id = self.json["package_groups"][0]["subs"][0]["packageid"]
-            return "s/" + str(sub_id), "sub"
+        if len(self.json["package_groups"]) != 0:
+            sub_id = 0
+            for sub in self.json["package_groups"][0]["subs"]:
+                if sub["is_free_license"]:
+                    sub_id = sub["packageid"]
+                    break
+            if sub_id != 0:
+                return "s/" + str(sub_id), "sub"
         elif self.isfree():
             while True:
                 try:
@@ -179,18 +183,26 @@ class SteamGame:
             return 0
         if "Steam Trading Cards" in category_block.text:
             marketurl = 'https://steamcommunity.com/market/search?q=&category_753_Game%5B0%5D=tag_app_' + self.appID + '&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
+            marketable_url = 'https://steamcommunity.com/market/search?q=This+item+can+no+longer+be+bought+or+sold+on+the+Community+Market&category_753_Game%5B0%5D=tag_app_' + self.appID + '&descriptions=1&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
             while True:
                 try:
                     marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
+                    marketable_check = BeautifulSoup(requests.get(marketable_url, timeout=30).text, "html.parser")
                     break
                 except requests.exceptions.RequestException:
                     print("Steam market timeout: sleep for 30 seconds and try again")
                     time.sleep(30)
             total = marketpage.find("span", id="searchResults_total")
             if total is not None:
+                nonmarketable = marketable_check.find("span", id="searchResults_total")
+                if nonmarketable is not None:
+                    if int(nonmarketable.string.strip()) != 0:
+                        marketable = False
+                else:
+                    marketable = True
                 total = int(total.string.strip())
                 drops = total//2 + (total % 2 > 0)
-                return total, drops, marketurl
+                return total, drops, marketurl, marketable
         return 0
 
     def isunreleased(self):
@@ -480,11 +492,15 @@ class SteamGame:
         if "release_date" in self.json:
             date = self.json["release_date"]
             if date["coming_soon"] is False and date["date"] != "":
+                release_date = date["date"]
                 try:
-                    date_abbr = time.strptime(date["date"], '%b %d, %Y')
-                    date_full = time.strftime('%B %#d, %Y', date_abbr)
-                except (ValueError, TypeError):
-                    return date["date"]
+                    date_abbr = dateutil.parser.parse(release_date)
+                except ParserError:
+                    return release_date
+                try:
+                    date_full = time.strftime('%B%e, %Y', date_abbr.timetuple())
+                except TypeError:
+                    return release_date
                 else:
                     return date_full
         return False
