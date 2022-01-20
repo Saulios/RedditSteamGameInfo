@@ -292,9 +292,9 @@ class CommentWatch(threading.Thread):
                                 and re.search(EPIC_URL_REGEX, comment.submission.url))
                         ):
                             if indiegala is not None:
-                                source_platform = "Indiegala"
+                                source_platform = "Indiegala_comment"
                             elif epic is not None:
-                                source_platform = "Epic"
+                                source_platform = "Epic_comment"
                         for i in range(len(games)):
                             appid = re.search('\d+', games[i]).group(0)
                             make_comment = buildcommenttext(SteamGame(appid), False, source_platform)
