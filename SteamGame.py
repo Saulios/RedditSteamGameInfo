@@ -511,10 +511,13 @@ class SteamGame:
         return False
 
     def plusone(self):
-        exceptions = [346290, 863550, 247120, 397720, 272060, 351940, 319830, 8650, 845070, 1515950, 232770, 608990, 769920, 252150, 583950, 584210, 802240]
-        if int(self.appID) in exceptions:
-            # some apps marked as free still give +1
-            return True
+        exceptions_txt = 'plusone_exceptions.txt'
+        with open(exceptions_txt) as exceptions:
+            for line in exceptions:
+                if not line.strip().startswith("#"):
+                    if str(self.appID) == line.rstrip():
+                        # some apps marked as free still give +1
+                        return True
         if (
             not self.islearning()
             and not self.isfree()

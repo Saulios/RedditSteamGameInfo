@@ -30,8 +30,9 @@ ITCH_URL_REGEX = r"((https?:\/\/)?)(itch.io\/)"
 
 
 def fitscriteria(s):
-    if s.author.name in open(BLOCKED_USER_FILE).read():
-        return False
+    with open(BLOCKED_USER_FILE) as blocked_users:
+        if s.author.name in blocked_users.read():
+            return False
     if hasbotalreadyreplied(s):
         return False
     if not hasbotalreadyreplied(s):

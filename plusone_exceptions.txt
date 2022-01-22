@@ -1,0 +1,37 @@
+### some apps marked as free still give +1
+### insert an appid per line that the bot doesn't know should give +1
+# RACE 07: Andy Priaulx Crowne Plaza Raceway
+8650
+# POSTAL
+232770
+# Portal 2 Sixense Perceptual Pack
+247120
+# Grimm
+252150
+261390
+# Serena
+272060
+# AX:EL
+319830
+# Penumbra: Necrologue
+346290
+# The Descendant
+351940
+# Romance of the Three Kingdoms Maker
+397720
+# Artifact Classic
+583950
+# Tom Clancy's Ghost Recon Wildlands Open Beta
+584210
+# The Archotek Project
+608990
+# Odysseus Kosmos and his Robot Quest - Episode 1
+769920
+# SOS: Classic
+802240
+# The Awesome Adventures of Captain Spirit
+845070
+# HITMAN 2
+863550
+# Capcom Arcade Stadium
+1515950
