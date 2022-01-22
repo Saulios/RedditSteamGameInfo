@@ -26,6 +26,7 @@ INDIEGALA_URL_REGEX = r"((https?:\/\/)?)(freebies.indiegala.com\/)"
 INDIEGALA_TITLE_REGEX = r"\[.*(Indiegala).*\]\s*\(.*(Game).*\)"
 EPIC_URL_REGEX = r"((https?:\/\/)?)(epicgames.com\/)"
 EPIC_TITLE_REGEX = r"\[.*(Epic).*\]\s*\(.*(Game).*\)"
+ITCH_URL_REGEX = r"((https?:\/\/)?)(itch.io\/)"
 
 
 def fitscriteria(s):
@@ -290,11 +291,14 @@ class CommentWatch(threading.Thread):
                                 and re.search(INDIEGALA_URL_REGEX, comment.submission.url))
                             or (epic := re.search(EPIC_TITLE_REGEX, comment.submission.title, re.IGNORECASE)
                                 and re.search(EPIC_URL_REGEX, comment.submission.url))
+                            or (itch := re.search(ITCH_URL_REGEX, comment.submission.url))
                         ):
                             if indiegala is not None:
                                 source_platform = "Indiegala_comment"
                             elif epic is not None:
                                 source_platform = "Epic_comment"
+                            elif itch is not None:
+                                source_platform = "Itch_comment"
                         for i in range(len(games)):
                             appid = re.search('\d+', games[i]).group(0)
                             make_comment = buildcommenttext(SteamGame(appid), False, source_platform)
