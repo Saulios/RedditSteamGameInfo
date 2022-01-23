@@ -69,7 +69,7 @@ def buildcommenttext(g, removed, source):
         if source == "Indiegala" or source == "Epic":
             commenttext += '*Game with the same name on Steam:* '
         if removed:
-            commenttext += '*Removed/banned from Steam - this is information from ' + g.date + ':*\n\n'
+            commenttext += '*Removed from Steam - this is information from ' + g.date + ':*\n\n'
         commenttext += '**' + g.title + '**'
         if g.nsfw:
             commenttext += ' *(NSFW)*'
