@@ -226,8 +226,8 @@ class SteamSearchGame:
                     get_title == game_name
                     # words are the same but different order
                     or set(get_title.split(" ")) == set(game_name.split(" "))
-					# target fully in search result
-					or game_name in get_title
+                    # target fully in search result
+                    or game_name in get_title
                 ):
                     href = game.get('href').split("/")
                     app = href.index("app") + 1
@@ -239,10 +239,10 @@ class SteamSearchGame:
                 if (
                     get_title == game_name_roman
                     or set(get_title.split(" ")) == set(game_name_roman.split(" "))
-					or game_name_roman in get_title
+                    or game_name_roman in get_title
                     or get_title == game_name_number
                     or set(get_title.split(" ")) == set(game_name_number.split(" "))
-					or game_name_number in get_title
+                    or game_name_number in get_title
                 ):
                     href = game.get('href').split("/")
                     app = href.index("app") + 1
