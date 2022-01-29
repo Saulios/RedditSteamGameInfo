@@ -120,7 +120,7 @@ def buildcommenttext(g, removed, source):
         if not removed and not (g.unreleased and g.price[0] == "No price found"):
             commenttext += ' * '
             if g.price[0] == "Free" and g.basegame is not None and g.basegame[2] == "Free":
-                commenttext += 'Game & '
+                commenttext += 'Game and '
             if g.gettype == "dlc":
                 commenttext += 'DLC '
             elif g.gettype == "music":
