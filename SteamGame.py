@@ -241,7 +241,15 @@ class SteamGame:
                 if "reviews" in summary.string:
                     return ""
                 return summary.string
-        return "No user reviews"
+        releasedate = self.releasedate()
+        if (
+            releasedate == time.strftime("%B %e, %Y", time.localtime())
+            or releasedate == time.strftime("%b %e, %Y", time.localtime())
+        ):
+            # Skip review text if app released today and has no reviews
+            return ""
+        else:
+            return "No user reviews"
 
     def lowreviews(self):
         # gives better review text when at low review amounts
@@ -277,10 +285,13 @@ class SteamGame:
         reviewscore = [[80, "Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Negative"]]
         reviewscore_50 = [[80, "Very Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Very Negative"]]
         if 1 < total < 10:
-            if positive == total:
-                lowreviews = "All of the " + str(total) + " user reviews are positive"
+            if positive == total and total > 2:
+                lowreviews = "All"
+            elif total == 2:
+                lowreviews = "Both"
             else:
-                lowreviews = str(positive) + " of the " + str(total) + " user reviews are positive"
+                lowreviews = str(positive)
+            lowreviews += " of the " + str(total) + " user reviews are positive"
         elif total >= 10:
             if total >= 50:
                 for score in reviewscore_50:
