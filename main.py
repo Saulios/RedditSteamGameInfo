@@ -154,7 +154,9 @@ def buildcommenttext(g, removed, source):
             commenttext += ' * Genre: ' + g.genres + '\n'
         if g.gettype == "game" and source == "Steam":
             if not g.unreleased:
-                if int(g.achievements) != 0:
+                if int(g.achievements) == 1:
+                    commenttext += ' * Has ' + str(g.achievements) + ' achievement\n'
+                if int(g.achievements) > 1:
                     commenttext += ' * Has ' + str(g.achievements) + ' achievements\n'
                 if not type(g.cards) == int:
                     if int(g.achievements) == 0:
