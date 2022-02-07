@@ -200,6 +200,17 @@ class SteamGame:
                     if int(nonmarketable.string.strip()) != 0:
                         marketable = False
                 total = int(total.string.strip())
+                if total == 0:
+                    # Get the page again, something might have parsed wrong
+                    while True:
+                        try:
+                            marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
+                            break
+                        except requests.exceptions.RequestException:
+                            print("Steam market timeout: sleep for 30 seconds and try again")
+                            time.sleep(30)
+                    total = marketpage.find("span", id="searchResults_total")
+                    total = int(total.string.strip())
                 drops = total//2 + (total % 2 > 0)
                 return total, drops, marketurl, marketable
         return 0
