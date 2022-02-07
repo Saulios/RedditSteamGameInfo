@@ -11,7 +11,7 @@ class SteamSearchGame:
     def __init__(self, game_name, removed):
         self.game_name = self.game_name_searchable(game_name)
         if removed:
-            self.url = 'https://steam.madjoki.com/search?q=' + self.game_name
+            self.url = 'https://steam-old.madjoki.com/search?q=' + self.game_name
             self.urlbackup_banned = 'https://steam-tracker.com/apps/banned'
             self.urlbackup_delisted = 'https://steam-tracker.com/apps/delisted'
             try:
