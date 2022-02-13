@@ -307,6 +307,21 @@ class SubWatch(threading.Thread):
                                             commenttext_awa = buildcommenttext_awa(AlienwareArena(submission.url))
                                         if commenttext_awa is not None and commenttext_awa != "":
                                             commenttext = commenttext_awa + commenttext
+                                        commenttext_igames = ""
+                                        g_website = "steelseries"
+                                        if re.search(CRUCIAL_URL_REGEX, submission.url):
+                                            g_website = "crucial"
+                                        elif re.search(IGAMES_URL_REGEX, submission.url):
+                                            g_website = "igames"
+                                        if (
+                                            re.search(STEELSERIES_URL_REGEX, submission.url)
+                                            or re.search(CRUCIAL_URL_REGEX, submission.url)
+                                            or re.search(IGAMES_URL_REGEX, submission.url)
+                                        ):
+                                            g_id = re.search('\d+', submission.url).group(0)
+                                            commenttext_igames = buildcommenttext_igames(iGames(g_id, g_website))
+                                        if commenttext_igames is not None and commenttext_igames != "":
+                                            commenttext = commenttext_igames + commenttext
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name)
