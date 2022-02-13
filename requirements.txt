@@ -1,5 +1,8 @@
 beautifulsoup4==4.10.0
+countryinfo==0.1.2
 praw==7.5.0
 prawcore==2.3.0
+pycountry==22.1.10
+pycountry_convert==0.7.2
 python_dateutil==2.8.2
 requests==2.27.1

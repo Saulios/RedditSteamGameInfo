@@ -13,6 +13,8 @@ from prawcore.exceptions import PrawcoreException
 from SteamGame import SteamGame
 from SteamRemovedGame import SteamRemovedGame
 from SteamSearchGame import SteamSearchGame
+from AlienwareArena import AlienwareArena
+from iGames import iGames
 
 BLOCKED_USER_FILE = 'blockedusers.txt'  # Will not reply to these people
 SUBLIST = "FreeGameFindings"
@@ -27,6 +29,10 @@ INDIEGALA_TITLE_REGEX = r"\[.*(Indiegala).*\]\s*\(.*(Game).*\)"
 EPIC_URL_REGEX = r"((https?:\/\/)?)(epicgames.com\/)"
 EPIC_TITLE_REGEX = r"\[.*(Epic).*\]\s*\(.*(Game).*\)"
 ITCH_URL_REGEX = r"((https?:\/\/)?)(itch.io\/)"
+ALIENWARE_URL_REGEX = r"(https?:\/\/)?(\b)?\.?(alienwarearena.com\/\w*)"
+STEELSERIES_URL_REGEX = r"((https?:\/\/)?)(games.steelseries.com\/giveaway\/\d+)"
+CRUCIAL_URL_REGEX = r"((https?:\/\/)?)(games.crucial.com\/promotions\/\d+)"
+IGAMES_URL_REGEX = r"((https?:\/\/)?)(igames.gg\/promotions\/\d+)"
 
 
 def fitscriteria(s):
@@ -61,6 +67,42 @@ def hasbotalreadyreplied(s):
                 return True
 
     return False
+
+
+def buildcommenttext_awa(g):
+    commenttext = "**Giveaway details**\n\n"
+    if isinstance(g.keys_level, list) and len(g.keys_level) != 0:
+        commenttext += "* Minimum level: " + g.keys_level[0] + "\n"
+        commenttext += "* Available keys: " + g.keys_level[1] + "\n"
+    else:
+        return None
+    if len(g.country_names_with_keys) != 0 and len(g.country_names_with_keys) <= 10:
+        commenttext += "* Available for: " + ', '.join(g.country_names_with_keys) + "\n"
+    elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) <= 10:
+        commenttext += "* Unavailable for: " + ', '.join(g.country_names_without_keys) + "\n"
+    elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) > 10:
+        commenttext += "* Unavailable for: " + ', '.join(g.continents_without_keys) + "\n"
+    elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) > 10:
+        commenttext += "* Available for: " + ', '.join(g.continents_with_keys) + "\n"
+    elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
+        commenttext += "* No restricted countries\n"
+    commenttext += '\n***\n'
+    return commenttext
+
+
+def buildcommenttext_igames(g):
+    commenttext = "**Giveaway details**\n\n"
+    if isinstance(g.key_amount, str) and g.key_amount != "0":
+        commenttext += "* Available keys: " + g.key_amount
+        if g.key_claimed != "0":
+            commenttext += " (" + g.key_claimed + " already claimed)"
+        commenttext += "\n"
+        if g.key_claimed != "0" and g.key_amount != g.key_total:
+            commenttext += "* Total keys: " + g.key_total + "\n"
+    else:
+        return None
+    commenttext += '\n***\n'
+    return commenttext
 
 
 def buildcommenttext(g, removed, source):
@@ -226,6 +268,26 @@ class SubWatch(threading.Thread):
                             if appid != 0:
                                 commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
                                 if commenttext is not None:
+                                    commenttext_awa = ""
+                                    if re.search(ALIENWARE_URL_REGEX, submission.url):
+                                        commenttext_awa = buildcommenttext_awa(AlienwareArena(submission.url))
+                                    if commenttext_awa is not None and commenttext_awa != "":
+                                        commenttext = commenttext_awa + commenttext
+                                    commenttext_igames = ""
+                                    g_website = "steelseries"
+                                    if re.search(CRUCIAL_URL_REGEX, submission.url):
+                                        g_website = "crucial"
+                                    elif re.search(IGAMES_URL_REGEX, submission.url):
+                                        g_website = "igames"
+                                    if (
+                                        re.search(STEELSERIES_URL_REGEX, submission.url)
+                                        or re.search(CRUCIAL_URL_REGEX, submission.url)
+                                        or re.search(IGAMES_URL_REGEX, submission.url)
+                                    ):
+                                        g_id = re.search('\d+', submission.url).group(0)
+                                        commenttext_igames = buildcommenttext_igames(iGames(g_id, g_website))
+                                    if commenttext_igames is not None and commenttext_igames != "":
+                                        commenttext = commenttext_igames + commenttext
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
                                         print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
@@ -240,6 +302,11 @@ class SubWatch(threading.Thread):
                                         # not available on Steam
                                         commenttext = buildcommenttext(SteamRemovedGame(appid), True, source_platform)
                                     if commenttext is not None:
+                                        commenttext_awa = ""
+                                        if re.search(ALIENWARE_URL_REGEX, submission.url):
+                                            commenttext_awa = buildcommenttext_awa(AlienwareArena(submission.url))
+                                        if commenttext_awa is not None and commenttext_awa != "":
+                                            commenttext = commenttext_awa + commenttext
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name)
@@ -267,6 +334,32 @@ class SubWatch(threading.Thread):
                                     if len(commenttext) < 10000:
                                         print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
                                         submission.reply(commenttext)
+                    elif re.search(ALIENWARE_URL_REGEX, submission.url):
+                        if fitscriteria(submission):
+                            commenttext = buildcommenttext_awa(AlienwareArena(submission.url))
+                            if commenttext is not None:
+                                commenttext += buildfootertext()
+                                if len(commenttext) < 10000:
+                                    print('Commenting on post ' + str(submission) + ' after finding Alienware Arena domain')
+                                    submission.reply(commenttext)
+                    elif (
+                        re.search(STEELSERIES_URL_REGEX, submission.url)
+                        or re.search(CRUCIAL_URL_REGEX, submission.url)
+                        or re.search(IGAMES_URL_REGEX, submission.url)
+                    ):
+                        if fitscriteria(submission):
+                            g_website = "steelseries"
+                            if re.search(CRUCIAL_URL_REGEX, submission.url):
+                                g_website = "crucial"
+                            elif re.search(IGAMES_URL_REGEX, submission.url):
+                                g_website = "igames"
+                            g_id = re.search('\d+', submission.url).group(0)
+                            commenttext = buildcommenttext_igames(iGames(g_id, g_website))
+                            if commenttext is not None and commenttext != "":
+                                commenttext += buildfootertext()
+                                if len(commenttext) < 10000:
+                                    print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
+                                    submission.reply(commenttext)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)

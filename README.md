@@ -5,6 +5,7 @@ Original bot modified specifically for r/FreeGameFindings, with added functional
 - Works for SteamDB submissions
 - Works with FGF title format by searching for the game/dlc on Steam
 - Works for games/dlc removed from Steam by searching for them on [archive.org/web](https://archive.org/web)
+- Provides giveaway details for Alienware Arena, SteelSeries, Crucial and iGames
 
 ## Workflows
 
@@ -14,9 +15,12 @@ Original bot modified specifically for r/FreeGameFindings, with added functional
 4. **Delisted or removed**: Get the game/dlc name from the submission title, use either [madjoki](https://steam.madjoki.com/apps/banned) or [steam-tracker](https://steam-tracker.com/) to find the appid (note: I can't use SteamDB)
     - Delisted: get the Steam store link using the appid
     - Removed: search [archive.org/web](https://archive.org/web) for the most recent archived store link and get details from there
+5. **Alienware Arena**: Retrieve details of Alienware Arena giveaways, based on [awa_key_checker](https://github.com/Saulios/awa_key_checker). Details include account level required, initial key amount and country/continent restrictions.
+6. **SteelSeries/Crucial/iGames**: Retrieve key availability from the website API
 
 ## What information will the bot provide?
 
+### Game/DLC details
 |                |   Steam  | Removed from Steam | Unreleased on Steam | Non-Steam |
 |:--------------:|:--------:|:------------------:|:-------------------:|:---------:|
 |      Links     | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |
@@ -29,3 +33,10 @@ Original bot modified specifically for r/FreeGameFindings, with added functional
 |  Trading Cards | &#10004; |      &#10004;      |       &#10060;      |  &#10060; |
 |   Game Count   | &#10004; |      &#10004;      |       &#10004;      |  &#10060; |
 | ASF/addlicense | &#10004; |      &#10060;      |       &#10060;      |  &#10060; |
+
+### Giveaway details
+|                 | Alienware Arena | SteelSeries |  Crucial |  iGames  |
+|:---------------:|:---------------:|:-----------:|:--------:|:--------:|
+|  Available keys |     &#10004;    |   &#10004;  | &#10004; | &#10004; |
+|    Total keys   |     &#10060;    |   &#10004;  | &#10004; | &#10004; |
+| Regional issues |     &#10004;    |   &#10060;  | &#10060; | &#10060; |
