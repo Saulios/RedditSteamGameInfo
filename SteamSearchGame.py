@@ -162,7 +162,7 @@ class SteamSearchGame:
             appid = self.appidbackup(self.urlbackup_banned)
             if appid == 0:
                 self.appid = self.appidbackup(self.urlbackup_delisted)
-        if not removed and appid == 0:
+        if not removed and appid == 0 and "random" not in game_name:
             # If nothing found, try again but allow one word to be missing from target
             for game in games:
                 # game_name is used from previous loop
