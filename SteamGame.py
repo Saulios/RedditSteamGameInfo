@@ -176,42 +176,43 @@ class SteamGame:
         return 0
 
     def getcards(self):
-        category_block = self.gamePage.find("div", id="category_block")
-
-        if category_block is None:
-            return 0
-        if "Steam Trading Cards" in category_block.text:
-            marketurl = 'https://steamcommunity.com/market/search?q=&category_753_Game%5B0%5D=tag_app_' + self.appID + '&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
-            marketable_url = 'https://steamcommunity.com/market/search?q=This+item+can+no+longer+be+bought+or+sold+on+the+Community+Market&category_753_Game%5B0%5D=tag_app_' + self.appID + '&descriptions=1&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
+        marketurl = 'https://steamcommunity.com/market/search?q=&category_753_Game%5B0%5D=tag_app_' + self.appID + '&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
+        marketable_url = 'https://steamcommunity.com/market/search?q=This+item+can+no+longer+be+bought+or+sold+on+the+Community+Market&category_753_Game%5B0%5D=tag_app_' + self.appID + '&descriptions=1&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
+        while True:
+            try:
+                marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
+                break
+            except requests.exceptions.RequestException:
+                print("Steam market timeout: sleep for 30 seconds and try again")
+                time.sleep(30)
+        total = marketpage.find("span", id="searchResults_total")
+        if total is not None:
             while True:
                 try:
-                    marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
                     marketable_check = BeautifulSoup(requests.get(marketable_url, timeout=30).text, "html.parser")
                     break
                 except requests.exceptions.RequestException:
                     print("Steam market timeout: sleep for 30 seconds and try again")
                     time.sleep(30)
-            total = marketpage.find("span", id="searchResults_total")
-            if total is not None:
-                nonmarketable = marketable_check.find("span", id="searchResults_total")
-                marketable = True
-                if nonmarketable is not None:
-                    if int(nonmarketable.string.strip()) != 0:
-                        marketable = False
+            nonmarketable = marketable_check.find("span", id="searchResults_total")
+            marketable = True
+            if nonmarketable is not None:
+                if int(nonmarketable.string.strip()) != 0:
+                    marketable = False
+            total = int(total.string.strip())
+            if total == 0:
+                # Get the page again, something might have parsed wrong
+                while True:
+                    try:
+                        marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
+                        break
+                    except requests.exceptions.RequestException:
+                        print("Steam market timeout: sleep for 30 seconds and try again")
+                        time.sleep(30)
+                total = marketpage.find("span", id="searchResults_total")
                 total = int(total.string.strip())
-                if total == 0:
-                    # Get the page again, something might have parsed wrong
-                    while True:
-                        try:
-                            marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
-                            break
-                        except requests.exceptions.RequestException:
-                            print("Steam market timeout: sleep for 30 seconds and try again")
-                            time.sleep(30)
-                    total = marketpage.find("span", id="searchResults_total")
-                    total = int(total.string.strip())
-                drops = total//2 + (total % 2 > 0)
-                return total, drops, marketurl, marketable
+            drops = total//2 + (total % 2 > 0)
+            return total, drops, marketurl, marketable
         return 0
 
     def isunreleased(self):
