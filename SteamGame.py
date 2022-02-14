@@ -112,9 +112,7 @@ class SteamGame:
         return False
 
     def getprice(self):
-        if self.isfree():
-            finalprice = "Free"
-            return finalprice, ""
+        finalprice = "No price found"
         if "price_overview" in self.json and self.json["price_overview"] is not None:
             finalprice = self.json["price_overview"]["final_formatted"]
             fullprice = self.json["price_overview"]["initial_formatted"]
@@ -133,7 +131,8 @@ class SteamGame:
                     if fullprice is None:
                         return finalprice.string.strip(), ""
                     return finalprice.string.strip(), fullprice.string.strip()
-        finalprice = "No price found"
+        if self.isfree():
+            finalprice = "Free"
         return finalprice, ""
 
     def isfree(self):
@@ -542,7 +541,7 @@ class SteamGame:
                         return True
         if (
             not self.islearning()
-            and not self.isfree()
+            and (self.price[1] != "" or not self.isfree())
         ):
             if self.unreleased:
                 return True

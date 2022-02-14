@@ -175,8 +175,8 @@ def buildcommenttext(g, removed, source):
             commenttext += g.price[0]
             if not g.isfree() and g.price[0] != ("Free" and "No price found"):
                 commenttext += ' USD'
-                if g.discountamount:
-                    commenttext += ' (' + g.discountamount + ')'
+            if g.price[0] != "No price found" and g.discountamount:
+                commenttext += ' (' + g.discountamount + ')'
             commenttext += '\n'
             if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and (g.price[0] != "Free" or g.basegame[2] != "Free"):
                 commenttext += ' * Game Price: '
