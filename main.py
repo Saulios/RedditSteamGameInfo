@@ -69,9 +69,9 @@ def hasbotalreadyreplied(s):
     return False
 
 
-def buildcommenttext_awa(g):
+def buildcommenttext_awa(g, source):
     commenttext = "**Giveaway details**\n\n"
-    if isinstance(g.keys_level, list) and len(g.keys_level) != 0:
+    if isinstance(g.keys_level, list) and (source == "update" or len(g.keys_level) != 0):
         commenttext += "* Minimum level: " + g.keys_level[0] + "\n"
         commenttext += "* Available keys: " + g.keys_level[1] + "\n"
     else:
@@ -91,9 +91,9 @@ def buildcommenttext_awa(g):
     return commenttext
 
 
-def buildcommenttext_igames(g):
+def buildcommenttext_igames(g, source):
     commenttext = "**Giveaway details**\n\n"
-    if isinstance(g.key_amount, str) and g.key_amount != "0":
+    if isinstance(g.key_amount, str) and ((source == "update" and g.key_total != "0") or g.key_amount != "0"):
         commenttext += "* Available keys: " + g.key_amount
         if g.key_claimed != "0":
             commenttext += " (" + g.key_claimed + " already claimed)"
@@ -272,7 +272,7 @@ class SubWatch(threading.Thread):
                                 if commenttext is not None:
                                     commenttext_awa = ""
                                     if re.search(ALIENWARE_URL_REGEX, submission.url):
-                                        commenttext_awa = buildcommenttext_awa(AlienwareArena(submission.url))
+                                        commenttext_awa = buildcommenttext_awa(AlienwareArena(submission.url), "new")
                                     if commenttext_awa is not None and commenttext_awa != "":
                                         commenttext = commenttext_awa + commenttext
                                     commenttext_igames = ""
@@ -287,7 +287,7 @@ class SubWatch(threading.Thread):
                                         or re.search(IGAMES_URL_REGEX, submission.url)
                                     ):
                                         g_id = re.search('\d+', submission.url).group(0)
-                                        commenttext_igames = buildcommenttext_igames(iGames(g_id, g_website))
+                                        commenttext_igames = buildcommenttext_igames(iGames(g_id, g_website), "new")
                                     if commenttext_igames is not None and commenttext_igames != "":
                                         commenttext = commenttext_igames + commenttext
                                     commenttext += buildfootertext()
@@ -306,7 +306,7 @@ class SubWatch(threading.Thread):
                                     if commenttext is not None:
                                         commenttext_awa = ""
                                         if re.search(ALIENWARE_URL_REGEX, submission.url):
-                                            commenttext_awa = buildcommenttext_awa(AlienwareArena(submission.url))
+                                            commenttext_awa = buildcommenttext_awa(AlienwareArena(submission.url), "new")
                                         if commenttext_awa is not None and commenttext_awa != "":
                                             commenttext = commenttext_awa + commenttext
                                         commenttext_igames = ""
@@ -321,7 +321,7 @@ class SubWatch(threading.Thread):
                                             or re.search(IGAMES_URL_REGEX, submission.url)
                                         ):
                                             g_id = re.search('\d+', submission.url).group(0)
-                                            commenttext_igames = buildcommenttext_igames(iGames(g_id, g_website))
+                                            commenttext_igames = buildcommenttext_igames(iGames(g_id, g_website), "new")
                                         if commenttext_igames is not None and commenttext_igames != "":
                                             commenttext = commenttext_igames + commenttext
                                         commenttext += buildfootertext()
@@ -353,7 +353,7 @@ class SubWatch(threading.Thread):
                                         submission.reply(commenttext)
                     elif re.search(ALIENWARE_URL_REGEX, submission.url):
                         if fitscriteria(submission):
-                            commenttext = buildcommenttext_awa(AlienwareArena(submission.url))
+                            commenttext = buildcommenttext_awa(AlienwareArena(submission.url), "new")
                             if commenttext is not None:
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
@@ -371,7 +371,7 @@ class SubWatch(threading.Thread):
                             elif re.search(IGAMES_URL_REGEX, submission.url):
                                 g_website = "igames"
                             g_id = re.search('\d+', submission.url).group(0)
-                            commenttext = buildcommenttext_igames(iGames(g_id, g_website))
+                            commenttext = buildcommenttext_igames(iGames(g_id, g_website), "new")
                             if commenttext is not None and commenttext != "":
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
@@ -426,7 +426,7 @@ class CommentWatch(threading.Thread):
                     test_reply = re.search("fgf update", comment.body, re.IGNORECASE)
                     if test_reply and fitscriteria(comment) and comment.parent().author == BOT_USERNAME:
                         if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
-                            commenttext = buildcommenttext_awa(AlienwareArena(comment.submission.url))
+                            commenttext = buildcommenttext_awa(AlienwareArena(comment.submission.url), "update")
                             if commenttext is not None:
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
@@ -443,7 +443,7 @@ class CommentWatch(threading.Thread):
                             elif re.search(IGAMES_URL_REGEX, comment.submission.url):
                                 g_website = "igames"
                             g_id = re.search('\d+', comment.submission.url).group(0)
-                            commenttext = buildcommenttext_igames(iGames(g_id, g_website))
+                            commenttext = buildcommenttext_igames(iGames(g_id, g_website), "update")
                             if commenttext is not None and commenttext != "":
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
