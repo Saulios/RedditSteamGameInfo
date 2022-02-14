@@ -71,21 +71,24 @@ def hasbotalreadyreplied(s):
 
 def buildcommenttext_awa(g, source):
     commenttext = "**Giveaway details**\n\n"
-    if isinstance(g.keys_level, list) and (source == "update" or len(g.keys_level) != 0):
-        commenttext += "* Minimum level: " + g.keys_level[0] + "\n"
-        commenttext += "* Available keys: " + g.keys_level[1] + "\n"
+    if isinstance(g.keys_level, list) and len(g.keys_level) >= 2 and g.keys_level[1] != '0':
+        if isinstance(g.keys_level, list) and (source == "update" or len(g.keys_level) != 0):
+            commenttext += "* Minimum level: " + g.keys_level[0] + "\n"
+            commenttext += "* Available keys: " + g.keys_level[1] + "\n"
+        else:
+            return None
+        if len(g.country_names_with_keys) != 0 and len(g.country_names_with_keys) <= 10:
+            commenttext += "* Available for: " + ', '.join(g.country_names_with_keys) + "\n"
+        elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) <= 10:
+            commenttext += "* Unavailable for: " + ', '.join(g.country_names_without_keys) + "\n"
+        elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) > 10:
+            commenttext += "* Unavailable for: " + ', '.join(g.continents_without_keys) + "\n"
+        elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) > 10:
+            commenttext += "* Available for: " + ', '.join(g.continents_with_keys) + "\n"
+        elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
+            commenttext += "* No restricted countries\n"
     else:
-        return None
-    if len(g.country_names_with_keys) != 0 and len(g.country_names_with_keys) <= 10:
-        commenttext += "* Available for: " + ', '.join(g.country_names_with_keys) + "\n"
-    elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) <= 10:
-        commenttext += "* Unavailable for: " + ', '.join(g.country_names_without_keys) + "\n"
-    elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) > 10:
-        commenttext += "* Unavailable for: " + ', '.join(g.continents_without_keys) + "\n"
-    elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) > 10:
-        commenttext += "* Available for: " + ', '.join(g.continents_with_keys) + "\n"
-    elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
-        commenttext += "* No restricted countries\n"
+        commenttext += "* Available keys: " + g.keys_level[1] + "\n"
     commenttext += '\nReply `fgf update` to get updated giveaway details\n'
     commenttext += '\n***\n'
     return commenttext

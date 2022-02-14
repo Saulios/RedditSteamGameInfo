@@ -186,4 +186,7 @@ class AlienwareArena:
                         keys = self.countrykeys[country]["prestige"][prestige_level]
                         keys_level.append(str(keys))
                 break
+        else:
+            keys_level.append('0')
+            keys_level.append('0')
         return keys_level
