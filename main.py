@@ -266,7 +266,7 @@ class SubWatch(threading.Thread):
                     elif re.search(STEAM_TITLE_REGEX, submission.title, re.IGNORECASE):
                         title_split = re.split(STEAM_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
                         game_name = title_split[-1].strip()
-                        if fitscriteria(submission):
+                        if fitscriteria(submission) and game_name != "":
                             game = SteamSearchGame(game_name, False)
                             appid = game.appid
                             source_platform = "Steam"
@@ -344,7 +344,7 @@ class SubWatch(threading.Thread):
                             title_split = re.split(EPIC_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
                             source_platform = "Epic"
                         game_name = title_split[-1].strip()
-                        if fitscriteria(submission):
+                        if fitscriteria(submission) and game_name != "":
                             game = SteamSearchGame(game_name, False)
                             appid = game.appid
                             if appid != 0:
