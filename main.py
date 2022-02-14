@@ -86,6 +86,7 @@ def buildcommenttext_awa(g):
         commenttext += "* Available for: " + ', '.join(g.continents_with_keys) + "\n"
     elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
         commenttext += "* No restricted countries\n"
+    commenttext += '\nReply `fgf update` to get updated giveaway details\n'
     commenttext += '\n***\n'
     return commenttext
 
@@ -101,6 +102,7 @@ def buildcommenttext_igames(g):
             commenttext += "* Total keys: " + g.key_total + "\n"
     else:
         return None
+    commenttext += '\nReply `fgf update` to get updated key availability\n'
     commenttext += '\n***\n'
     return commenttext
 
@@ -421,6 +423,32 @@ class CommentWatch(threading.Thread):
                             if len(commenttext) < 10000:
                                 print('Replying to comment ' + str(comment) + ' after finding game ' + ', '.join(appids))
                                 comment.reply(commenttext)
+                    test_reply = re.search("fgf update", comment.body, re.IGNORECASE)
+                    if test_reply and fitscriteria(comment) and comment.parent().author == BOT_USERNAME:
+                        if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
+                            commenttext = buildcommenttext_awa(AlienwareArena(comment.submission.url))
+                            if commenttext is not None:
+                                commenttext += buildfootertext()
+                                if len(commenttext) < 10000:
+                                    print('Commenting on comment ' + str(comment) + ' after finding request to update Alienware Arena')
+                                    comment.reply(commenttext)
+                        elif (
+                            re.search(STEELSERIES_URL_REGEX, comment.submission.url)
+                            or re.search(CRUCIAL_URL_REGEX, comment.submission.url)
+                            or re.search(IGAMES_URL_REGEX, comment.submission.url)
+                        ):
+                            g_website = "steelseries"
+                            if re.search(CRUCIAL_URL_REGEX, comment.submission.url):
+                                g_website = "crucial"
+                            elif re.search(IGAMES_URL_REGEX, comment.submission.url):
+                                g_website = "igames"
+                            g_id = re.search('\d+', comment.submission.url).group(0)
+                            commenttext = buildcommenttext_igames(iGames(g_id, g_website))
+                            if commenttext is not None and commenttext != "":
+                                commenttext += buildfootertext()
+                                if len(commenttext) < 10000:
+                                    print('Commenting on comment ' + str(comment) + ' after finding request to update ' + g_website)
+                                    comment.reply(commenttext)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
