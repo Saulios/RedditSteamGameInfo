@@ -213,7 +213,7 @@ class SteamGame:
                 total = int(total.string.strip())
             drops = total//2 + (total % 2 > 0)
             return total, drops, marketurl, marketable
-        return 0
+        return 0, 0
 
     def isunreleased(self):
         unreleased = self.gamePage.find("div", class_="game_area_comingsoon")
