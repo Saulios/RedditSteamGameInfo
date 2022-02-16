@@ -14,36 +14,39 @@ class SteamRemovedGame:
 
     def __init__(self, appid):
         self.appID = appid
-
-        try:
-            archive_json = requests.get(
-                "https://web.archive.org/cdx/search/cdx?url=store.steampowered.com/app/" + appid + "/*&fl=original,timestamp&filter=statuscode:200&output=json",
-                timeout=15)
-        except requests.exceptions.RequestException:
-            print("Archive.org request timeout: sleep for 10 seconds and try again")
-            time.sleep(10)
+        while True:
+            try:
+                archive_json = requests.get(
+                    "https://web.archive.org/cdx/search/cdx?url=store.steampowered.com/app/" + appid + "/*&fl=original,timestamp&filter=statuscode:200&output=json",
+                    timeout=15)
+                break
+            except requests.exceptions.RequestException:
+                print("Archive.org request timeout: sleep for 15 seconds and try again")
+                time.sleep(15)
+        if 'json' in archive_json.headers.get('Content-Type'):
+            self.json = self.filterjson(archive_json)
         else:
-            if 'json' in archive_json.headers.get('Content-Type'):
-                self.json = self.filterjson(archive_json)
-            else:
-                return None
+            return None
 
-            if not self.json:
-                # invalid, try for old Steam layout
+        if not self.json:
+            # invalid, try for old Steam layout
+            while True:
                 try:
                     archive_json = requests.get(
                         "https://web.archive.org/cdx/search/cdx?url=store.steampowered.com/app/" + appid + "/&fl=original,timestamp&filter=statuscode:200&output=json",
                         timeout=15)
+                    break
                 except requests.exceptions.RequestException:
-                    print("Archive.org request timeout: sleep for 10 seconds and try again")
-                    time.sleep(10)
-                if 'json' in archive_json.headers.get('Content-Type'):
-                    self.json = self.filterjson(archive_json)
-                else:
-                    return None
-                if not self.json:
-                    return None
-            self.url, self.date = self.urldate()
+                    print("Archive.org request timeout: sleep for 15 seconds and try again")
+                    time.sleep(15)
+            if 'json' in archive_json.headers.get('Content-Type'):
+                self.json = self.filterjson(archive_json)
+            else:
+                return None
+            if not self.json:
+                return None
+        self.url, self.date = self.urldate()
+        while True:
             try:
                 self.gamePage = BeautifulSoup(
                     requests.get(
@@ -53,31 +56,32 @@ class SteamRemovedGame:
                             "lastagecheckage": "20-April-1990",
                             "mature_content": "1",
                         },
-                        timeout=30).text,
+                        timeout=15).text,
                     "html.parser",
                 )
+                break
             except requests.exceptions.RequestException:
-                print("Archive.org request timeout: sleep for 10 seconds and try again")
-                time.sleep(10)
-            else:
-                self.title = self.title()
-                self.gettype = self.gettype()
-                self.price = self.getprice()
-                self.asf = self.getasf()
-                self.achievements = SteamGame.getachev(self)
-                self.cards = SteamGame.getcards(self)
-                self.unreleased = SteamGame.isunreleased(self)
-                self.isearlyaccess = SteamGame.isearlyaccess(self)
-                self.unreleasedtext = SteamGame.getunreleasedtext(self)
-                self.blurb = self.getDescriptionSnippet()
-                self.reviewsummary = SteamGame.reviewsummary(self)
-                self.reviewdetails = SteamGame.reviewdetails(self)
-                self.genres = self.genres()
-                self.usertags = SteamGame.usertags(self)
-                self.basegame = self.basegame()
-                self.releasedate = self.releasedate()
-                self.nsfw = SteamGame.nsfw(self)
-                self.plusone = False
+                print("Archive.org request timeout: sleep for 15 seconds and try again")
+                time.sleep(15)
+
+        self.title = self.title()
+        self.gettype = self.gettype()
+        self.price = self.getprice()
+        self.asf = self.getasf()
+        self.achievements = SteamGame.getachev(self)
+        self.cards = SteamGame.getcards(self)
+        self.unreleased = SteamGame.isunreleased(self)
+        self.isearlyaccess = SteamGame.isearlyaccess(self)
+        self.unreleasedtext = SteamGame.getunreleasedtext(self)
+        self.blurb = self.getDescriptionSnippet()
+        self.reviewsummary = SteamGame.reviewsummary(self)
+        self.reviewdetails = SteamGame.reviewdetails(self)
+        self.genres = self.genres()
+        self.usertags = SteamGame.usertags(self)
+        self.basegame = self.basegame()
+        self.releasedate = self.releasedate()
+        self.nsfw = SteamGame.nsfw(self)
+        self.plusone = False
 
     @classmethod
     def filterjson(cls, archive_json):
@@ -170,13 +174,15 @@ class SteamRemovedGame:
             app = basegame_href.index("app") + 1
             appid = basegame_href[app]
 
-            try:
-                basegame_json = requests.get(
-                    "https://web.archive.org/cdx/search/cdx?url=store.steampowered.com/app/" + appid + "/*&fl=original,timestamp&filter=statuscode:200&output=json",
-                    timeout=15)
-            except requests.exceptions.RequestException:
-                print("Archive.org request timeout: sleep for 10 seconds and try again")
-                time.sleep(10)
+            while True:
+                try:
+                    basegame_json = requests.get(
+                        "https://web.archive.org/cdx/search/cdx?url=store.steampowered.com/app/" + appid + "/*&fl=original,timestamp&filter=statuscode:200&output=json",
+                        timeout=15)
+                    break
+                except requests.exceptions.RequestException:
+                    print("Archive.org request timeout: sleep for 15 seconds and try again")
+                    time.sleep(15)
 
             if 'json' in basegame_json.headers.get('Content-Type'):
                 basegame_data = self.filterjson(basegame_json)
@@ -197,45 +203,47 @@ class SteamRemovedGame:
                 return archive_url
 
             url = basegameurl()
-            try:
-                basegamePage = BeautifulSoup(
-                    requests.get(
-                        url,
-                        cookies={
-                            "birthtime": "640584001",
-                            "lastagecheckage": "20-April-1990",
-                            "mature_content": "1",
-                        },
-                        timeout=15).text,
-                    "html.parser",
-                )
-            except requests.exceptions.RequestException:
-                print("Archive.org request timeout: sleep for 10 seconds and try again")
-                time.sleep(10)
-            else:
-                def basegameisfree():
-                    price = basegamePage.find("div", {"class": "game_purchase_price"})
-                    if price is not None and "Free" in price.string.strip():
-                        return True
-                    return False
+            while True:
+                try:
+                    basegamePage = BeautifulSoup(
+                        requests.get(
+                            url,
+                            cookies={
+                                "birthtime": "640584001",
+                                "lastagecheckage": "20-April-1990",
+                                "mature_content": "1",
+                            },
+                            timeout=15).text,
+                        "html.parser",
+                    )
+                    break
+                except requests.exceptions.RequestException:
+                    print("Archive.org request timeout: sleep for 15 seconds and try again")
+                    time.sleep(15)
 
-                def basegameprice():
-                    price = basegamePage.find("div", {"class": "game_purchase_price"})
-                    if price is None:
-                        price = basegamePage.find("div", {"class": "discount_original_price"})
-                    if price is not None:
-                        return price.string.strip()
-                    return "Free"
+            def basegameisfree():
+                price = basegamePage.find("div", {"class": "game_purchase_price"})
+                if price is not None and "Free" in price.string.strip():
+                    return True
+                return False
 
-                def basegamename():
-                    title = basegamePage.title.string.replace(" on Steam", "")
-                    return re.sub(r"Save\s[0-9]+%\son\s", "", title)
+            def basegameprice():
+                price = basegamePage.find("div", {"class": "game_purchase_price"})
+                if price is None:
+                    price = basegamePage.find("div", {"class": "discount_original_price"})
+                if price is not None:
+                    return price.string.strip()
+                return "Free"
 
-                price = basegameprice()
-                free = basegameisfree()
-                discount = False
-                name = basegamename()
-                return appid, name, price, "", free, discount, url
+            def basegamename():
+                title = basegamePage.title.string.replace(" on Steam", "")
+                return re.sub(r"Save\s[0-9]+%\son\s", "", title)
+
+            price = basegameprice()
+            free = basegameisfree()
+            discount = False
+            name = basegamename()
+            return appid, name, price, "", free, discount, url
 
     def releasedate(self):
         release_divs = self.gamePage.find_all("div", class_="release_date")
