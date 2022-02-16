@@ -87,8 +87,10 @@ def buildcommenttext_awa(g, source):
             commenttext += "* Available for: " + ', '.join(g.continents_with_keys) + "\n"
         elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
             commenttext += "* No restricted countries\n"
-    else:
+    elif isinstance(g.keys_level, list):
         commenttext += "* Available keys: " + g.keys_level[1] + "\n"
+    else:
+        return None
     commenttext += '\nReply `fgf update` to get updated giveaway details\n'
     commenttext += '\n***\n'
     return commenttext
