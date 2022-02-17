@@ -1,3 +1,4 @@
+import os
 import time
 import json
 
@@ -8,6 +9,7 @@ class iGames:
 
     def __init__(self, g_id, website):
         self.g_id = g_id
+        API_URL = os.getenv("IGAMES_API")
         x_client_key = ""
         if website == "crucial":
             x_client_key = "micron"
@@ -17,9 +19,9 @@ class iGames:
             try:
                 if x_client_key != "":
                     headers = {"X-Client-Key": x_client_key}
-                    igames_json = requests.get("https://api.igsp.io/promotions", headers=headers, timeout=10)
+                    igames_json = requests.get(API_URL, headers=headers, timeout=10)
                 else:
-                    igames_json = requests.get("https://api.igsp.io/promotions", timeout=10)
+                    igames_json = requests.get(API_URL, timeout=10)
                 break
             except requests.exceptions.RequestException:
                 print("iGames API timeout: sleep for 10 seconds and try again")
