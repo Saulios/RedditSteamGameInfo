@@ -70,45 +70,54 @@ def hasbotalreadyreplied(s):
 
 
 def buildcommenttext_awa(g, source):
-    commenttext = "**Giveaway details**\n\n"
+    commenttext = ''
+    if source == "new":
+        commenttext += "**Giveaway details**\n\n"
     if isinstance(g.keys_level, list) and len(g.keys_level) >= 2 and g.keys_level[1] != '0':
-        if isinstance(g.keys_level, list) and (source == "update" or len(g.keys_level) != 0):
+        if source == "new":
             commenttext += "* Minimum level: " + g.keys_level[0] + "\n"
+        if source == "update" or len(g.keys_level) != 0:
             commenttext += "* Available keys: " + g.keys_level[1] + "\n"
         else:
             return None
-        if len(g.country_names_with_keys) != 0 and len(g.country_names_with_keys) <= 10:
-            commenttext += "* Available for: " + ', '.join(g.country_names_with_keys) + "\n"
-        elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) <= 10:
-            commenttext += "* Unavailable for: " + ', '.join(g.country_names_without_keys) + "\n"
-        elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) > 10:
-            commenttext += "* Unavailable for: " + ', '.join(g.continents_without_keys) + "\n"
-        elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) > 10:
-            commenttext += "* Available for: " + ', '.join(g.continents_with_keys) + "\n"
-        elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
-            commenttext += "* No restricted countries\n"
+        if source == "new":
+            if len(g.country_names_with_keys) != 0 and len(g.country_names_with_keys) <= 10:
+                commenttext += "* Available for: " + ', '.join(g.country_names_with_keys) + "\n"
+            elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) <= 10:
+                commenttext += "* Unavailable for: " + ', '.join(g.country_names_without_keys) + "\n"
+            elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) > 10:
+                commenttext += "* Unavailable for: " + ', '.join(g.continents_without_keys) + "\n"
+            elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) > 10:
+                commenttext += "* Available for: " + ', '.join(g.continents_with_keys) + "\n"
+            elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
+                commenttext += "* No restricted countries\n"
     elif isinstance(g.keys_level, list):
         commenttext += "* Available keys: " + g.keys_level[1] + "\n"
     else:
         return None
-    commenttext += '\nReply `fgf update` to get updated giveaway details\n'
-    commenttext += '\n***\n'
+    if source == "new":
+        commenttext += '\nReply `fgf update` to the bot for updated key availability\n'
+        commenttext += '\n***\n'
     return commenttext
 
 
 def buildcommenttext_igames(g, source):
-    commenttext = "**Giveaway details**\n\n"
+    commenttext = ''
+    if source == "new":
+        commenttext += "**Giveaway details**\n\n"
     if isinstance(g.key_amount, str) and ((source == "update" and g.key_total != "0") or g.key_amount != "0"):
         commenttext += "* Available keys: " + g.key_amount
         if g.key_claimed != "0":
             commenttext += " (" + g.key_claimed + " already claimed)"
-        commenttext += "\n"
-        if g.key_claimed != "0" and g.key_amount != g.key_total:
-            commenttext += "* Total keys: " + g.key_total + "\n"
+        if source != "update":
+            commenttext += "\n"
+            if g.key_claimed != "0" and g.key_amount != g.key_total:
+                commenttext += "* Total keys: " + g.key_total + "\n"
     else:
         return None
-    commenttext += '\nReply `fgf update` to get updated key availability\n'
-    commenttext += '\n***\n'
+    if source == "new":
+        commenttext += '\nReply `fgf update` to the bot for updated key availability\n'
+        commenttext += '\n***\n'
     return commenttext
 
 
@@ -279,7 +288,7 @@ class SubWatch(threading.Thread):
                                 if commenttext is not None:
                                     commenttext_awa = ""
                                     if re.search(ALIENWARE_URL_REGEX, submission.url):
-                                        commenttext_awa = buildcommenttext_awa(AlienwareArena(submission.url), "new")
+                                        commenttext_awa = buildcommenttext_awa(AlienwareArena(submission.url, "new"), "new")
                                     if commenttext_awa is not None and commenttext_awa != "":
                                         commenttext = commenttext_awa + commenttext
                                     commenttext_igames = ""
@@ -313,7 +322,7 @@ class SubWatch(threading.Thread):
                                     if commenttext is not None:
                                         commenttext_awa = ""
                                         if re.search(ALIENWARE_URL_REGEX, submission.url):
-                                            commenttext_awa = buildcommenttext_awa(AlienwareArena(submission.url), "new")
+                                            commenttext_awa = buildcommenttext_awa(AlienwareArena(submission.url, "new"), "new")
                                         if commenttext_awa is not None and commenttext_awa != "":
                                             commenttext = commenttext_awa + commenttext
                                         commenttext_igames = ""
@@ -360,7 +369,7 @@ class SubWatch(threading.Thread):
                                         submission.reply(commenttext)
                     elif re.search(ALIENWARE_URL_REGEX, submission.url):
                         if fitscriteria(submission):
-                            commenttext = buildcommenttext_awa(AlienwareArena(submission.url), "new")
+                            commenttext = buildcommenttext_awa(AlienwareArena(submission.url, "new"), "new")
                             if commenttext is not None:
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
@@ -433,9 +442,8 @@ class CommentWatch(threading.Thread):
                     test_reply = re.search("fgf update", comment.body, re.IGNORECASE)
                     if test_reply and fitscriteria(comment) and comment.parent().author == BOT_USERNAME:
                         if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
-                            commenttext = buildcommenttext_awa(AlienwareArena(comment.submission.url), "update")
+                            commenttext = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
                             if commenttext is not None:
-                                commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
                                     print('Commenting on comment ' + str(comment) + ' after finding request to update Alienware Arena')
                                     comment.reply(commenttext)
@@ -452,7 +460,6 @@ class CommentWatch(threading.Thread):
                             g_id = re.search('\d+', comment.submission.url).group(0)
                             commenttext = buildcommenttext_igames(iGames(g_id, g_website), "update")
                             if commenttext is not None and commenttext != "":
-                                commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
                                     print('Commenting on comment ' + str(comment) + ' after finding request to update ' + g_website)
                                     comment.reply(commenttext)

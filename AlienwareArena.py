@@ -10,7 +10,7 @@ from countryinfo import CountryInfo
 
 class AlienwareArena:
 
-    def __init__(self, url):
+    def __init__(self, url, source):
         self.url = url
         while True:
             try:
@@ -31,12 +31,13 @@ class AlienwareArena:
         if self.countrykeys is None:
             return None
         self.country_with_keys, self.country_without_keys = self.sorted_countries()
-        self.country_names_with_keys = self.get_country_names(self.country_with_keys)
-        self.country_names_without_keys = self.get_country_names(self.country_without_keys)
-        if len(self.country_names_with_keys) > 10 and len(self.country_names_without_keys) > 10:
-            self.raw_continents_with_keys, self.raw_continents_with_country = self.get_continents(self.country_with_keys)
-            self.raw_continents_without_keys, self.raw_continents_without_country = self.get_continents(self.country_without_keys)
-            self.continents_with_keys, self.continents_without_keys = self.duplicate_continents()
+        if source == "new":
+            self.country_names_with_keys = self.get_country_names(self.country_with_keys)
+            self.country_names_without_keys = self.get_country_names(self.country_without_keys)
+            if len(self.country_names_with_keys) > 10 and len(self.country_names_without_keys) > 10:
+                self.raw_continents_with_keys, self.raw_continents_with_country = self.get_continents(self.country_with_keys)
+                self.raw_continents_without_keys, self.raw_continents_without_country = self.get_continents(self.country_without_keys)
+                self.continents_with_keys, self.continents_without_keys = self.duplicate_continents()
         self.keys_level = self.keys_level()
 
     def countrykeys(self):
