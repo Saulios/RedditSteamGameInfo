@@ -110,6 +110,7 @@ class SteamSearchGame:
             search_data = self.gamePage.find("div", id="search_result_container")
             games = search_data.find_all('a', {'class': 'search_result_row'})
         appid = 0
+        game_name = ""
 
         def repl_roman(match):
             return self.write_roman(int(match.group(0)))
@@ -138,6 +139,8 @@ class SteamSearchGame:
                 get_title == game_name
                 # words are the same but different order
                 or set(get_title.split(" ")) == set(game_name.split(" "))
+                # typo in target
+                or sorted(get_title.replace(" ", "")) == sorted(game_name.replace(" ", ""))
             ):
                 if removed:
                     appid = game['data-id']
@@ -150,8 +153,10 @@ class SteamSearchGame:
             if (
                 get_title == game_name_roman
                 or set(get_title.split(" ")) == set(game_name_roman.split(" "))
+                or sorted(get_title.replace(" ", "")) == sorted(game_name_roman.replace(" ", ""))
                 or get_title == game_name_number
                 or set(get_title.split(" ")) == set(game_name_number.split(" "))
+                or sorted(get_title.replace(" ", "")) == sorted(game_name_number.replace(" ", ""))
             ):
                 if removed:
                     appid = game['data-id']
@@ -177,6 +182,8 @@ class SteamSearchGame:
                         game_name in get_title
                         # target words are all in search result
                         or all(x in get_title for x in game_name.split(" "))
+                        # typo in target
+                        or all(char in sorted(get_title.replace(" ", "")) for char in sorted(game_name.replace(" ", "")))
                     ):
                         appid = game['data-ds-appid']
                         break
@@ -185,8 +192,10 @@ class SteamSearchGame:
                     if (
                         game_name_roman in get_title
                         or all(x in get_title for x in game_name_roman.split(" "))
+                        or all(char in sorted(get_title.replace(" ", "")) for char in sorted(game_name_roman.replace(" ", "")))
                         or game_name_number in get_title
                         or all(x in get_title for x in game_name_number.split(" "))
+                        or all(char in sorted(get_title.replace(" ", "")) for char in sorted(game_name_number.replace(" ", "")))
                     ):
                         appid = game['data-ds-appid']
                         break
@@ -202,6 +211,7 @@ class SteamSearchGame:
         else:
             games = self.gamePage.find_all("a", string=re.compile(str(self.game_name.split(" ")[0])))
             appid = 0
+            game_name = ""
 
             def repl_roman(match):
                 return self.write_roman(int(match.group(0)))
@@ -221,14 +231,15 @@ class SteamSearchGame:
                 # Some dlc have the word DLC in the name
                 get_title = get_title.replace("dlc", "").replace("  ", " ")
                 game_name = game_name.replace("dlc", "").replace("  ", " ")
-
                 if (
                     # exactly the same
                     get_title == game_name
                     # words are the same but different order
                     or set(get_title.split(" ")) == set(game_name.split(" "))
-                    # target fully in search result
+                    # typo in target
+                    or sorted(get_title.replace(" ", "")) == sorted(game_name.replace(" ", ""))
                     or game_name in get_title
+                    or set(game_name.split(" ")) <= set(get_title.split(" "))
                 ):
                     href = game.get('href').split("/")
                     app = href.index("app") + 1
@@ -240,9 +251,11 @@ class SteamSearchGame:
                 if (
                     get_title == game_name_roman
                     or set(get_title.split(" ")) == set(game_name_roman.split(" "))
+                    or sorted(get_title.replace(" ", "")) == sorted(game_name_roman.replace(" ", ""))
                     or game_name_roman in get_title
                     or get_title == game_name_number
                     or set(get_title.split(" ")) == set(game_name_number.split(" "))
+                    or sorted(get_title.replace(" ", "")) == sorted(game_name_number.replace(" ", ""))
                     or game_name_number in get_title
                 ):
                     href = game.get('href').split("/")
