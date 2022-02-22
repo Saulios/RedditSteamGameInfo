@@ -82,10 +82,12 @@ def buildcommenttext_awa(g, source):
         commenttext += "**Giveaway details**\n\n"
     if isinstance(g.keys_level, list) and len(g.keys_level) >= 2 and g.keys_level[1] != '0':
         if source == "update" or len(g.keys_level) != 0:
-            commenttext += "* Available keys: " + g.keys_level[1] + "\n"
+            commenttext += "* Available keys: " + g.keys_level[1]
         else:
             return None
         if source == "new":
+            commenttext += "\n"
+            commenttext += "* Total keys (at post time): " + g.keys_level[1] + "\n"
             commenttext += "* Minimum level: " + g.keys_level[0] + "\n"
             if len(g.country_names_with_keys) != 0 and len(g.country_names_with_keys) <= 10:
                 commenttext += "* Available for: " + ', '.join(g.country_names_with_keys) + "\n"
@@ -102,7 +104,7 @@ def buildcommenttext_awa(g, source):
     else:
         return None
     if source == "new":
-        commenttext += '\n*Available keys are automatically updated every minute (for 2 hours)*\n'
+        commenttext += '\n*Available keys are automatically updated every minute (for 4 hours)*\n'
         commenttext += '\n***\n'
     return commenttext
 
@@ -122,7 +124,7 @@ def buildcommenttext_igames(g, source):
     else:
         return None
     if source == "new":
-        commenttext += '\n*Available keys are automatically updated every minute (for 2 hours)*\n'
+        commenttext += '\n*Available keys are automatically updated every minute (for 4 hours)*\n'
         commenttext += '\n***\n'
     return commenttext
 
@@ -455,39 +457,46 @@ class EditCommentWatch(threading.Thread):
         print('Watching bot comments')
         while True:
             try:
+                count = 0
                 for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=10):
                     now = time.time()
                     age = now - comment.created_utc  # in seconds
-                    if age <= 7200:  # 2 hours
+                    if age <= 14400:  # 4 hours
                         if comment.body.startswith('**Giveaway details**'):
-                            time.sleep(60)  # try edit every minute
-                            if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
-                                g_website = "alienware"
-                            elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
-                                g_website = "steelseries"
-                            elif re.search(CRUCIAL_URL_REGEX, comment.submission.url):
-                                g_website = "crucial"
-                            elif re.search(IGAMES_URL_REGEX, comment.submission.url):
-                                g_website = "igames"
-                            original_body = comment.body
-                            edited_comment = ""
-                            if g_website == "alienware":
-                                edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
-                                original_body_split = original_body.split("**Giveaway details**\n\n")
-                                part_to_edit = original_body_split[1].split("\n* Minimum level")[0]
-                                original_body_part = original_body_split[1].split("\n* Minimum level")[1]
-                                edited_comment = "**Giveaway details**\n\n" + edited_part + "\n* Minimum level" + original_body_part
-                            else:
-                                g_id = re.search('\d+', comment.submission.url).group(0)
-                                edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
+                            count += 1
+                if count > 0:
+                    for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=10):
+                        now = time.time()
+                        age = now - comment.created_utc  # in seconds
+                        if age <= 14400:  # 4 hours
+                            if comment.body.startswith('**Giveaway details**'):
+                                sleep_time = 60 / count
+                                time.sleep(sleep_time)  # try edit(s) every minute
+                                if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
+                                    g_website = "alienware"
+                                elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
+                                    g_website = "steelseries"
+                                elif re.search(CRUCIAL_URL_REGEX, comment.submission.url):
+                                    g_website = "crucial"
+                                elif re.search(IGAMES_URL_REGEX, comment.submission.url):
+                                    g_website = "igames"
+                                original_body = comment.body
                                 original_body_split = original_body.split("**Giveaway details**\n\n")
                                 part_to_edit = original_body_split[1].split("\n* Total keys")[0]
-                                original_body_part = original_body_split[1].split("already claimed)")[1]
-                                edited_comment = "**Giveaway details**\n\n" + edited_part + original_body_part
-                            if edited_part != part_to_edit:
-                                if len(edited_comment) < 10000:
-                                    print("Editing key availability on comment " + str(comment))
-                                    comment.edit(edited_comment)
+                                edited_comment = ""
+                                if g_website == "alienware":
+                                    edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
+                                    original_body_part = original_body_split[1].split("\n* Total keys")[1]
+                                    edited_comment = "**Giveaway details**\n\n" + edited_part + "\n* Total keys" + original_body_part
+                                else:
+                                    g_id = re.search('\d+', comment.submission.url).group(0)
+                                    edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
+                                    original_body_part = original_body_split[1].split("already claimed)")[1]
+                                    edited_comment = "**Giveaway details**\n\n" + edited_part + original_body_part
+                                if edited_part != part_to_edit:
+                                    if len(edited_comment) < 10000:
+                                        print("Editing key availability on comment " + str(comment))
+                                        comment.edit(edited_comment)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
