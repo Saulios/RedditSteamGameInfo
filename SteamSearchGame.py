@@ -182,8 +182,6 @@ class SteamSearchGame:
                         game_name in get_title
                         # target words are all in search result
                         or all(x in get_title for x in game_name.split(" "))
-                        # typo in target
-                        or all(char in sorted(get_title.replace(" ", "")) for char in sorted(game_name.replace(" ", "")))
                     ):
                         appid = game['data-ds-appid']
                         break
@@ -192,10 +190,8 @@ class SteamSearchGame:
                     if (
                         game_name_roman in get_title
                         or all(x in get_title for x in game_name_roman.split(" "))
-                        or all(char in sorted(get_title.replace(" ", "")) for char in sorted(game_name_roman.replace(" ", "")))
                         or game_name_number in get_title
                         or all(x in get_title for x in game_name_number.split(" "))
-                        or all(char in sorted(get_title.replace(" ", "")) for char in sorted(game_name_number.replace(" ", "")))
                     ):
                         appid = game['data-ds-appid']
                         break
