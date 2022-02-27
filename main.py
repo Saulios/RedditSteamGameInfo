@@ -132,6 +132,7 @@ def buildcommenttext_igames(g, source):
 def buildcommenttext(g, removed, source):
     if isinstance(g.title, str):
         commenttext = ''
+        javascripttext = ''
         if source == "Indiegala" or source == "Epic":
             commenttext += '*Game with the same name on Steam:* '
         if removed:
@@ -253,9 +254,10 @@ def buildcommenttext(g, removed, source):
                 commenttext += "a/" + g.basegame[0] + ","
             commenttext += g.asf[0] + '`\n'
             if g.asf[1] == "sub":
-                commenttext += ' * Can be added in browsers/mobile with `javascript:AddFreeLicense(' + g.asf[0].strip("s/") + ')`\n'
+                javascripttext = f'javascript:AddFreeLicense({g.asf[0].strip("s/")})'
+                commenttext += f' * Can be added in browsers/mobile with `{javascripttext}`\n'
         commenttext += '\n***\n'
-        return commenttext
+        return commenttext, javascripttext
 
 
 def buildfootertext():
@@ -278,12 +280,14 @@ class SubWatch(threading.Thread):
                         appid = re.search('\d+', submission.url).group(0)
                         source_platform = "Steam"
                         if fitscriteria(submission):
-                            commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
+                            commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
                             if commenttext is not None:
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
                                     print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
-                                    submission.reply(commenttext)
+                                    botcomment = submission.reply(commenttext)
+                                    if javascripttext is not None:
+                                        botcomment.reply(javascripttext)
                     elif re.search(STEAM_TITLE_REGEX, submission.title, re.IGNORECASE):
                         title_split = re.split(STEAM_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
                         game_name = title_split[-1].strip()
@@ -292,7 +296,7 @@ class SubWatch(threading.Thread):
                             appid = game.appid
                             source_platform = "Steam"
                             if appid != 0:
-                                commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
+                                commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
                                 if commenttext is not None:
                                     commenttext_awa = ""
                                     if re.search(ALIENWARE_URL_REGEX, submission.url):
@@ -318,15 +322,18 @@ class SubWatch(threading.Thread):
                                     if len(commenttext) < 10000:
                                         print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
                                         submission.reply(commenttext)
+                                        botcomment = submission.reply(commenttext)
+                                        if javascripttext is not None:
+                                            botcomment.reply(javascripttext)                                        
                             else:
                                 game = SteamSearchGame(game_name, True)
                                 appid = game.appid
                                 if appid != 0:
                                     # try for only removed store page
-                                    commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
+                                    commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
                                     if commenttext is None:
                                         # not available on Steam
-                                        commenttext = buildcommenttext(SteamRemovedGame(appid), True, source_platform)
+                                        commenttext, javascripttext = buildcommenttext(SteamRemovedGame(appid), True, source_platform)
                                     if commenttext is not None:
                                         commenttext_awa = ""
                                         if re.search(ALIENWARE_URL_REGEX, submission.url):
@@ -351,7 +358,9 @@ class SubWatch(threading.Thread):
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name)
-                                            submission.reply(commenttext)
+                                            botcomment = submission.reply(commenttext)
+                                            if javascripttext is not None:
+                                                botcomment.reply(javascripttext)    
                     elif (
                         (indiegala := re.search(INDIEGALA_TITLE_REGEX, submission.title, re.IGNORECASE)
                             and re.search(INDIEGALA_URL_REGEX, submission.url))
@@ -369,12 +378,14 @@ class SubWatch(threading.Thread):
                             game = SteamSearchGame(game_name, False)
                             appid = game.appid
                             if appid != 0:
-                                commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
+                                commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
                                 if commenttext is not None:
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
                                         print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
-                                        submission.reply(commenttext)
+                                        botcomment = submission.reply(commenttext)
+                                        if javascripttext is not None:
+                                            botcomment.reply(javascripttext)
                     elif re.search(ALIENWARE_URL_REGEX, submission.url):
                         if fitscriteria(submission):
                             commenttext = buildcommenttext_awa(AlienwareArena(submission.url, "new"), "new")
