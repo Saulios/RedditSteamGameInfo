@@ -360,6 +360,24 @@ class SubWatch(threading.Thread):
                                             botcomment = submission.reply(commenttext)
                                             if javascripttext is not None and javascripttext != "":
                                                 botcomment.reply(javascripttext)
+                                elif (
+                                    re.search(STEELSERIES_URL_REGEX, submission.url)
+                                    or re.search(CRUCIAL_URL_REGEX, submission.url)
+                                    or re.search(IGAMES_URL_REGEX, submission.url)
+                                ):
+                                    # Not found on Steam, still post key availability part
+                                    g_website = "steelseries"
+                                    if re.search(CRUCIAL_URL_REGEX, submission.url):
+                                        g_website = "crucial"
+                                    elif re.search(IGAMES_URL_REGEX, submission.url):
+                                        g_website = "igames"
+                                    g_id = re.search('\d+', submission.url).group(0)
+                                    commenttext = buildcommenttext_igames(iGames(g_id, g_website), "new")
+                                    if commenttext is not None and commenttext != "":
+                                        commenttext += buildfootertext()
+                                        if len(commenttext) < 10000:
+                                            print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
+                                            submission.reply(commenttext)
                     elif (
                         (indiegala := re.search(INDIEGALA_TITLE_REGEX, submission.title, re.IGNORECASE)
                             and re.search(INDIEGALA_URL_REGEX, submission.url))
