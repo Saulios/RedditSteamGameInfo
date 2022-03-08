@@ -80,15 +80,13 @@ def buildcommenttext_awa(g, source):
     commenttext = ''
     if source == "new":
         commenttext += "**Giveaway details**\n\n"
-    if isinstance(g.keys_level, list) and len(g.keys_level) >= 2 and g.keys_level[1] != '0':
+    if isinstance(g.keys_level, list) and len(g.keys_level) > 0 and (g.keys_level[0][1] != '0' or (len(g.keys_level) > 1 and g.keys_level[1][1] != '0')):
         if source == "update" or len(g.keys_level) != 0:
-            commenttext += "* Available keys: " + g.keys_level[1]
+            commenttext += "* Available keys: " + g.keys_total + "\n"
+            commenttext += "* Level required: " + g.keys_level[0][0] + "\n"
         else:
             return None
         if source == "new":
-            commenttext += "\n"
-            commenttext += "* Total keys (at post time): " + g.keys_level[1] + "\n"
-            commenttext += "* Minimum level: " + g.keys_level[0] + "\n"
             if len(g.country_names_with_keys) != 0 and len(g.country_names_with_keys) <= 10:
                 commenttext += "* Available for: " + ', '.join(g.country_names_with_keys) + "\n"
             elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) <= 10:
@@ -99,8 +97,10 @@ def buildcommenttext_awa(g, source):
                 commenttext += "* Available for: " + ', '.join(g.continents_with_keys) + "\n"
             elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
                 commenttext += "* No restricted countries\n"
-    elif isinstance(g.keys_level, list):
-        commenttext += "* Available keys: " + g.keys_level[1] + "\n"
+            commenttext += "* Initial keys (at post time): " + g.keys_total + "\n"
+    elif isinstance(g.keys_level, list) and source == "update" and len(g.keys_level) > 0 and g.keys_level[0][1] == '0':
+        commenttext += "* Available keys: " + g.keys_total + "\n"
+        commenttext += "* Level required: " + g.keys_level[0][0] + "\n"
     else:
         return None
     if source == "new":
@@ -113,14 +113,13 @@ def buildcommenttext_igames(g, source):
     commenttext = ''
     if source == "new":
         commenttext += "**Giveaway details**\n\n"
-    if isinstance(g.key_amount, str) and ((source == "update" and g.key_total != "0") or g.key_amount != "0"):
+    if isinstance(g.key_amount, str) and ((g.key_claimed != "0" and source == "update") or source == "new"):
         commenttext += "* Available keys: " + g.key_amount
         if g.key_claimed != "0":
             commenttext += " (" + g.key_claimed + " already claimed)"
-        if source != "update":
-            commenttext += "\n"
-            if g.key_claimed != "0" and g.key_amount != g.key_total:
-                commenttext += "* Total keys: " + g.key_total + "\n"
+        commenttext += "\n"
+        if (g.key_claimed != "0" and g.key_total != "0") or source == "new":
+            commenttext += "* Total keys: " + g.key_total + "\n"
     else:
         return None
     if source == "new":
@@ -507,26 +506,37 @@ class EditCommentWatch(threading.Thread):
                             time.sleep(sleep_time)  # try edit(s) every minute
                             if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
                                 g_website = "alienware"
+                                split_part = "* Unavailable for:"
                             elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
                                 g_website = "steelseries"
+                                split_part = "\n*Available"
                             elif re.search(CRUCIAL_URL_REGEX, comment.submission.url):
                                 g_website = "crucial"
+                                split_part = "\n*Available"
                             elif re.search(IGAMES_URL_REGEX, comment.submission.url):
                                 g_website = "igames"
-                            original_body = comment.body
-                            original_body_split = original_body.split("**Giveaway details**\n\n")
-                            part_to_edit = original_body_split[1].split("\n* Total keys")[0]
-                            edited_comment = ""
+                                split_part = "\n*Available"
                             if g_website == "alienware":
                                 edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
-                                original_body_part = original_body_split[1].split("\n* Total keys")[1]
-                                edited_comment = "**Giveaway details**\n\n" + edited_part + "\n* Total keys" + original_body_part
                             else:
                                 g_id = re.search('\d+', comment.submission.url).group(0)
                                 edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
-                                original_body_part = original_body_split[1].split("already claimed)")[1]
-                                edited_comment = "**Giveaway details**\n\n" + edited_part + original_body_part
+                                if "Total" not in edited_part:
+                                    split_part = "* Total"
+                            original_body = comment.body
+                            original_body_split = original_body.split("**Giveaway details**\n\n")
+                            if g_website == "alienware":
+                                split_test = original_body_split[1].split(split_part, 1)
+                                if len(split_test) == 1:
+                                    split_part = "* Available for:"
+                                    split_test = original_body_split[1].split(split_part, 1)
+                                    if len(split_test) == 1:
+                                        split_part = "* No restricted countries"
+                            part_to_edit = original_body_split[1].split(split_part, 1)[0]
+                            original_body_part = original_body_split[1].split(split_part, 1)[1]
+                            edited_comment = ""
                             if edited_part != part_to_edit:
+                                edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part
                                 if len(edited_comment) < 10000:
                                     comment.edit(edited_comment)
             except PrawcoreException:
@@ -557,26 +567,37 @@ class EditCommentWatchLong(threading.Thread):
                             time.sleep(sleep_time)  # try edit(s) every 10 minutes
                             if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
                                 g_website = "alienware"
+                                split_part = "* Unavailable for:"
                             elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
                                 g_website = "steelseries"
+                                split_part = "\n*Available"
                             elif re.search(CRUCIAL_URL_REGEX, comment.submission.url):
                                 g_website = "crucial"
+                                split_part = "\n*Available"
                             elif re.search(IGAMES_URL_REGEX, comment.submission.url):
                                 g_website = "igames"
-                            original_body = comment.body
-                            original_body_split = original_body.split("**Giveaway details**\n\n")
-                            part_to_edit = original_body_split[1].split("\n* Total keys")[0]
-                            edited_comment = ""
+                                split_part = "\n*Available"
                             if g_website == "alienware":
                                 edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
-                                original_body_part = original_body_split[1].split("\n* Total keys")[1]
-                                edited_comment = "**Giveaway details**\n\n" + edited_part + "\n* Total keys" + original_body_part.replace("Available keys are automatically updated every minute", "Available keys are automatically updated every 10 minutes")
                             else:
                                 g_id = re.search('\d+', comment.submission.url).group(0)
                                 edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
-                                original_body_part = original_body_split[1].split("already claimed)")[1]
-                                edited_comment = "**Giveaway details**\n\n" + edited_part + original_body_part.replace("Available keys are automatically updated every minute", "Available keys are automatically updated every 10 minutes")
+                                if "Total" not in edited_part:
+                                    split_part = "* Total"
+                            original_body = comment.body
+                            original_body_split = original_body.split("**Giveaway details**\n\n")
+                            if g_website == "alienware":
+                                split_test = original_body_split[1].split(split_part, 1)
+                                if len(split_test) == 1:
+                                    split_part = "* Available for:"
+                                    split_test = original_body_split[1].split(split_part, 1)
+                                    if len(split_test) == 1:
+                                        split_part = "* No restricted countries"
+                            part_to_edit = original_body_split[1].split(split_part, 1)[0]
+                            original_body_part = original_body_split[1].split(split_part, 1)[1]
+                            edited_comment = ""
                             if edited_part != part_to_edit:
+                                edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part.replace("are automatically updated every minute", "are automatically updated every 10 minutes")
                                 if len(edited_comment) < 10000:
                                     comment.edit(edited_comment)
             except PrawcoreException:
