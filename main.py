@@ -129,9 +129,9 @@ def buildcommenttext_igames(g, source):
 
 
 def buildcommenttext(g, removed, source):
+    commenttext = ''
+    javascripttext = ''
     if isinstance(g.title, str):
-        commenttext = ''
-        javascripttext = ''
         if source == "Indiegala" or source == "Epic":
             commenttext += '*Game with the same name on Steam:* '
         if removed:
@@ -256,7 +256,7 @@ def buildcommenttext(g, removed, source):
                 javascripttext = f'javascript:AddFreeLicense({g.asf[0].strip("s/")})'
                 commenttext += f' * Can be added in browsers/mobile with `{javascripttext}`\n'
         commenttext += '\n***\n'
-        return commenttext, javascripttext
+    return commenttext, javascripttext
 
 
 def buildfootertext():
@@ -329,7 +329,7 @@ class SubWatch(threading.Thread):
                                 if appid != 0:
                                     # try for only removed store page
                                     commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
-                                    if commenttext is None:
+                                    if commenttext is None or commenttext == "":
                                         # not available on Steam
                                         commenttext, javascripttext = buildcommenttext(SteamRemovedGame(appid), True, source_platform)
                                     if commenttext is not None and commenttext != "":
