@@ -91,16 +91,16 @@ class AlienwareArena:
             try:
                 # Islands lead to messy results, don't include countries with population under 500k
                 if CountryInfo(country).population() > 500000:
-                    #print(country)
-                    continent = continents_list[country_alpha2_to_continent_code(country)]
-                    #print(continent)
-                    continents.append(continent)
+                    if country != "MN":
+                        continent = continents_list[country_alpha2_to_continent_code(country)]
+                        continents.append(continent)
                     if continent == "North America" and len(north_america) == 0:
                         north_america.append(pycountry.countries.get(alpha_2=country).name)
                     elif continent == "South America" and len(south_america) == 0:
                         south_america.append(pycountry.countries.get(alpha_2=country).name)
                     elif continent == "Asia" and len(asia) == 0:
-                        asia.append(pycountry.countries.get(alpha_2=country).name)
+                        if country != "MN":
+                            asia.append(pycountry.countries.get(alpha_2=country).name)
                     elif continent == "Oceania" and len(oceania) == 0:
                         oceania.append(pycountry.countries.get(alpha_2=country).name)
                     elif continent == "Africa" and len(africa) == 0:
