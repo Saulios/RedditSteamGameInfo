@@ -113,13 +113,14 @@ def buildcommenttext_igames(g, source):
     commenttext = ''
     if source == "new":
         commenttext += "**Giveaway details**\n\n"
-    if isinstance(g.key_amount, str) and ((g.key_claimed != "0" and source == "update") or source == "new"):
+    if isinstance(g.key_amount, str) and ((g.key_total != "0" and source == "update") or source == "new"):
         commenttext += "* Available keys: " + g.key_amount
         if g.key_claimed != "0":
             commenttext += " (" + g.key_claimed + " already claimed)"
-        commenttext += "\n"
-        if (g.key_claimed != "0" and g.key_total != "0") or source == "new":
-            commenttext += "* Total keys: " + g.key_total + "\n"
+        if source != "update":
+            commenttext += "\n"
+            if g.key_claimed != "0" and g.key_total != "0":
+                commenttext += "* Total keys: " + g.key_total + "\n"
     else:
         return None
     if source == "new":
@@ -509,20 +510,18 @@ class EditCommentWatch(threading.Thread):
                                 split_part = "* Unavailable for:"
                             elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
                                 g_website = "steelseries"
-                                split_part = "\n*Available"
+                                split_part = "already claimed)"
                             elif re.search(CRUCIAL_URL_REGEX, comment.submission.url):
                                 g_website = "crucial"
-                                split_part = "\n*Available"
+                                split_part = "already claimed)"
                             elif re.search(IGAMES_URL_REGEX, comment.submission.url):
                                 g_website = "igames"
-                                split_part = "\n*Available"
+                                split_part = "already claimed)"
                             if g_website == "alienware":
                                 edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
                             else:
                                 g_id = re.search('\d+', comment.submission.url).group(0)
                                 edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
-                                if "Total" not in edited_part:
-                                    split_part = "* Total"
                             original_body = comment.body
                             original_body_split = original_body.split("**Giveaway details**\n\n")
                             if g_website == "alienware":
@@ -533,6 +532,11 @@ class EditCommentWatch(threading.Thread):
                                     if len(split_test) == 1:
                                         split_part = "* No restricted countries"
                             part_to_edit = original_body_split[1].split(split_part, 1)[0]
+                            if g_website == "steelseries" or g_website == "crucial" or g_website == "igames":
+                                test_out_of_keys = re.sub("[^0-9]", "", part_to_edit)
+                                if test_out_of_keys.startswith('0'):
+                                    # prevents edits on a restock, leads to incorrect keys
+                                    edited_part = part_to_edit
                             original_body_part = original_body_split[1].split(split_part, 1)[1]
                             edited_comment = ""
                             if edited_part != part_to_edit:
@@ -570,20 +574,18 @@ class EditCommentWatchLong(threading.Thread):
                                 split_part = "* Unavailable for:"
                             elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
                                 g_website = "steelseries"
-                                split_part = "\n*Available"
+                                split_part = "already claimed)"
                             elif re.search(CRUCIAL_URL_REGEX, comment.submission.url):
                                 g_website = "crucial"
-                                split_part = "\n*Available"
+                                split_part = "already claimed)"
                             elif re.search(IGAMES_URL_REGEX, comment.submission.url):
                                 g_website = "igames"
-                                split_part = "\n*Available"
+                                split_part = "already claimed)"
                             if g_website == "alienware":
                                 edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
                             else:
                                 g_id = re.search('\d+', comment.submission.url).group(0)
                                 edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
-                                if "Total" not in edited_part:
-                                    split_part = "* Total"
                             original_body = comment.body
                             original_body_split = original_body.split("**Giveaway details**\n\n")
                             if g_website == "alienware":
@@ -594,6 +596,11 @@ class EditCommentWatchLong(threading.Thread):
                                     if len(split_test) == 1:
                                         split_part = "* No restricted countries"
                             part_to_edit = original_body_split[1].split(split_part, 1)[0]
+                            if g_website == "steelseries" or g_website == "crucial" or g_website == "igames":
+                                test_out_of_keys = re.sub("[^0-9]", "", part_to_edit)
+                                if test_out_of_keys.startswith('0'):
+                                    # prevents edits on a restock, leads to incorrect keys
+                                    edited_part = part_to_edit
                             original_body_part = original_body_split[1].split(split_part, 1)[1]
                             edited_comment = ""
                             if edited_part != part_to_edit:
