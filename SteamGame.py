@@ -159,7 +159,7 @@ class SteamGame:
                     print("Steam store timeout: sleep for 30 seconds and try again")
                     time.sleep(30)
             subid_json = get_subid.json()
-            if subid_json["is_free"]:
+            if "is_free" in subid_json and subid_json["is_free"]:
                 sub_id = subid_json["subid"]
                 if sub_id != 0:
                     return "s/" + str(sub_id), "sub"
