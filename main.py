@@ -540,7 +540,10 @@ class EditCommentWatch(threading.Thread):
                             original_body_part = original_body_split[1].split(split_part, 1)[1]
                             edited_comment = ""
                             if edited_part != part_to_edit:
-                                edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part
+                                try:
+                                    edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part
+                                except TypeError:
+                                    continue
                                 if len(edited_comment) < 10000:
                                     comment.edit(edited_comment)
             except PrawcoreException:
@@ -604,7 +607,10 @@ class EditCommentWatchLong(threading.Thread):
                             original_body_part = original_body_split[1].split(split_part, 1)[1]
                             edited_comment = ""
                             if edited_part != part_to_edit:
-                                edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part.replace("are automatically updated every minute", "are automatically updated every 10 minutes")
+                                try:
+                                    edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part.replace("are automatically updated every minute", "are automatically updated every 10 minutes")
+                                except TypeError:
+                                    continue
                                 if len(edited_comment) < 10000:
                                     comment.edit(edited_comment)
             except PrawcoreException:
