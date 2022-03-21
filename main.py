@@ -159,13 +159,18 @@ def buildcommenttext(g, removed, source):
         if g.gettype == "game" or g.gettype == "mod":
             commenttext += '[Community Hub](https://steamcommunity.com/app/' + g.appID + ') | '
         commenttext += '[SteamDB](https://steamdb.info/app/' + g.appID + ')\n'
-        if not g.gettype == "game" and g.basegame is not None:
+        if (g.gettype == "dlc" or g.gettype == "mod") and g.basegame is not None:
             commenttext += '* Game links (**' + g.basegame[1] + '**): '
             if removed:
                 commenttext += '[Store Page (archived)](' + g.basegame[6]
             else:
                 commenttext += '[Store Page](https://store.steampowered.com/app/' + g.basegame[0]
             commenttext += ') | [Community Hub](https://steamcommunity.com/app/' + g.basegame[0] + ') | [SteamDB](https://steamdb.info/app/' + g.basegame[0] + ')\n\n'
+        elif g.gettype == "music" and g.basegame is not None:
+            if removed:
+                commenttext += '* Base game ([' + g.basegame[1] + '](' + g.basegame[6] + ')) not required\n\n'
+            else:
+                commenttext += '* Base game ([' + g.basegame[1] + '](https://store.steampowered.com/app/' + g.basegame[0] + ')) not required\n\n'
         else:
             commenttext += '\n'
         if not g.unreleased and (g.reviewsummary != "" or g.reviewdetails != ""):
@@ -186,7 +191,7 @@ def buildcommenttext(g, removed, source):
                 commenttext += ' * ' + g.unreleasedtext + '\n'
         if not removed and not (g.unreleased and g.price[0] == "No price found"):
             commenttext += ' * '
-            if g.price[0] == "Free" and g.basegame is not None and g.basegame[2] == "Free":
+            if g.price[0] == "Free" and g.basegame is not None and g.basegame[2] == "Free" and g.gettype == "dlc":
                 commenttext += 'Game and '
             if g.gettype == "dlc":
                 commenttext += 'DLC '
@@ -201,7 +206,7 @@ def buildcommenttext(g, removed, source):
             if g.price[0] != "No price found" and g.discountamount:
                 commenttext += ' (' + g.discountamount + ')'
             commenttext += '\n'
-            if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and (g.price[0] != "Free" or g.basegame[2] != "Free"):
+            if (g.gettype == "dlc" or g.gettype == "mod") and g.basegame is not None and len(g.basegame) > 2 and (g.price[0] != "Free" or g.basegame[2] != "Free"):
                 commenttext += ' * Game Price: '
                 if g.basegame[3] != "":
                     commenttext += '~~' + g.basegame[3] + '~~ '
@@ -248,9 +253,9 @@ def buildcommenttext(g, removed, source):
             else:
                 commenttext += ' * Does not give'
             commenttext += ' +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F)\n'
-        if (g.isfree() or g.price[0] == "Free") and not g.unreleased and source == "Steam":
+        if (g.isfree() or g.price[0] == "Free") and not g.unreleased and (source == "Steam" or g.gettype != "dlc" or (g.gettype == "dlc" and (g.isfree() or g.price[0] == "Free") and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4])):
             commenttext += ' * Can be added to ASF clients with `!addlicense asf '
-            if not g.gettype == "game" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4]:
+            if g.gettype == "dlc" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4]:
                 commenttext += "a/" + g.basegame[0] + ","
             commenttext += g.asf[0] + '`\n'
             if g.asf[1] == "sub":
