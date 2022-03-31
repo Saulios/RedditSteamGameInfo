@@ -515,13 +515,13 @@ class EditCommentWatch(threading.Thread):
                                 split_part = "* Unavailable for:"
                             elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
                                 g_website = "steelseries"
-                                split_part = "already claimed)"
+                                split_part = "\n* Total keys:"
                             elif re.search(CRUCIAL_URL_REGEX, comment.submission.url):
                                 g_website = "crucial"
-                                split_part = "already claimed)"
+                                split_part = "\n* Total keys:"
                             elif re.search(IGAMES_URL_REGEX, comment.submission.url):
                                 g_website = "igames"
-                                split_part = "already claimed)"
+                                split_part = "\n* Total keys:"
                             if g_website == "alienware":
                                 edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
                             else:
@@ -582,13 +582,13 @@ class EditCommentWatchLong(threading.Thread):
                                 split_part = "* Unavailable for:"
                             elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
                                 g_website = "steelseries"
-                                split_part = "already claimed)"
+                                split_part = "\n* Total keys:"
                             elif re.search(CRUCIAL_URL_REGEX, comment.submission.url):
                                 g_website = "crucial"
-                                split_part = "already claimed)"
+                                split_part = "\n* Total keys:"
                             elif re.search(IGAMES_URL_REGEX, comment.submission.url):
                                 g_website = "igames"
-                                split_part = "already claimed)"
+                                split_part = "\n* Total keys:"
                             if g_website == "alienware":
                                 edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
                             else:
