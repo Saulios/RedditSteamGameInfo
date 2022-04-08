@@ -191,7 +191,7 @@ def buildcommenttext(g, removed, source):
                 commenttext += ' * ' + g.unreleasedtext + '\n'
         if not removed and not (g.unreleased and g.price[0] == "No price found"):
             commenttext += ' * '
-            if g.price[0] == "Free" and g.basegame is not None and g.basegame[2] == "Free" and g.gettype == "dlc":
+            if g.price[0] == "Free" and g.price[1] == "" and g.basegame is not None and g.basegame[2] == "Free" and g.basegame[3] == "" and g.gettype == "dlc":
                 commenttext += 'Game and '
             if g.gettype == "dlc":
                 commenttext += 'DLC '
@@ -203,18 +203,18 @@ def buildcommenttext(g, removed, source):
             commenttext += g.price[0]
             if not g.isfree() and g.price[0] != ("Free" and "No price found"):
                 commenttext += ' USD'
-            if g.price[0] != "No price found" and g.discountamount:
+            if g.price[0] != "No price found" and g.price[1] != "" and g.discountamount:
                 commenttext += ' (' + g.discountamount + ')'
             commenttext += '\n'
-            if (g.gettype == "dlc" or g.gettype == "mod") and g.basegame is not None and len(g.basegame) > 2 and (g.price[0] != "Free" or g.basegame[2] != "Free"):
+            if (g.gettype == "dlc" or g.gettype == "mod") and g.basegame is not None and len(g.basegame) > 2 and (g.price[0] != "Free" or g.price[1] != "" or g.basegame[3] != "" or g.basegame[2] != "Free"):
                 commenttext += ' * Game Price: '
                 if g.basegame[3] != "":
                     commenttext += '~~' + g.basegame[3] + '~~ '
                 commenttext += g.basegame[2]
                 if not g.basegame[4] and g.basegame[2] != ("Free" and "No price found"):
                     commenttext += ' USD'
-                    if g.basegame[5]:
-                        commenttext += ' (' + g.basegame[5] + ')'
+                if g.basegame[2] != "No price found" and g.basegame[3] != "" and g.basegame[5]:
+                    commenttext += ' (' + g.basegame[5] + ')'
                 commenttext += '\n'
         if not g.unreleased and g.releasedate:
             commenttext += ' * Release Date: ' + g.releasedate + '\n'
