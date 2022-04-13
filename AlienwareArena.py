@@ -38,7 +38,7 @@ class AlienwareArena:
                 self.raw_continents_with_keys, self.raw_continents_with_country = self.get_continents(self.country_with_keys)
                 self.raw_continents_without_keys, self.raw_continents_without_country = self.get_continents(self.country_without_keys)
                 self.continents_with_keys, self.continents_without_keys = self.duplicate_continents()
-        self.keys_level, self.keys_total = self.keys_level()
+        self.keys_level = self.keys_level()
 
     def countrykeys(self):
         try:
@@ -52,7 +52,7 @@ class AlienwareArena:
         country_with_keys = []
         country_without_keys = []
         for country in self.countrykeys:
-            if len(self.countrykeys[country]["normal"]) == 0 and len(self.countrykeys[country]["prestige"]) == 0:
+            if len(self.countrykeys[country]) == 0:
                 country_without_keys.append(country)
             else:
                 country_with_keys.append(country)
@@ -167,33 +167,16 @@ class AlienwareArena:
 
     def keys_level(self):
         keys_level = []
-        keys_normal = 0
-        keys_prestige = 0
-        keys_total = "0"
         if len(self.country_with_keys) != 0:
             for country in self.country_with_keys:
-                if len(self.countrykeys[country]["normal"]) != 0:
-                    for level in self.countrykeys[country]["normal"]:
-                        if isinstance(level, int):
-                            keys = self.countrykeys[country]["normal"][0]
-                            keys_level.append(['0', str(keys)])
-                            keys_normal += int(keys)
-                        else:
-                            keys = self.countrykeys[country]["normal"][level]
-                            keys_level.append([str(level), str(keys)])
-                            keys_normal += int(keys)
-                if len(self.countrykeys[country]["prestige"]) != 0:
-                    for prestige_level in self.countrykeys[country]["prestige"]:
-                        keys = self.countrykeys[country]["prestige"][prestige_level]
-                        keys_level.append(['30+ (prestige pool)', str(keys)])
-                        keys_prestige += int(keys)
+                for level in self.countrykeys[country]:
+                    if isinstance(level, int):
+                        keys = self.countrykeys[country][0]
+                        keys_level.append(['0', str(keys)])
+                    else:
+                        keys = self.countrykeys[country][level]
+                        keys_level.append([str(level), str(keys)])
                 break
         else:
             keys_level.append(['0', '0'])
-        if keys_normal != 0:
-            keys_total = str(keys_normal)
-            if keys_prestige != 0:
-                keys_total += " (+ " + str(keys_prestige) + " keys for prestige)"
-        elif keys_prestige != 0:
-            keys_total = str(keys_prestige)
-        return keys_level, keys_total
+        return keys_level

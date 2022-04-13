@@ -82,8 +82,8 @@ def buildcommenttext_awa(g, source):
         commenttext += "**Giveaway details**\n\n"
     if isinstance(g.keys_level, list) and len(g.keys_level) > 0 and (g.keys_level[0][1] != '0' or (len(g.keys_level) > 1 and g.keys_level[1][1] != '0')):
         if source == "update" or len(g.keys_level) != 0:
-            commenttext += "* Available keys: " + g.keys_total + "\n"
-            commenttext += "* Level required: " + g.keys_level[0][0] + "\n"
+            commenttext += "* Available keys: " + g.keys_level[0][1] + "\n"
+            commenttext += "* Tier required: " + g.keys_level[0][0] + "\n"
         else:
             return None
         if source == "new":
@@ -97,10 +97,10 @@ def buildcommenttext_awa(g, source):
                 commenttext += "* Available for: " + ', '.join(g.continents_with_keys) + "\n"
             elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
                 commenttext += "* No restricted countries\n"
-            commenttext += "* Initial keys (at post time): " + g.keys_total + "\n"
+            commenttext += "* Initial keys (at post time): " + g.keys_level[0][1] + "\n"
     elif isinstance(g.keys_level, list) and source == "update" and len(g.keys_level) > 0 and g.keys_level[0][1] == '0':
-        commenttext += "* Available keys: " + g.keys_total + "\n"
-        commenttext += "* Level required: " + g.keys_level[0][0] + "\n"
+        commenttext += "* Available keys: " + g.keys_level[0][1] + "\n"
+        commenttext += "* Tier required: " + g.keys_level[0][0] + "\n"
     else:
         return None
     if source == "new":
