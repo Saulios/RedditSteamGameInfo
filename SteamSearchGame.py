@@ -8,23 +8,14 @@ from bs4 import BeautifulSoup
 
 class SteamSearchGame:
 
-    def __init__(self, game_name, removed):
+    def __init__(self, game_name, removed, source="Steam"):
         self.game_name = self.game_name_searchable(game_name)
         if removed:
-            self.url = 'https://steam-old.madjoki.com/search?q=' + self.game_name
-            self.urlbackup_banned = 'https://steam-tracker.com/apps/banned'
-            self.urlbackup_delisted = 'https://steam-tracker.com/apps/delisted'
-            try:
-                request = requests.get(self.url, timeout=30)
-                request.raise_for_status()
-            except (requests.exceptions.RequestException, requests.exceptions.HTTPError):
-                print("Timeout: try backup urls")
-                self.appid = self.appidbackup(self.urlbackup_banned)
-                if self.appid == 0:
-                    self.appid = self.appidbackup(self.urlbackup_delisted)
-            else:
-                self.gamePage = BeautifulSoup(request.text, "html.parser")
-                self.appid = self.appid(removed)
+            self.url_banned = 'https://steam-tracker.com/apps/banned'
+            self.url_delisted = 'https://steam-tracker.com/apps/delisted'
+            self.appid = self.appidremoved(self.url_banned)
+            if self.appid == 0:
+                self.appid = self.appidremoved(self.url_delisted)
         else:
             self.url = 'https://store.steampowered.com/search/?term=' + self.game_name + '&ignore_preferences=1'
             while True:
@@ -34,7 +25,7 @@ class SteamSearchGame:
                 except requests.exceptions.RequestException:
                     print("Steam store timeout: sleep for 30 seconds and try again")
                     time.sleep(30)
-            self.appid = self.appid(removed)
+            self.appid = self.appid(removed, source)
 
     @classmethod
     def game_name_searchable(cls, game_name):
@@ -103,7 +94,7 @@ class SteamSearchGame:
             return str(num)
         return roman_num
 
-    def appid(self, removed):
+    def appid(self, removed, source):
         if removed:
             games = self.gamePage.select('tr[data-type="app"]')
         else:
@@ -168,7 +159,7 @@ class SteamSearchGame:
             appid = self.appidbackup(self.urlbackup_banned)
             if appid == 0:
                 self.appid = self.appidbackup(self.urlbackup_delisted)
-        if not removed and appid == 0 and "random" not in game_name:
+        if not removed and appid == 0 and "random" not in game_name and source == "Steam":
             # If nothing found, try again but allow one word to be missing from target
             for game in games:
                 # game_name is used from previous loop
@@ -198,7 +189,7 @@ class SteamSearchGame:
 
         return appid
 
-    def appidbackup(self, url):
+    def appidremoved(self, url):
         try:
             self.gamePage = BeautifulSoup(requests.get(url, timeout=30).text, "html.parser")
         except requests.exceptions.RequestException:

@@ -397,7 +397,9 @@ class SubWatch(threading.Thread):
                             source_platform = "Epic"
                         game_name = title_split[-1].strip()
                         if fitscriteria(submission) and game_name != "":
-                            game = SteamSearchGame(game_name, False)
+                            game = SteamSearchGame(game_name, False, "non-Steam")
+                            if game.appid == 0:
+                                game = SteamSearchGame(game_name, True, "non-Steam")
                             appid = game.appid
                             if appid != 0:
                                 commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
