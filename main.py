@@ -88,23 +88,23 @@ def buildcommenttext_awa(g, source):
             return None
         if source == "new":
             if len(g.country_names_with_keys) != 0 and len(g.country_names_with_keys) <= 10:
-                commenttext += "* Available for: " + ', '.join(g.country_names_with_keys) + "\n"
+                commenttext += "* Keys available for: " + ', '.join(g.country_names_with_keys) + "\n"
             elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) <= 10:
-                commenttext += "* Unavailable for: " + ', '.join(g.country_names_without_keys) + "\n"
+                commenttext += "* No keys for: " + ', '.join(g.country_names_without_keys) + "\n"
             elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) > 10:
-                commenttext += "* Unavailable for: " + ', '.join(g.continents_without_keys) + "\n"
+                commenttext += "* No keys for: " + ', '.join(g.continents_without_keys) + "\n"
             elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) > 10:
-                commenttext += "* Available for: " + ', '.join(g.continents_with_keys) + "\n"
+                commenttext += "* Keys available for: " + ', '.join(g.continents_with_keys) + "\n"
             elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
-                commenttext += "* No restricted countries\n"
-            commenttext += "* Initial keys (at post time): " + g.keys_level[0][1] + "\n"
+                commenttext += "* Keys available for all countries\n"
+            commenttext += "* Total keys: " + g.keys_level[0][1] + "\n"
     elif isinstance(g.keys_level, list) and source == "update" and len(g.keys_level) > 0 and g.keys_level[0][1] == '0':
         commenttext += "* Available keys: " + g.keys_level[0][1] + "\n"
         commenttext += "* Tier required: " + g.keys_level[0][0] + "\n"
     else:
         return None
     if source == "new":
-        commenttext += '\n*Available keys are automatically updated every minute*\n'
+        commenttext += '\n*Updating available keys every minute*\n'
         commenttext += '\n***\n'
     return commenttext
 
@@ -116,7 +116,8 @@ def buildcommenttext_igames(g, source):
     if isinstance(g.key_amount, str) and ((g.key_total != "0" and source == "update") or source == "new"):
         commenttext += "* Available keys: " + g.key_amount
         if g.key_claimed != "0":
-            commenttext += " (" + g.key_claimed + " already claimed)"
+            commenttext += "\n"
+            commenttext += "* Keys already claimed: " + g.key_claimed
         if source != "update":
             commenttext += "\n"
             if g.key_claimed != "0" and g.key_total != "0":
@@ -124,7 +125,7 @@ def buildcommenttext_igames(g, source):
     else:
         return None
     if source == "new":
-        commenttext += '\n*Available keys are automatically updated every minute*\n'
+        commenttext += '\n*Updating available keys every minute*\n'
         commenttext += '\n***\n'
     return commenttext
 
@@ -514,7 +515,7 @@ class EditCommentWatch(threading.Thread):
                             time.sleep(sleep_time)  # try edit(s) every minute
                             if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
                                 g_website = "alienware"
-                                split_part = "* Unavailable for:"
+                                split_part = "* No keys for:"
                             elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
                                 g_website = "steelseries"
                                 split_part = "\n* Total keys:"
@@ -534,10 +535,7 @@ class EditCommentWatch(threading.Thread):
                             if g_website == "alienware":
                                 split_test = original_body_split[1].split(split_part, 1)
                                 if len(split_test) == 1:
-                                    split_part = "* Available for:"
-                                    split_test = original_body_split[1].split(split_part, 1)
-                                    if len(split_test) == 1:
-                                        split_part = "* No restricted countries"
+                                    split_part = "* Keys available for"
                             part_to_edit = original_body_split[1].split(split_part, 1)[0]
                             if g_website == "steelseries" or g_website == "crucial" or g_website == "igames":
                                 test_out_of_keys = re.sub("[^0-9]", "", part_to_edit)
@@ -564,24 +562,24 @@ class EditCommentWatchLong(threading.Thread):
         while True:
             try:
                 count = 0
-                for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=20):
+                for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=50):
                     now = time.time()
                     age = now - comment.created_utc  # in seconds
                     if age > 14400 and comment.body.startswith('**Giveaway details**'):
                         count += 1
                 if count > 0:
-                    seconds = 600
+                    seconds = 1800
                     if count > 11:
-                        seconds = 1200
-                    for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=20):
+                        seconds = 3600
+                    for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=50):
                         now = time.time()
                         age = now - comment.created_utc  # in seconds
                         if age > 14400 and comment.body.startswith('**Giveaway details**'):
                             sleep_time = seconds / count
-                            time.sleep(sleep_time)  # try edit(s) every 10 minutes
+                            time.sleep(sleep_time)  # try edit(s) every 30 minutes
                             if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
                                 g_website = "alienware"
-                                split_part = "* Unavailable for:"
+                                split_part = "* No keys for:"
                             elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
                                 g_website = "steelseries"
                                 split_part = "\n* Total keys:"
@@ -601,10 +599,7 @@ class EditCommentWatchLong(threading.Thread):
                             if g_website == "alienware":
                                 split_test = original_body_split[1].split(split_part, 1)
                                 if len(split_test) == 1:
-                                    split_part = "* Available for:"
-                                    split_test = original_body_split[1].split(split_part, 1)
-                                    if len(split_test) == 1:
-                                        split_part = "* No restricted countries"
+                                    split_part = "* Keys available for"
                             part_to_edit = original_body_split[1].split(split_part, 1)[0]
                             if g_website == "steelseries" or g_website == "crucial" or g_website == "igames":
                                 test_out_of_keys = re.sub("[^0-9]", "", part_to_edit)
@@ -615,7 +610,7 @@ class EditCommentWatchLong(threading.Thread):
                             edited_comment = ""
                             if edited_part != part_to_edit:
                                 try:
-                                    edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part.replace("are automatically updated every minute", "are automatically updated every 10 minutes")
+                                    edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part.replace("available keys every minute", "available keys every 30 minutes")
                                 except TypeError:
                                     continue
                                 if len(edited_comment) < 10000:
