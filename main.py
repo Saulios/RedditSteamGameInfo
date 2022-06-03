@@ -542,6 +542,11 @@ class EditCommentWatch(threading.Thread):
                                 if test_out_of_keys.startswith('0'):
                                     # prevents edits on a restock, leads to incorrect keys
                                     edited_part = part_to_edit
+                            if g_website == "alienware":
+                                if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
+                                    original_tier_split = part_to_edit.split("Tier required")
+                                    zero_tier_split = edited_part.split("Tier required")
+                                    edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
                             original_body_part = original_body_split[1].split(split_part, 1)[1]
                             edited_comment = ""
                             if edited_part != part_to_edit:
@@ -551,6 +556,9 @@ class EditCommentWatch(threading.Thread):
                                     continue
                                 if len(edited_comment) < 10000:
                                     comment.edit(edited_comment)
+                                    if "Available keys: 0\n" in edited_part:
+                                        # flair post as expired
+                                        comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
@@ -606,6 +614,11 @@ class EditCommentWatchLong(threading.Thread):
                                 if test_out_of_keys.startswith('0'):
                                     # prevents edits on a restock, leads to incorrect keys
                                     edited_part = part_to_edit
+                            if g_website == "alienware":
+                                if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
+                                    original_tier_split = part_to_edit.split("Tier required")
+                                    zero_tier_split = edited_part.split("Tier required")
+                                    edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
                             original_body_part = original_body_split[1].split(split_part, 1)[1]
                             edited_comment = ""
                             if edited_part != part_to_edit:
@@ -615,6 +628,9 @@ class EditCommentWatchLong(threading.Thread):
                                     continue
                                 if len(edited_comment) < 10000:
                                     comment.edit(edited_comment)
+                                    if "Available keys: 0\n" in edited_part:
+                                        # flair post as expired
+                                        comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
