@@ -237,6 +237,8 @@ def buildcommenttext(g, removed, source):
                     commenttext += ' * Has ' + str(g.cards[0]) + ' trading cards'
                     if g.cards[1] != 0 and not g.isfree():
                         commenttext += ' (drops ' + str(g.cards[1]) + ')'
+                    elif g.cards[1] != 0 and g.isfree():
+                        commenttext += ' (drops 0)'
                     if not g.cards[3]:
                         commenttext += ' [non-marketable]'
                     if g.cards[3]:
@@ -570,7 +572,7 @@ class EditCommentWatchLong(threading.Thread):
         while True:
             try:
                 count = 0
-                for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=50):
+                for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=100):
                     now = time.time()
                     age = now - comment.created_utc  # in seconds
                     if age > 14400 and comment.body.startswith('**Giveaway details**'):
@@ -579,7 +581,7 @@ class EditCommentWatchLong(threading.Thread):
                     seconds = 1800
                     if count > 11:
                         seconds = 3600
-                    for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=50):
+                    for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=100):
                         now = time.time()
                         age = now - comment.created_utc  # in seconds
                         if age > 14400 and comment.body.startswith('**Giveaway details**'):
