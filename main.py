@@ -368,6 +368,9 @@ class SubWatch(threading.Thread):
                                             botcomment = submission.reply(commenttext)
                                             if javascripttext is not None and javascripttext != "":
                                                 botcomment.reply(javascripttext)
+                                            if commenttext.startswith("*Removed from Steam") and submission.link_flair_text is None:
+                                                # flair post with delisted if no flair exists
+                                                submission.mod.flair(text="Delisted Game", css_class="DelistedGame", flair_template_id="9a5196c4-8865-11ec-8a1f-8261ed8ecd20")
                                 elif (
                                     re.search(STEELSERIES_URL_REGEX, submission.url)
                                     or re.search(CRUCIAL_URL_REGEX, submission.url)
