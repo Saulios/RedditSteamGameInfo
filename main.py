@@ -332,6 +332,16 @@ class SubWatch(threading.Thread):
                                         botcomment = submission.reply(commenttext)
                                         if javascripttext is not None and javascripttext != "":
                                             botcomment.reply(javascripttext)
+                                        flair_text = submission.link_flair_text
+                                        if commenttext_awa != "" and "* Keys available for all countries\n" not in commenttext_awa:
+                                            if flair_text is None:
+                                                # flair post with regional issues if no flair exists
+                                                submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
+                                            elif "regional" not in flair_text.lower():
+                                                # flair post with regional issues if not yet in flair
+                                                flair_id = submission.link_flair_template_id
+                                                new_text = flair_text + " | Regional Issues"
+                                                submission.mod.flair(text=new_text, flair_template_id=flair_id)
                             else:
                                 game = SteamSearchGame(game_name, True)
                                 appid = game.appid
@@ -368,9 +378,25 @@ class SubWatch(threading.Thread):
                                             botcomment = submission.reply(commenttext)
                                             if javascripttext is not None and javascripttext != "":
                                                 botcomment.reply(javascripttext)
-                                            if commenttext.startswith("*Removed from Steam") and submission.link_flair_text is None:
-                                                # flair post with delisted if no flair exists
-                                                submission.mod.flair(text="Delisted Game", css_class="DelistedGame", flair_template_id="9a5196c4-8865-11ec-8a1f-8261ed8ecd20")
+                                            flair_text = submission.link_flair_text
+                                            if commenttext.startswith("*Removed from Steam"):
+                                                if flair_text is None:
+                                                    # flair post with delisted if no flair exists
+                                                    submission.mod.flair(text="Delisted Game", css_class="DelistedGame", flair_template_id="9a5196c4-8865-11ec-8a1f-8261ed8ecd20")
+                                                elif "delisted" not in flair_text.lower():
+                                                    # flair post with delisted if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = flair_text + " | Delisted Game"
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            if commenttext_awa != "" and "* Keys available for all countries\n" not in commenttext_awa:
+                                                if flair_text is None:
+                                                    # flair post with regional issues if no flair exists
+                                                    submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
+                                                elif "regional" not in flair_text.lower():
+                                                    # flair post with regional issues if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = flair_text + " | Regional Issues"
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                 elif (
                                     re.search(STEELSERIES_URL_REGEX, submission.url)
                                     or re.search(CRUCIAL_URL_REGEX, submission.url)
@@ -422,6 +448,16 @@ class SubWatch(threading.Thread):
                                 if len(commenttext) < 10000:
                                     print('Commenting on post ' + str(submission) + ' after finding Alienware Arena domain')
                                     submission.reply(commenttext)
+                                    flair_text = submission.link_flair_text
+                                    if commenttext != "" and "* Keys available for all countries\n" not in commenttext:
+                                        if flair_text is None:
+                                            # flair post with regional issues if no flair exists
+                                            submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
+                                        elif "regional" not in flair_text.lower():
+                                            # flair post with regional issues if not yet in flair
+                                            flair_id = submission.link_flair_template_id
+                                            new_text = flair_text + " | Regional Issues"
+                                            submission.mod.flair(text=new_text, flair_template_id=flair_id)
                     elif (
                         re.search(STEELSERIES_URL_REGEX, submission.url)
                         or re.search(CRUCIAL_URL_REGEX, submission.url)
