@@ -29,6 +29,10 @@ class iGames:
 
         if 'json' in igames_json.headers.get('Content-Type'):
             self.json = json.loads(igames_json.content.decode('utf-8-sig'))
+            try:
+                self.json[0]
+            except KeyError:
+                return None
         else:
             return None
 
