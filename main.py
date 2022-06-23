@@ -296,6 +296,9 @@ class SubWatch(threading.Thread):
                                     botcomment = submission.reply(commenttext)
                                     if javascripttext is not None and javascripttext != "":
                                         botcomment.reply(javascripttext)
+                                    if "*(NSFW)*" in commenttext and submission.over_18 is False:
+                                        # Set post as NSFW
+                                        submission.mod.nsfw()
                     elif re.search(STEAM_TITLE_REGEX, submission.title, re.IGNORECASE):
                         title_split = re.split(STEAM_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
                         game_name = title_split[-1].strip()
@@ -342,6 +345,9 @@ class SubWatch(threading.Thread):
                                                 flair_id = submission.link_flair_template_id
                                                 new_text = flair_text + " | Regional Issues"
                                                 submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                        if "*(NSFW)*" in commenttext and submission.over_18 is False:
+                                            # Set post as NSFW
+                                            submission.mod.nsfw()
                             else:
                                 game = SteamSearchGame(game_name, True)
                                 appid = game.appid
@@ -397,6 +403,9 @@ class SubWatch(threading.Thread):
                                                     flair_id = submission.link_flair_template_id
                                                     new_text = flair_text + " | Regional Issues"
                                                     submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            if "*(NSFW)*" in commenttext and submission.over_18 is False:
+                                                # Set post as NSFW
+                                                submission.mod.nsfw()
                                 elif (
                                     re.search(STEELSERIES_URL_REGEX, submission.url)
                                     or re.search(CRUCIAL_URL_REGEX, submission.url)
@@ -440,6 +449,9 @@ class SubWatch(threading.Thread):
                                     if len(commenttext) < 10000:
                                         print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
                                         submission.reply(commenttext)
+                                        if "*(NSFW)*" in commenttext and submission.over_18 is False:
+                                            # Set post as NSFW
+                                            submission.mod.nsfw()
                     elif re.search(ALIENWARE_URL_REGEX, submission.url):
                         if fitscriteria(submission):
                             commenttext = buildcommenttext_awa(AlienwareArena(submission.url, "new"), "new")
