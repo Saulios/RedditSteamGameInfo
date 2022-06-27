@@ -18,6 +18,7 @@ Original bot modified specifically for r/FreeGameFindings, with added functional
     - Removed: search [archive.org/web](https://archive.org/web) for the most recent archived store link and get details from there
 5. **Alienware Arena**: Retrieve details of Alienware Arena giveaways, based on [awa_key_checker](https://github.com/Saulios/awa_key_checker). Details include account level required, initial key amount and country/continent restrictions.
 6. **SteelSeries/Crucial/iGames**: Retrieve key availability from the website API
+7. **Keyhub**: Retrieve key availability from the website API and Steam level requirement from the giveaway link
 
 ## What information will the bot provide?
 
@@ -36,8 +37,9 @@ Original bot modified specifically for r/FreeGameFindings, with added functional
 | ASF/addlicense | &#10004; |      &#10060;      |       &#10060;      |  &#10060; |
 
 ### Giveaway details
-|                 | Alienware Arena | SteelSeries |  Crucial |  iGames  |
-|:---------------:|:---------------:|:-----------:|:--------:|:--------:|
-|  Available keys |     &#10004;    |   &#10004;  | &#10004; | &#10004; |
-|    Total keys   |     &#10004;    |   &#10004;  | &#10004; | &#10004; |
-| Regional issues |     &#10004;    |   &#10060;  | &#10060; | &#10060; |
+|                   | Alienware Arena | SteelSeries |  Crucial |  iGames  |  Keyhub  |
+|:-----------------:|:---------------:|:-----------:|:--------:|:--------:|:--------:|
+|   Available keys  |     &#10004;    |   &#10004;  | &#10004; | &#10004; | &#10004; |
+|     Total keys    |     &#10004;    |   &#10004;  | &#10004; | &#10004; | &#10004; |
+| Level requirement |     &#10004;    |   &#10060;  | &#10060; | &#10060; | &#10004; |
+|  Regional issues  |     &#10004;    |   &#10060;  | &#10060; | &#10060; | &#10060; |

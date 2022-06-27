@@ -15,6 +15,7 @@ from SteamRemovedGame import SteamRemovedGame
 from SteamSearchGame import SteamSearchGame
 from AlienwareArena import AlienwareArena
 from iGames import iGames
+from Keyhub import Keyhub
 
 BLOCKED_USER_FILE = 'blockedusers.txt'  # Will not reply to these people
 SUBLIST = "FreeGameFindings"
@@ -33,6 +34,7 @@ ALIENWARE_URL_REGEX = r"(https?:\/\/)?(\b)?\.?(alienwarearena.com\/\w*)"
 STEELSERIES_URL_REGEX = r"((https?:\/\/)?)(games.steelseries.com\/giveaway\/\d+)"
 CRUCIAL_URL_REGEX = r"((https?:\/\/)?)(games.crucial.com\/promotions\/\d+)"
 IGAMES_URL_REGEX = r"((https?:\/\/)?)(igames.gg\/promotions\/\d+)"
+KEYHUB_URL_REGEX = r"((https?:\/\/)?)(key-hub.eu\/giveaway\/\d+)"
 
 
 def fitscriteria(s):
@@ -122,6 +124,23 @@ def buildcommenttext_igames(g, source):
             commenttext += "\n"
             if g.key_claimed != "0" and g.key_total != "0":
                 commenttext += "* Total keys: " + g.key_total + "\n"
+    else:
+        return None
+    if source == "new":
+        commenttext += '\n*Updating available keys every minute*\n'
+        commenttext += '\n***\n'
+    return commenttext
+
+
+def buildcommenttext_keyhub(g, source):
+    commenttext = ''
+    if source == "new":
+        commenttext += "**Giveaway details**\n\n"
+    if isinstance(g.key_amount, str) and ((g.key_amount != "0" and source == "new") or source == "update"):
+        commenttext += "* Available keys: " + g.key_amount + "\n"
+        if source == "new":
+            commenttext += "* Steam level required: " + g.level + "\n"
+            commenttext += "* Total keys: " + g.key_amount + "\n"
     else:
         return None
     if source == "new":
@@ -329,6 +348,11 @@ class SubWatch(threading.Thread):
                                         commenttext_igames = buildcommenttext_igames(iGames(g_id, g_website), "new")
                                     if commenttext_igames is not None and commenttext_igames != "":
                                         commenttext = commenttext_igames + commenttext
+                                    commenttext_keyhub = ""
+                                    if re.search(KEYHUB_URL_REGEX, submission.url):
+                                        commenttext_keyhub = buildcommenttext_keyhub(Keyhub(submission.url, "new"), "new")
+                                    if commenttext_keyhub is not None and commenttext_keyhub != "":
+                                        commenttext = commenttext_keyhub + commenttext
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
                                         print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
@@ -378,6 +402,11 @@ class SubWatch(threading.Thread):
                                             commenttext_igames = buildcommenttext_igames(iGames(g_id, g_website), "new")
                                         if commenttext_igames is not None and commenttext_igames != "":
                                             commenttext = commenttext_igames + commenttext
+                                        commenttext_keyhub = ""
+                                        if re.search(KEYHUB_URL_REGEX, submission.url):
+                                            commenttext_keyhub = buildcommenttext_keyhub(Keyhub(submission.url, "new"), "new")
+                                        if commenttext_keyhub is not None and commenttext_keyhub != "":
+                                            commenttext = commenttext_keyhub + commenttext
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name)
@@ -410,6 +439,8 @@ class SubWatch(threading.Thread):
                                     re.search(STEELSERIES_URL_REGEX, submission.url)
                                     or re.search(CRUCIAL_URL_REGEX, submission.url)
                                     or re.search(IGAMES_URL_REGEX, submission.url)
+                                    or re.search(ALIENWARE_URL_REGEX, submission.url)
+                                    or re.search(KEYHUB_URL_REGEX, submission.url)
                                 ):
                                     # Not found on Steam, still post key availability part
                                     g_website = "steelseries"
@@ -417,13 +448,36 @@ class SubWatch(threading.Thread):
                                         g_website = "crucial"
                                     elif re.search(IGAMES_URL_REGEX, submission.url):
                                         g_website = "igames"
-                                    g_id = re.search('\d+', submission.url).group(0)
-                                    commenttext = buildcommenttext_igames(iGames(g_id, g_website), "new")
+                                    if (
+                                        re.search(STEELSERIES_URL_REGEX, submission.url)
+                                        or re.search(CRUCIAL_URL_REGEX, submission.url)
+                                        or re.search(IGAMES_URL_REGEX, submission.url)
+                                    ):
+                                        g_id = re.search('\d+', submission.url).group(0)
+                                        commenttext = buildcommenttext_igames(iGames(g_id, g_website), "new")
+                                    if re.search(ALIENWARE_URL_REGEX, submission.url):
+                                        g_website = "alienware"
+                                        commenttext = buildcommenttext_awa(AlienwareArena(submission.url, "new"), "new")
+                                    if re.search(KEYHUB_URL_REGEX, submission.url):
+                                        g_website = "keyhub"
+                                        commenttext = buildcommenttext_keyhub(Keyhub(submission.url, "new"), "new")
                                     if commenttext is not None and commenttext != "":
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
                                             submission.reply(commenttext)
+                                            if g_website == "alienware" and commenttext_awa != "" and "* Keys available for all countries\n" not in commenttext_awa:
+                                                if flair_text is None:
+                                                    # flair post with regional issues if no flair exists
+                                                    submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
+                                                elif "regional" not in flair_text.lower():
+                                                    # flair post with regional issues if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = flair_text + " | Regional Issues"
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            if "*(NSFW)*" in commenttext and submission.over_18 is False:
+                                                # Set post as NSFW
+                                                submission.mod.nsfw()
                     elif (
                         (indiegala := re.search(INDIEGALA_TITLE_REGEX, submission.title, re.IGNORECASE)
                             and re.search(INDIEGALA_URL_REGEX, submission.url))
@@ -487,6 +541,14 @@ class SubWatch(threading.Thread):
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
                                     print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
+                                    submission.reply(commenttext)
+                    elif re.search(KEYHUB_URL_REGEX, submission.url):
+                        if fitscriteria(submission):
+                            commenttext = buildcommenttext_keyhub(Keyhub(submission.url, "new"), "new")
+                            if commenttext is not None and commenttext != "":
+                                commenttext += buildfootertext()
+                                if len(commenttext) < 10000:
+                                    print('Commenting on post ' + str(submission) + ' after finding Keyhub domain')
                                     submission.reply(commenttext)
             except PrawcoreException:
                 print('Trying to reach Reddit')
@@ -554,7 +616,7 @@ class EditCommentWatch(threading.Thread):
                 for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=20):
                     now = time.time()
                     age = now - comment.created_utc  # in seconds
-                    if age <= 14400 and comment.body.startswith('**Giveaway details**'):
+                    if age <= 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
                         count += 1
                 if count > 0:
                     seconds = 60
@@ -563,7 +625,7 @@ class EditCommentWatch(threading.Thread):
                     for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=20):
                         now = time.time()
                         age = now - comment.created_utc  # in seconds
-                        if age <= 14400 and comment.body.startswith('**Giveaway details**'):
+                        if age <= 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
                             sleep_time = seconds / count
                             time.sleep(sleep_time)  # try edit(s) every minute
                             if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
@@ -578,11 +640,16 @@ class EditCommentWatch(threading.Thread):
                             elif re.search(IGAMES_URL_REGEX, comment.submission.url):
                                 g_website = "igames"
                                 split_part = "\n* Total keys:"
+                            elif re.search(KEYHUB_URL_REGEX, comment.submission.url):
+                                g_website = "keyhub"
+                                split_part = "* Steam level required:"
                             if g_website == "alienware":
                                 edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
-                            else:
+                            elif g_website == "steelseries" or g_website == "crucial" or g_website == "igames":
                                 g_id = re.search('\d+', comment.submission.url).group(0)
                                 edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
+                            elif g_website == "keyhub":
+                                edited_part = buildcommenttext_keyhub(Keyhub(comment.submission.url, "update"), "update")
                             original_body = comment.body
                             original_body_split = original_body.split("**Giveaway details**\n\n")
                             if g_website == "alienware":
@@ -626,7 +693,7 @@ class EditCommentWatchLong(threading.Thread):
                 for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=100):
                     now = time.time()
                     age = now - comment.created_utc  # in seconds
-                    if age > 14400 and comment.body.startswith('**Giveaway details**'):
+                    if age > 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
                         count += 1
                 if count > 0:
                     seconds = 1800
@@ -635,9 +702,10 @@ class EditCommentWatchLong(threading.Thread):
                     for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=100):
                         now = time.time()
                         age = now - comment.created_utc  # in seconds
-                        if age > 14400 and comment.body.startswith('**Giveaway details**'):
+                        if age > 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
                             sleep_time = seconds / count
                             time.sleep(sleep_time)  # try edit(s) every 30 minutes
+                            g_website = ""
                             if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
                                 g_website = "alienware"
                                 split_part = "* No keys for:"
@@ -650,11 +718,16 @@ class EditCommentWatchLong(threading.Thread):
                             elif re.search(IGAMES_URL_REGEX, comment.submission.url):
                                 g_website = "igames"
                                 split_part = "\n* Total keys:"
+                            elif re.search(KEYHUB_URL_REGEX, comment.submission.url):
+                                g_website = "keyhub"
+                                split_part = "* Steam level required:"
                             if g_website == "alienware":
                                 edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
-                            else:
+                            elif g_website == "steelseries" or g_website == "crucial" or g_website == "igames":
                                 g_id = re.search('\d+', comment.submission.url).group(0)
                                 edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
+                            elif g_website == "keyhub":
+                                edited_part = buildcommenttext_keyhub(Keyhub(comment.submission.url, "update"), "update")
                             original_body = comment.body
                             original_body_split = original_body.split("**Giveaway details**\n\n")
                             if g_website == "alienware":
