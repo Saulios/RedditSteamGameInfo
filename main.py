@@ -82,10 +82,10 @@ def buildcommenttext_awa(g, source):
     commenttext = ''
     if source == "new":
         commenttext += "**Giveaway details**\n\n"
-    if isinstance(g.keys_level, list) and len(g.keys_level) > 0 and (g.keys_level[0][1] != '0' or (len(g.keys_level) > 1 and g.keys_level[1][1] != '0')):
-        if source == "update" or len(g.keys_level) != 0:
-            commenttext += "* Available keys: " + g.keys_level[0][1] + "\n"
-            commenttext += "* Tier required: " + g.keys_level[0][0] + "\n"
+    if isinstance(g.keys_tier, list) and len(g.keys_tier) > 0 and (g.keys_tier[0][1] != '0' or (len(g.keys_tier) > 1 and g.keys_tier[1][1] != '0')):
+        if source == "update" or len(g.keys_tier) != 0:
+            commenttext += "* Available keys: " + g.keys_tier[0][1] + "\n"
+            commenttext += "* Tier required: " + g.keys_tier[0][0] + "\n"
         else:
             return None
         if source == "new":
@@ -99,10 +99,10 @@ def buildcommenttext_awa(g, source):
                 commenttext += "* Keys available for: " + ', '.join(g.continents_with_keys) + "\n"
             elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
                 commenttext += "* Keys available for all countries\n"
-            commenttext += "* Total keys: " + g.keys_level[0][1] + "\n"
-    elif isinstance(g.keys_level, list) and source == "update" and len(g.keys_level) > 0 and g.keys_level[0][1] == '0':
-        commenttext += "* Available keys: " + g.keys_level[0][1] + "\n"
-        commenttext += "* Tier required: " + g.keys_level[0][0] + "\n"
+            commenttext += "* Total keys: " + g.keys_tier[0][1] + "\n"
+    elif isinstance(g.keys_tier, list) and source == "update" and len(g.keys_tier) > 0 and g.keys_tier[0][1] == '0':
+        commenttext += "* Available keys: " + g.keys_tier[0][1] + "\n"
+        commenttext += "* Tier required: " + g.keys_tier[0][0] + "\n"
     else:
         return None
     if source == "new":
@@ -359,16 +359,41 @@ class SubWatch(threading.Thread):
                                         botcomment = submission.reply(commenttext)
                                         if javascripttext is not None and javascripttext != "":
                                             botcomment.reply(javascripttext)
-                                        flair_text = submission.link_flair_text
-                                        if commenttext_awa != "" and "* Keys available for all countries\n" not in commenttext_awa:
-                                            if flair_text is None:
-                                                # flair post with regional issues if no flair exists
-                                                submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
-                                            elif "regional" not in flair_text.lower():
-                                                # flair post with regional issues if not yet in flair
-                                                flair_id = submission.link_flair_template_id
-                                                new_text = flair_text + " | Regional Issues"
-                                                submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                        if commenttext_awa != "":
+                                            flair_text = submission.link_flair_text
+                                            tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
+                                            if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" not in commenttext_awa:
+                                                # flair post with prior work required, regional issues and add tier
+                                                if flair_text is None:
+                                                    # if no flair exists
+                                                    new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues"
+                                                    submission.mod.flair(text=new_text, css_class="restoften", flair_template_id="b204d6b4-0b90-11e4-9095-12313b0add52")
+                                                elif "prior work" not in flair_text.lower() and "regional" not in flair_text.lower():
+                                                    # if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues" + flair_text
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" in commenttext_awa:
+                                                # flair post with prior work required and add tier
+                                                if flair_text is None:
+                                                    # if no flair exists
+                                                    new_text = "Tier " + tier_number + "+ | Prior Work Required"
+                                                    submission.mod.flair(text=new_text, css_class="restoften", flair_template_id="b204d6b4-0b90-11e4-9095-12313b0add52")
+                                                elif "prior work" not in flair_text.lower():
+                                                    # if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = "Tier " + tier_number + "+ | Prior Work Required | " + flair_text
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            if "* Keys available for all countries\n" not in commenttext_awa and "Tier required: 1" in commenttext_awa:
+                                                # flair post with regional issues
+                                                if flair_text is None:
+                                                    # if no flair exists
+                                                    submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
+                                                elif "regional" not in flair_text.lower():
+                                                    # if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = flair_text + " | Regional Issues"
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                         if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                             # Set post as NSFW
                                             submission.mod.nsfw()
@@ -423,15 +448,40 @@ class SubWatch(threading.Thread):
                                                     flair_id = submission.link_flair_template_id
                                                     new_text = flair_text + " | Delisted Game"
                                                     submission.mod.flair(text=new_text, flair_template_id=flair_id)
-                                            if commenttext_awa != "" and "* Keys available for all countries\n" not in commenttext_awa:
-                                                if flair_text is None:
-                                                    # flair post with regional issues if no flair exists
-                                                    submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
-                                                elif "regional" not in flair_text.lower():
-                                                    # flair post with regional issues if not yet in flair
-                                                    flair_id = submission.link_flair_template_id
-                                                    new_text = flair_text + " | Regional Issues"
-                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            if commenttext_awa != "":
+                                                tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
+                                                if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" not in commenttext_awa:
+                                                    # flair post with prior work required, regional issues and add tier
+                                                    if flair_text is None:
+                                                        # if no flair exists
+                                                        new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues"
+                                                        submission.mod.flair(text=new_text, css_class="restoften", flair_template_id="b204d6b4-0b90-11e4-9095-12313b0add52")
+                                                    elif "prior work" not in flair_text.lower() and "regional" not in flair_text.lower():
+                                                        # if not yet in flair
+                                                        flair_id = submission.link_flair_template_id
+                                                        new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues" + flair_text
+                                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" in commenttext_awa:
+                                                    # flair post with prior work required and add tier
+                                                    if flair_text is None:
+                                                        # if no flair exists
+                                                        new_text = "Tier " + tier_number + "+ | Prior Work Required"
+                                                        submission.mod.flair(text=new_text, css_class="restoften", flair_template_id="b204d6b4-0b90-11e4-9095-12313b0add52")
+                                                    elif "prior work" not in flair_text.lower():
+                                                        # if not yet in flair
+                                                        flair_id = submission.link_flair_template_id
+                                                        new_text = "Tier " + tier_number + "+ | Prior Work Required | " + flair_text
+                                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                if "* Keys available for all countries\n" not in commenttext_awa and "Tier required: 1" in commenttext_awa:
+                                                    # flair post with regional issues
+                                                    if flair_text is None:
+                                                        # if no flair exists
+                                                        submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
+                                                    elif "regional" not in flair_text.lower():
+                                                        # if not yet in flair
+                                                        flair_id = submission.link_flair_template_id
+                                                        new_text = flair_text + " | Regional Issues"
+                                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                             if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                                 # Set post as NSFW
                                                 submission.mod.nsfw()
@@ -466,15 +516,41 @@ class SubWatch(threading.Thread):
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
                                             submission.reply(commenttext)
-                                            if g_website == "alienware" and commenttext_awa != "" and "* Keys available for all countries\n" not in commenttext_awa:
-                                                if flair_text is None:
-                                                    # flair post with regional issues if no flair exists
-                                                    submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
-                                                elif "regional" not in flair_text.lower():
-                                                    # flair post with regional issues if not yet in flair
-                                                    flair_id = submission.link_flair_template_id
-                                                    new_text = flair_text + " | Regional Issues"
-                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            flair_text = submission.link_flair_text
+                                            if g_website == "alienware" and commenttext_awa != "":
+                                                tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
+                                                if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" not in commenttext_awa:
+                                                    # flair post with prior work required, regional issues and add tier
+                                                    if flair_text is None:
+                                                        # if no flair exists
+                                                        new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues"
+                                                        submission.mod.flair(text=new_text, css_class="restoften", flair_template_id="b204d6b4-0b90-11e4-9095-12313b0add52")
+                                                    elif "prior work" not in flair_text.lower() and "regional" not in flair_text.lower():
+                                                        # if not yet in flair
+                                                        flair_id = submission.link_flair_template_id
+                                                        new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues" + flair_text
+                                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" in commenttext_awa:
+                                                    # flair post with prior work required and add tier
+                                                    if flair_text is None:
+                                                        # if no flair exists
+                                                        new_text = "Tier " + tier_number + "+ | Prior Work Required"
+                                                        submission.mod.flair(text=new_text, css_class="restoften", flair_template_id="b204d6b4-0b90-11e4-9095-12313b0add52")
+                                                    elif "prior work" not in flair_text.lower():
+                                                        # if not yet in flair
+                                                        flair_id = submission.link_flair_template_id
+                                                        new_text = "Tier " + tier_number + "+ | Prior Work Required | " + flair_text
+                                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                if "* Keys available for all countries\n" not in commenttext_awa and "Tier required: 1" in commenttext_awa:
+                                                    # flair post with regional issues
+                                                    if flair_text is None:
+                                                        # if no flair exists
+                                                        submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
+                                                    elif "regional" not in flair_text.lower():
+                                                        # if not yet in flair
+                                                        flair_id = submission.link_flair_template_id
+                                                        new_text = flair_text + " | Regional Issues"
+                                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                             if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                                 # Set post as NSFW
                                                 submission.mod.nsfw()
@@ -515,15 +591,40 @@ class SubWatch(threading.Thread):
                                     print('Commenting on post ' + str(submission) + ' after finding Alienware Arena domain')
                                     submission.reply(commenttext)
                                     flair_text = submission.link_flair_text
-                                    if commenttext != "" and "* Keys available for all countries\n" not in commenttext:
-                                        if flair_text is None:
-                                            # flair post with regional issues if no flair exists
-                                            submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
-                                        elif "regional" not in flair_text.lower():
-                                            # flair post with regional issues if not yet in flair
-                                            flair_id = submission.link_flair_template_id
-                                            new_text = flair_text + " | Regional Issues"
-                                            submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                    if commenttext != "":
+                                        tier_number = commenttext.split("Tier required: ")[1].split()[0]
+                                        if "Tier required: 1" not in commenttext and "* Keys available for all countries\n" not in commenttext:
+                                            # flair post with prior work required, regional issues and add tier
+                                            if flair_text is None:
+                                                # if no flair exists
+                                                new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues"
+                                                submission.mod.flair(text=new_text, css_class="restoften", flair_template_id="b204d6b4-0b90-11e4-9095-12313b0add52")
+                                            elif "prior work" not in flair_text.lower() and "regional" not in flair_text.lower():
+                                                # if not yet in flair
+                                                flair_id = submission.link_flair_template_id
+                                                new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues" + flair_text
+                                                submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                        if "Tier required: 1" not in commenttext and "* Keys available for all countries\n" in commenttext:
+                                            # flair post with prior work required and add tier
+                                            if flair_text is None:
+                                                # if no flair exists
+                                                new_text = "Tier " + tier_number + "+ | Prior Work Required"
+                                                submission.mod.flair(text=new_text, css_class="restoften", flair_template_id="b204d6b4-0b90-11e4-9095-12313b0add52")
+                                            elif "prior work" not in flair_text.lower():
+                                                # if not yet in flair
+                                                flair_id = submission.link_flair_template_id
+                                                new_text = "Tier " + tier_number + "+ | Prior Work Required | " + flair_text
+                                                submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                        if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" in commenttext:
+                                            # flair post with regional issues
+                                            if flair_text is None:
+                                                # if no flair exists
+                                                submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
+                                            elif "regional" not in flair_text.lower():
+                                                # if not yet in flair
+                                                flair_id = submission.link_flair_template_id
+                                                new_text = flair_text + " | Regional Issues"
+                                                submission.mod.flair(text=new_text, flair_template_id=flair_id)
                     elif (
                         re.search(STEELSERIES_URL_REGEX, submission.url)
                         or re.search(CRUCIAL_URL_REGEX, submission.url)
@@ -622,12 +723,11 @@ class EditCommentWatch(threading.Thread):
                     seconds = 60
                     if count > 11:
                         seconds = 120
+                    sleep_time = seconds / count
                     for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=20):
                         now = time.time()
                         age = now - comment.created_utc  # in seconds
                         if age <= 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
-                            sleep_time = seconds / count
-                            time.sleep(sleep_time)  # try edit(s) every minute
                             if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
                                 g_website = "alienware"
                                 split_part = "* No keys for:"
@@ -663,10 +763,13 @@ class EditCommentWatch(threading.Thread):
                                     # prevents edits on a restock, leads to incorrect keys
                                     edited_part = part_to_edit
                             if g_website == "alienware":
-                                if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
-                                    original_tier_split = part_to_edit.split("Tier required")
-                                    zero_tier_split = edited_part.split("Tier required")
-                                    edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
+                                try:
+                                    if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
+                                        original_tier_split = part_to_edit.split("Tier required")
+                                        zero_tier_split = edited_part.split("Tier required")
+                                        edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
+                                except TypeError:
+                                    continue
                             original_body_part = original_body_split[1].split(split_part, 1)[1]
                             edited_comment = ""
                             if edited_part != part_to_edit:
@@ -679,6 +782,8 @@ class EditCommentWatch(threading.Thread):
                                     if "Available keys: 0\n" in edited_part:
                                         # flair post as expired
                                         comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
+                            # try edit(s) every minute
+                            time.sleep(sleep_time)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
@@ -699,12 +804,11 @@ class EditCommentWatchLong(threading.Thread):
                     seconds = 1800
                     if count > 11:
                         seconds = 3600
+                    sleep_time = seconds / count
                     for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=100):
                         now = time.time()
                         age = now - comment.created_utc  # in seconds
                         if age > 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
-                            sleep_time = seconds / count
-                            time.sleep(sleep_time)  # try edit(s) every 30 minutes
                             g_website = ""
                             if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
                                 g_website = "alienware"
@@ -741,10 +845,13 @@ class EditCommentWatchLong(threading.Thread):
                                     # prevents edits on a restock, leads to incorrect keys
                                     edited_part = part_to_edit
                             if g_website == "alienware":
-                                if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
-                                    original_tier_split = part_to_edit.split("Tier required")
-                                    zero_tier_split = edited_part.split("Tier required")
-                                    edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
+                                try:
+                                    if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
+                                        original_tier_split = part_to_edit.split("Tier required")
+                                        zero_tier_split = edited_part.split("Tier required")
+                                        edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
+                                except TypeError:
+                                    continue
                             original_body_part = original_body_split[1].split(split_part, 1)[1]
                             edited_comment = ""
                             if edited_part != part_to_edit:
@@ -757,6 +864,8 @@ class EditCommentWatchLong(threading.Thread):
                                     if "Available keys: 0\n" in edited_part:
                                         # flair post as expired
                                         comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
+                            # try edit(s) every 30 minutes
+                            time.sleep(sleep_time)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)

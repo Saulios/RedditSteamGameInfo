@@ -13,12 +13,17 @@ class AlienwareArena:
     def __init__(self, url, source):
         self.url = url
         while True:
+            session = requests.Session()
             try:
-                session = requests.Session()
                 self.giveawayPage = session.get(
                     self.url,
                     timeout=10).text
-                # for non-global giveaways it will go to the giveaway page second time
+            except requests.exceptions.RequestException:
+                print("Alienware timeout: sleep for 10 seconds before second try")
+                time.sleep(10)
+            try:
+                # for non-global giveaways it will go to login page
+                # first time, so request twice to get giveaway page
                 self.giveawayPage = session.get(
                     self.url,
                     timeout=10).text
@@ -38,7 +43,7 @@ class AlienwareArena:
                 self.raw_continents_with_keys, self.raw_continents_with_country = self.get_continents(self.country_with_keys)
                 self.raw_continents_without_keys, self.raw_continents_without_country = self.get_continents(self.country_without_keys)
                 self.continents_with_keys, self.continents_without_keys = self.duplicate_continents()
-        self.keys_level = self.keys_level()
+        self.keys_tier = self.keys_tier()
 
     def countrykeys(self):
         try:
@@ -165,18 +170,24 @@ class AlienwareArena:
             continents_with_keys.append(diff + " (partly)")
         return continents_with_keys, continents_without_keys
 
-    def keys_level(self):
-        keys_level = []
+    def keys_tier(self):
+        keys_tier = []
+        tier_arp = {2: " (2500 ARP)", 3: " (7000 ARP)", 4: " (12000 ARP)", 5: " (18000 ARP)"}
         if len(self.country_with_keys) != 0:
             for country in self.country_with_keys:
-                for level in self.countrykeys[country]:
-                    if isinstance(level, int):
+                for tier in self.countrykeys[country]:
+                    if isinstance(tier, int):
                         keys = self.countrykeys[country][0]
-                        keys_level.append(['0', str(keys)])
+                        keys_tier.append(['0', str(keys)])
                     else:
-                        keys = self.countrykeys[country][level]
-                        keys_level.append([str(level), str(keys)])
+                        keys = self.countrykeys[country][tier]
+                        if int(tier) > 1:
+                            for elem in tier_arp:
+                                if elem == int(tier):
+                                    keys_tier.append([str(tier) + tier_arp[elem], str(keys)])
+                        else:
+                            keys_tier.append([str(tier), str(keys)])
                 break
         else:
-            keys_level.append(['0', '0'])
-        return keys_level
+            keys_tier.append(['0', '0'])
+        return keys_tier
