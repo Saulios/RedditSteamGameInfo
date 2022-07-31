@@ -274,7 +274,7 @@ def buildcommenttext(g, removed, source):
                 commenttext += ' * Full game license (no beta testing) will give'
             else:
                 commenttext += ' * Does not give'
-            commenttext += ' +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq#wiki_what_is_.2B1.3F)\n'
+            commenttext += ' +1 game count [^(what is +1?)](https://www.reddit.com/r/FreeGameFindings/wiki/faq/#wiki_what_is_.2B1.3F)\n'
         if (g.isfree() or g.price[0] == "Free") and not g.unreleased and (source == "Steam" or g.gettype != "dlc" or (g.gettype == "dlc" and (g.isfree() or g.price[0] == "Free") and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4])):
             commenttext += ' * Can be added to ASF clients with `!addlicense asf '
             if g.gettype == "dlc" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4]:
