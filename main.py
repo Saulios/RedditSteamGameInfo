@@ -293,6 +293,35 @@ def buildfootertext():
     return footertext
 
 
+def repostwatch_title(title):
+    repost_title_regex = r"[.;?!]$"
+    if re.search(repost_title_regex, title):
+        return True
+    else:
+        return False
+
+
+def repostwatch_duplicate(submission):
+    for duplicate in submission.duplicates():
+        if duplicate.subreddit == SUBLIST:
+            created_time = duplicate.created_utc
+            now = time.time()
+            age = now - created_time
+            days_364 = 31449600
+            days_366 = 31622400
+            if days_364 <= age <= days_366:
+                return True
+            else:
+                return False
+
+
+def buildcommenttext_repost(submission):
+    commenttext = 'I have detected that this may be a false submission from a repost bot, and have therefore removed this submission as a precaution.\n\nIf this is a mistake, please send a message to us with [this link]'
+    commenttext += '(https://www.reddit.com/message/compose?to=%2Fr%2Ffreegamefindings&subject=FGF%20bot%20removed%20my%20post%2C%20please%20approve%20it%20if%20it%20conforms%20to%20the%20subreddit%20rules.&message=FGF%20bot%20removed%20my%20post%2C%20please%20approve%20it%20if%20it%20conforms%20to%20the%20subreddit%20rules.%20https://www.reddit.com' + submission.permalink + ')'
+    commenttext += ' and we will approve it as soon as possible.'
+    return commenttext
+
+
 class SubWatch(threading.Thread):
     def run(self):
         print('Started watching subs: ' + SUBLIST)
@@ -871,6 +900,24 @@ class EditCommentWatchLong(threading.Thread):
                 time.sleep(30)
 
 
+class RepostWatch(threading.Thread):
+    def run(self):
+        print('Started watching subs for reposts: ' + SUBLIST)
+        subreddit = reddit.subreddit(SUBLIST)
+        while True:
+            try:
+                for submission in subreddit.stream.submissions(skip_existing=True):
+                    if repostwatch_title(submission.title):
+                        if repostwatch_duplicate(submission):
+                            commenttext = buildcommenttext_repost(submission)
+                            submission.mod.remove(spam=True)
+                            comment = submission.reply(commenttext)
+                            comment.mod.distinguish(sticky=True)
+            except PrawcoreException:
+                print('Trying to reach Reddit')
+                time.sleep(30)
+
+
 if __name__ == "__main__":
 
     reddit = praw.Reddit(
@@ -886,8 +933,10 @@ if __name__ == "__main__":
     commentwatch = CommentWatch()
     editcommentwatch = EditCommentWatch()
     editcommentwatchlong = EditCommentWatchLong()
+    repostwatch = RepostWatch()
 
     subwatch.start()
     commentwatch.start()
     editcommentwatch.start()
     editcommentwatchlong.start()
+    repostwatch.start()
