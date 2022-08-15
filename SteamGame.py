@@ -327,6 +327,9 @@ class SteamGame:
             review_div = self.gamePage.find("div", {"id": "userReviews"})
         if review_div is not None:
             review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
+            review_div_count = review_div.find("meta", {"itemprop": "reviewCount"})
+            if review_div_count is not None and review_div_count["content"] is not None and int(review_div_count["content"]) < 100:
+                return SteamGame.lowreviews(self)
             details_span = review_div_agg.select('span[class*="responsive_reviewdesc"]')
             details = next(iter(details_span), None)
             if details is not None:

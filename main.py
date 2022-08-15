@@ -29,7 +29,6 @@ INDIEGALA_URL_REGEX = r"((https?:\/\/)?)(freebies.indiegala.com\/)"
 INDIEGALA_TITLE_REGEX = r"\[.*(Indiegala).*\]\s*\((Game)\)"
 EPIC_URL_REGEX = r"((https?:\/\/)?)(epicgames.com\/)"
 EPIC_TITLE_REGEX = r"\[.*(Epic).*\]\s*\((Game)\)"
-ITCH_URL_REGEX = r"((https?:\/\/)?)(itch.io\/)"
 ALIENWARE_URL_REGEX = r"(https?:\/\/)?(\b)?\.?(alienwarearena.com\/\w+)"
 STEELSERIES_URL_REGEX = r"((https?:\/\/)?)(games.steelseries.com\/giveaway\/\d+)"
 CRUCIAL_URL_REGEX = r"((https?:\/\/)?)(games.crucial.com\/promotions\/\d+)"
@@ -195,7 +194,7 @@ def buildcommenttext(g, removed, source):
             commenttext += '\n'
         if not g.unreleased and (g.reviewsummary != "" or g.reviewdetails != ""):
             commenttext += 'Reviews: '
-            if g.reviewsummary == "No user reviews" and g.reviewdetails != "":
+            if g.reviewdetails != "" and (g.reviewsummary == "No user reviews" or g.reviewsummary in g.reviewdetails):
                 commenttext += g.reviewdetails
             elif g.reviewdetails != "":
                 commenttext += g.reviewsummary + g.reviewdetails
@@ -257,7 +256,7 @@ def buildcommenttext(g, removed, source):
                     if g.cards[1] != 0 and not g.isfree():
                         commenttext += ' (drops ' + str(g.cards[1]) + ')'
                     elif g.cards[1] != 0 and g.isfree():
-                        commenttext += ' (drops 0)'
+                        commenttext += ' (no drops)'
                     if not g.cards[3]:
                         commenttext += ' [non-marketable]'
                     if g.cards[3]:
@@ -703,19 +702,8 @@ class CommentWatch(threading.Thread):
                         commenttext = ""
                         javascripts = []
                         source_platform = "Steam"
-                        if (
-                            (indiegala := re.search(INDIEGALA_TITLE_REGEX, comment.submission.title, re.IGNORECASE)
-                                and re.search(INDIEGALA_URL_REGEX, comment.submission.url))
-                            or (epic := re.search(EPIC_TITLE_REGEX, comment.submission.title, re.IGNORECASE)
-                                and re.search(EPIC_URL_REGEX, comment.submission.url))
-                            or (itch := re.search(ITCH_URL_REGEX, comment.submission.url))
-                        ):
-                            if indiegala is not None:
-                                source_platform = "Indiegala_comment"
-                            elif epic is not None:
-                                source_platform = "Epic_comment"
-                            elif itch is not None:
-                                source_platform = "Itch_comment"
+                        if not re.search(STEAM_TITLE_REGEX, comment.submission.title, re.IGNORECASE) and not re.search(STEAM_APPURL_REGEX, comment.submission.url):
+                            source_platform = "nonSteam"
                         for i in range(len(games)):
                             appid = re.search('\d+', games[i]).group(0)
                             make_comment, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
