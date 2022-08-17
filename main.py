@@ -387,7 +387,7 @@ class SubWatch(threading.Thread):
                                         botcomment = submission.reply(commenttext)
                                         if javascripttext is not None and javascripttext != "":
                                             botcomment.reply(javascripttext)
-                                        if commenttext_awa != "":
+                                        if commenttext_awa is not None and commenttext_awa != "":
                                             flair_text = submission.link_flair_text
                                             tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
                                             if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" not in commenttext_awa:
@@ -476,7 +476,7 @@ class SubWatch(threading.Thread):
                                                     flair_id = submission.link_flair_template_id
                                                     new_text = flair_text + " | Delisted Game"
                                                     submission.mod.flair(text=new_text, flair_template_id=flair_id)
-                                            if commenttext_awa != "":
+                                            if commenttext_awa is not None and commenttext_awa != "":
                                                 tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
                                                 if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" not in commenttext_awa:
                                                     # flair post with prior work required, regional issues and add tier
@@ -545,7 +545,7 @@ class SubWatch(threading.Thread):
                                             print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
                                             submission.reply(commenttext)
                                             flair_text = submission.link_flair_text
-                                            if g_website == "alienware" and commenttext_awa != "":
+                                            if g_website == "alienware" and commenttext_awa is not None and commenttext_awa != "":
                                                 tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
                                                 if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" not in commenttext_awa:
                                                     # flair post with prior work required, regional issues and add tier
