@@ -75,7 +75,7 @@ class SteamGame:
         self.unreleasedtext = self.getunreleasedtext()
         self.blurb = self.getDescriptionSnippet()
         self.reviewsummary = self.reviewsummary()
-        self.reviewdetails = self.reviewdetails()
+        self.reviewdetails, self.lowreviews = self.reviewdetails()
         self.genres = self.genres()
         self.usertags = self.usertags()
         self.basegame = self.basegame()
@@ -329,7 +329,7 @@ class SteamGame:
             review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
             review_div_count = review_div.find("meta", {"itemprop": "reviewCount"})
             if review_div_count is not None and review_div_count["content"] is not None and int(review_div_count["content"]) < 100:
-                return SteamGame.lowreviews(self)
+                return SteamGame.lowreviews(self), True
             details_span = review_div_agg.select('span[class*="responsive_reviewdesc"]')
             details = next(iter(details_span), None)
             if details is not None:
@@ -339,8 +339,8 @@ class SteamGame:
                     details = details.replace("- ", " (")
                     details = details.replace("positive.", "positive)")
                     details = details.replace(",", "")
-                    return details
-        return SteamGame.lowreviews(self)
+                    return details, False
+        return SteamGame.lowreviews(self), True
 
     def genres(self):
         if "genres" in self.json:
