@@ -50,7 +50,10 @@ class AlienwareArena:
             raw_data = re.search(r"(var\scountryKeys\s*=\s*(.*))", str(self.giveawayPage)).group(2)
         except AttributeError:
             return None
-        json_data = json.loads(raw_data[:-1])
+        try:
+            json_data = json.loads(raw_data[:-1])
+        except json.decoder.JSONDecodeError:
+            return None
         return json_data
 
     def sorted_countries(self):

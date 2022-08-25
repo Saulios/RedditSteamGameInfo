@@ -114,7 +114,7 @@ def buildcommenttext_igames(g, source):
     commenttext = ''
     if source == "new":
         commenttext += "**Giveaway details**\n\n"
-    if isinstance(g.key_amount, str) and ((g.key_total != "0" and source == "update") or source == "new"):
+    if isinstance(g.key_amount, str) and ((g.key_total != "0" and source == "update") or source == "new") and not g.gg_app:
         commenttext += "* Available keys: " + g.key_amount
         if g.key_claimed != "0":
             commenttext += "\n"
@@ -545,9 +545,9 @@ class SubWatch(threading.Thread):
                                             print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
                                             submission.reply(commenttext)
                                             flair_text = submission.link_flair_text
-                                            if g_website == "alienware" and commenttext_awa is not None and commenttext_awa != "":
-                                                tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
-                                                if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" not in commenttext_awa:
+                                            if g_website == "alienware" and commenttext is not None and commenttext != "":
+                                                tier_number = commenttext.split("Tier required: ")[1].split()[0]
+                                                if "Tier required: 1" not in commenttext and "* Keys available for all countries\n" not in commenttext:
                                                     # flair post with prior work required, regional issues and add tier
                                                     if flair_text is None:
                                                         # if no flair exists
@@ -558,7 +558,7 @@ class SubWatch(threading.Thread):
                                                         flair_id = submission.link_flair_template_id
                                                         new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues" + flair_text
                                                         submission.mod.flair(text=new_text, flair_template_id=flair_id)
-                                                if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" in commenttext_awa:
+                                                if "Tier required: 1" not in commenttext and "* Keys available for all countries\n" in commenttext:
                                                     # flair post with prior work required and add tier
                                                     if flair_text is None:
                                                         # if no flair exists
@@ -569,7 +569,7 @@ class SubWatch(threading.Thread):
                                                         flair_id = submission.link_flair_template_id
                                                         new_text = "Tier " + tier_number + "+ | Prior Work Required | " + flair_text
                                                         submission.mod.flair(text=new_text, flair_template_id=flair_id)
-                                                if "* Keys available for all countries\n" not in commenttext_awa and "Tier required: 1" in commenttext_awa:
+                                                if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" in commenttext:
                                                     # flair post with regional issues
                                                     if flair_text is None:
                                                         # if no flair exists
