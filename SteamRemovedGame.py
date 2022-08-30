@@ -75,7 +75,7 @@ class SteamRemovedGame:
         self.unreleasedtext = SteamGame.getunreleasedtext(self)
         self.blurb = self.getDescriptionSnippet()
         self.reviewsummary = SteamGame.reviewsummary(self)
-        self.reviewdetails = SteamGame.reviewdetails(self)
+        self.reviewdetails, self.lowreviews = SteamGame.reviewdetails(self)
         self.genres = self.genres()
         self.usertags = SteamGame.usertags(self)
         self.basegame = self.basegame()

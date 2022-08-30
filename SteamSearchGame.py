@@ -196,6 +196,9 @@ class SteamSearchGame:
             print('removed game backup request timeout')
             return 0
         else:
+            # adjust game name if needed
+            if "TOTI" in self.game_name:
+                self.game_name = self.game_name.replace("TOTI", "Trials of the Illuminati")
             games = self.gamePage.find_all("a", string=re.compile(str(self.game_name.split(" ")[0])))
             appid = 0
             game_name = ""
