@@ -210,7 +210,10 @@ class SteamGame:
                         print("Steam market timeout: sleep for 30 seconds and try again")
                         time.sleep(30)
                 total = marketpage.find("span", id="searchResults_total")
-                total = int(total.string.strip())
+                if total is not None:
+                    total = int(total.string.strip())
+                else:
+                    total = 0
             drops = total//2 + (total % 2 > 0)
             return total, drops, marketurl, marketable
         return 0, 0
@@ -291,45 +294,49 @@ class SteamGame:
         total = positive + negative
         lowreviews = ""
         if total == 0:
-            return lowreviews
+            return lowreviews, total
         percentage = positive / total * 100
         reviewscore = [[80, "Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Negative"]]
         reviewscore_50 = [[80, "Very Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Very Negative"]]
         if 1 < total < 10:
             if positive == total and total > 2:
                 lowreviews = "All"
-            elif total == 2:
+            elif positive == total and total == 2:
                 lowreviews = "Both"
+            elif negative == total:
+                lowreviews = "None"
             else:
                 lowreviews = str(positive)
             lowreviews += " of the " + str(total) + " user reviews are positive"
         elif total >= 10:
             if total >= 50:
                 for score in reviewscore_50:
-                    if round(percentage) >= score[0]:
+                    if int(percentage) >= score[0]:
                         lowreviews += score[1]
                         break
             else:
                 for score in reviewscore:
-                    if round(percentage) >= score[0]:
+                    if int(percentage) >= score[0]:
                         lowreviews += score[1]
                         break
-            lowreviews += " (" + str(round(percentage)) + "% of the " + str(total) + " user reviews are positive)"
+            lowreviews += " (" + str(int(percentage)) + "% of the " + str(total) + " user reviews are positive)"
         elif positive > 0:
             lowreviews = "1 user review (positive)"
         elif negative > 0:
             lowreviews = "1 user review (negative)"
-        return lowreviews
+        return lowreviews, total
 
     def reviewdetails(self):
         review_div = self.gamePage.find("div", {"class": "user_reviews"})
+        details = lowreviews = ""
+        total = 0
         if review_div is None:
             review_div = self.gamePage.find("div", {"id": "userReviews"})
         if review_div is not None:
             review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
             review_div_count = review_div.find("meta", {"itemprop": "reviewCount"})
-            if review_div_count is not None and review_div_count["content"] is not None and int(review_div_count["content"]) < 100:
-                return SteamGame.lowreviews(self), True
+            if review_div_count is None or (review_div_count["content"] is not None and int(review_div_count["content"]) < 100):
+                lowreviews, total = SteamGame.lowreviews(self)
             details_span = review_div_agg.select('span[class*="responsive_reviewdesc"]')
             details = next(iter(details_span), None)
             if details is not None:
@@ -339,8 +346,15 @@ class SteamGame:
                     details = details.replace("- ", " (")
                     details = details.replace("positive.", "positive)")
                     details = details.replace(",", "")
-                    return details, False
-        return SteamGame.lowreviews(self), True
+        lowreviews_details = lowreviews[lowreviews.find("(")-1:lowreviews.find(")")+1]
+        if lowreviews != "" and details != lowreviews_details and review_div_count is not None and review_div_count["content"] is not None and review_div_count["content"] == str(total):
+            # low reviews but all are direct purchases
+            return lowreviews, False
+        elif lowreviews != "" and details != lowreviews_details:
+            # low reviews with key activations
+            return lowreviews, True
+        else:
+            return details, False
 
     def genres(self):
         if "genres" in self.json:
