@@ -193,8 +193,10 @@ def buildcommenttext(g, removed, source):
             commenttext += '\n'
         if not g.unreleased and (g.reviewsummary != "" or g.reviewdetails != ""):
             commenttext += 'Reviews'
-            if g.reviewdetails != "" and g.lowreviews and not removed:
-                commenttext += " (purchases + keys): " + g.reviewdetails
+            if g.reviewdetails != "" and g.lowreviews:
+                if not removed:
+                    commenttext += " (purchases + keys)"
+                commenttext += ": " + g.reviewdetails
             elif g.reviewdetails != "" and g.reviewdetails is not None:
                 commenttext += ": " + g.reviewsummary + g.reviewdetails
             else:

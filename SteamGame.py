@@ -252,8 +252,6 @@ class SteamGame:
             review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
             summary = review_div_agg.find("span", {"class": "game_review_summary"})
             if summary is not None:
-                if "reviews" in summary.string:
-                    return ""
                 return summary.string
         releasedate = self.releasedate()
         if (
@@ -268,6 +266,8 @@ class SteamGame:
     def lowreviews(self):
         # gives better review text when at low review amounts
         reviews_url = 'https://store.steampowered.com/appreviews/' + self.appID + '?json=1&filter=summary&review_type=all&purchase_type=all&language=all'
+        lowreviews = ""
+        total = 0
         while True:
             try:
                 appreviews = requests.get(reviews_url, timeout=30)
@@ -282,19 +282,34 @@ class SteamGame:
             try:
                 appreviews = requests.get(reviews_url, timeout=30)
             except requests.exceptions.RequestException:
-                return ""
+                return lowreviews, total
             if 'json' in appreviews.headers.get('Content-Type'):
                 appreviews_json = json.loads(appreviews.content.decode('utf-8-sig'))
             else:
-                return ""
+                return lowreviews, total
         if appreviews_json is None or appreviews_json["success"] != 1:
-            return ""
+            return lowreviews, total
         positive = appreviews_json["query_summary"]["total_positive"]
         negative = appreviews_json["query_summary"]["total_negative"]
         total = positive + negative
-        lowreviews = ""
         if total == 0:
-            return lowreviews, total
+            backup_reviews_url = 'https://store.steampowered.com/appreviews/' + self.appID + '?json=1'
+            while True:
+                try:
+                    appreviews = requests.get(backup_reviews_url, timeout=30)
+                    break
+                except requests.exceptions.RequestException:
+                    print("Steam store timeout: sleep for 30 seconds and try again")
+                    time.sleep(30)
+            if 'json' in appreviews.headers.get('Content-Type'):
+                appreviews_json = json.loads(appreviews.content.decode('utf-8-sig'))
+            else:
+                return lowreviews, total
+            positive = appreviews_json["query_summary"]["total_positive"]
+            negative = appreviews_json["query_summary"]["total_negative"]
+            total = positive + negative
+            if total == 0:
+                return lowreviews, total
         percentage = positive / total * 100
         reviewscore = [[80, "Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Negative"]]
         reviewscore_50 = [[80, "Very Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Very Negative"]]
@@ -337,6 +352,8 @@ class SteamGame:
             review_div_count = review_div.find("meta", {"itemprop": "reviewCount"})
             if review_div_count is None or (review_div_count["content"] is not None and int(review_div_count["content"]) < 100):
                 lowreviews, total = SteamGame.lowreviews(self)
+                if total == 0:
+                    return None, total
             details_span = review_div_agg.select('span[class*="responsive_reviewdesc"]')
             details = next(iter(details_span), None)
             if details is not None:
@@ -347,10 +364,10 @@ class SteamGame:
                     details = details.replace("positive.", "positive)")
                     details = details.replace(",", "")
         lowreviews_details = lowreviews[lowreviews.find("(")-1:lowreviews.find(")")+1]
-        if lowreviews != "" and details != lowreviews_details and review_div_count is not None and review_div_count["content"] is not None and review_div_count["content"] == str(total):
+        if lowreviews != "" and details != lowreviews_details and review_div_count is not None and total > 0 and review_div_count["content"] is not None and review_div_count["content"] == str(total):
             # low reviews but all are direct purchases
             return lowreviews, False
-        elif lowreviews != "" and details != lowreviews_details:
+        elif lowreviews != "" and details != lowreviews_details and total > 0:
             # low reviews with key activations
             return lowreviews, True
         else:
