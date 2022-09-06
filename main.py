@@ -34,6 +34,7 @@ STEELSERIES_URL_REGEX = r"((https?:\/\/)?)(games.steelseries.com\/giveaway\/\d+)
 CRUCIAL_URL_REGEX = r"((https?:\/\/)?)(games.crucial.com\/promotions\/\d+)"
 IGAMES_URL_REGEX = r"((https?:\/\/)?)(igames.gg\/promotions\/\d+)"
 KEYHUB_URL_REGEX = r"((https?:\/\/)?)(key-hub.eu\/giveaway\/\d+)"
+GLEAMIO_URL_REGEX = r"((https?:\/\/)?)(gleam.io\/)"
 
 
 def fitscriteria(s):
@@ -682,8 +683,12 @@ class CommentWatch(threading.Thread):
         while True:
             try:
                 for comment in reddit.subreddit(SUBLIST).stream.comments(skip_existing=True):
-                    test_comment = re.search(STEAM_APPURL_REGEX, comment.body)
-                    if test_comment and fitscriteria(comment):
+                    test_comment_gleamio = re.search(GLEAMIO_URL_REGEX, comment.body)
+                    test_comment_steam = re.search(STEAM_APPURL_REGEX, comment.body)
+                    if test_comment_gleamio:
+                        if comment.approved_by is None:
+                            comment.mod.approve()
+                    if test_comment_steam and fitscriteria(comment):
                         games = []
                         urlregex = re.finditer(STEAM_APPURL_REGEX, comment.body)
                         for url in urlregex:
