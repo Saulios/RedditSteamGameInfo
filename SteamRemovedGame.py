@@ -69,7 +69,6 @@ class SteamRemovedGame:
         self.price = self.getprice()
         self.asf = self.getasf()
         self.achievements = SteamGame.getachev(self)
-        self.cards = SteamGame.getcards(self)
         self.unreleased = SteamGame.isunreleased(self)
         self.isearlyaccess = SteamGame.isearlyaccess(self)
         self.unreleasedtext = SteamGame.getunreleasedtext(self)
@@ -78,10 +77,14 @@ class SteamRemovedGame:
         self.reviewdetails, self.lowreviews = SteamGame.reviewdetails(self)
         self.genres = self.genres()
         self.usertags = SteamGame.usertags(self)
-        self.basegame = self.basegame()
+        if self.gettype != "game":
+            self.basegame = self.basegame()
         self.releasedate = self.releasedate()
         self.nsfw = SteamGame.nsfw(self)
         self.plusone = False
+        if self.gettype == "game":
+            self.cards = SteamGame.getcards(self)
+            self.pcgamingwiki = SteamGame.pcgamingwiki(self, self.appID)
 
     @classmethod
     def filterjson(cls, archive_json):

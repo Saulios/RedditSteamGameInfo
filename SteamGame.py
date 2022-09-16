@@ -4,6 +4,7 @@ import time
 
 import requests
 import dateutil.parser
+import dateutil.tz
 from dateutil.parser import ParserError
 from bs4 import BeautifulSoup
 
@@ -69,7 +70,6 @@ class SteamGame:
         self.price = self.getprice()
         self.asf = self.getasf()
         self.achievements = self.getachev()
-        self.cards = self.getcards()
         self.unreleased = self.isunreleased()
         self.isearlyaccess = self.isearlyaccess()
         self.unreleasedtext = self.getunreleasedtext()
@@ -78,10 +78,14 @@ class SteamGame:
         self.reviewdetails, self.lowreviews = self.reviewdetails()
         self.genres = self.genres()
         self.usertags = self.usertags()
-        self.basegame = self.basegame()
+        if self.gettype != "game":
+            self.basegame = self.basegame()
         self.releasedate = self.releasedate()
         self.nsfw = self.nsfw()
         self.plusone = self.plusone()
+        if self.gettype == "game":
+            self.cards = self.getcards()
+            self.pcgamingwiki = self.pcgamingwiki(self.appID)
 
     def title(self):
         return self.json["name"]
@@ -93,7 +97,52 @@ class SteamGame:
         if "price_overview" in self.json and self.json["price_overview"] is not None:
             amount = self.json["price_overview"]["discount_percent"]
             if amount != 0:
-                return "-" + str(amount) + "%"
+                discount_end_time = self.gamePage.find("p", {"class": "game_purchase_discount_quantity"})
+                discount_countdown = self.gamePage.find("p", {"class": "game_purchase_discount_countdown"})
+                amount = "-" + str(amount) + "%"
+                if discount_end_time is not None:
+                    discount_end_time = discount_end_time.text.strip()
+                    discount_end_time = discount_end_time.replace("Some limitations apply. (?)", "").strip()
+                    discount_end_time = discount_end_time.replace("Free to keep when you get it before", "").strip()
+                    try:
+                        # convert to UTC
+                        dateutil_end_time = discount_end_time.replace("@", "")
+                        dateutil_end_time = dateutil.parser.parse(dateutil_end_time).replace(tzinfo=dateutil.tz.gettz("America/Los_Angeles"))
+                        dateutil_end_time = dateutil_end_time.astimezone(dateutil.tz.UTC)
+                    except ParserError:
+                        amount += " until " + discount_end_time.replace(".", "") + " PT"
+                        return amount
+                    try:
+                        date_full = time.strftime('%B %e, %H:%M', dateutil_end_time.timetuple())
+                        date_full = date_full.replace("  ", " ")
+                    except TypeError:
+                        amount += " until " + discount_end_time.replace(".", "") + " PT"
+                        return amount
+                    else:
+                        amount += " until " + date_full + " UTC"
+                        return amount
+                    amount += " until " + discount_end_time.replace(".", "") + " PT"
+                if discount_countdown is not None:
+                    discount_countdown = discount_countdown.text.strip()
+                    if "ends in" in discount_countdown:
+                        game_area_purchase = self.gamePage.find("div", {"class": "game_area_purchase_game"})
+                        daily_deal_timer = game_area_purchase.find('script').string
+                        daily_deal_timer_unix = [int(s) for s in daily_deal_timer.split() if s.isdigit()]
+                        if len(daily_deal_timer_unix) == 1:
+                            daily_deal_timer_unix = daily_deal_timer_unix[0]
+                            try:
+                                # convert unix to UTC
+                                daily_deal_timer_convert = time.gmtime(daily_deal_timer_unix)
+                                daily_deal_timer_convert = time.strftime("%B %e, %H:%M", daily_deal_timer_convert)
+                                daily_deal_timer_convert = daily_deal_timer_convert.replace("  ", " ")
+                            except TypeError:
+                                return amount
+                            amount += " until " + daily_deal_timer_convert + " UTC"
+                            return amount
+                    else:
+                        discount_countdown = discount_countdown.split()[-2:]
+                    amount += " until " + " ".join(discount_countdown)
+                return amount
         elif len(self.json["package_groups"]) != 0:
             amount = self.json["package_groups"][0]["subs"][0]["percent_savings_text"]
             amount = amount.strip()
@@ -474,6 +523,9 @@ class SteamGame:
             def basegameisfree():
                 return basegame_data["is_free"]
 
+            def basegamepcgamingwiki(appid):
+                return self.pcgamingwiki(appid)
+
             def basegameprice():
                 def discountamount():
                     if "price_overview" in basegame_data and basegame_data["price_overview"] is not None:
@@ -541,7 +593,8 @@ class SteamGame:
 
             finalprice, fullprice, discount = basegameprice()
             free = basegameisfree()
-            return appid, name, finalprice, fullprice, free, discount
+            pcgamingwiki = basegamepcgamingwiki(appid)
+            return appid, name, finalprice, fullprice, free, discount, pcgamingwiki
 
     def releasedate(self):
         if "release_date" in self.json:
@@ -583,3 +636,18 @@ class SteamGame:
             elif not (self.price[0] == "Free" and self.discountamount is False):
                 return True
         return False
+
+    def pcgamingwiki(self, appid):
+        api_url_appid = "https://www.pcgamingwiki.com/api/appid.php?appid=" + appid
+        while True:
+            try:
+                appid_json = requests.get(api_url_appid, allow_redirects=False, timeout=10)
+                break
+            except requests.exceptions.RequestException:
+                print("PCGamingWiki API timeout: sleep for 10 seconds and try again")
+                time.sleep(10)
+        if appid_json.text == "":
+            # page available
+            return True
+        else:
+            return False

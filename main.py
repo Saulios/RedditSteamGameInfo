@@ -25,6 +25,7 @@ BOT_USERNAME = os.getenv("RSGIB_USERNAME")
 STEAM_APPURL_REGEX = r"((https?:\/\/)?)(store.steampowered.com(\/agecheck)?\/app\/\d+)"
 STEAMDB_APPURL_REGEX = r"((https?:\/\/)?)(steamdb.info\/app\/\d+)"
 STEAM_TITLE_REGEX = r"\[.*(Steam).*\]\s*\((Game|DLC|Beta|Alpha)\)"
+STEAM_PLATFORM_REGEX = r"\[.*(Steam).*\]"
 INDIEGALA_URL_REGEX = r"((https?:\/\/)?)(freebies.indiegala.com\/)"
 INDIEGALA_TITLE_REGEX = r"\[.*(Indiegala).*\]\s*\((Game)\)"
 EPIC_URL_REGEX = r"((https?:\/\/)?)(epicgames.com\/)"
@@ -177,14 +178,20 @@ def buildcommenttext(g, removed, source):
         commenttext += ') | '
         if g.gettype == "game" or g.gettype == "mod":
             commenttext += '[Community Hub](https://steamcommunity.com/app/' + g.appID + ') | '
-        commenttext += '[SteamDB](https://steamdb.info/app/' + g.appID + ')\n'
+        commenttext += '[SteamDB](https://steamdb.info/app/' + g.appID + ')'
+        if g.gettype == "game" and g.pcgamingwiki:
+            commenttext += ' | [PCGamingWiki](https://www.pcgamingwiki.com/api/appid.php?appid=' + g.appID + ')'
+        commenttext += '\n'
         if (g.gettype == "dlc" or g.gettype == "mod") and g.basegame is not None:
             commenttext += '* Game links (**' + g.basegame[1] + '**): '
             if removed:
                 commenttext += '[Store Page (archived)](' + g.basegame[6]
             else:
                 commenttext += '[Store Page](https://store.steampowered.com/app/' + g.basegame[0]
-            commenttext += ') | [Community Hub](https://steamcommunity.com/app/' + g.basegame[0] + ') | [SteamDB](https://steamdb.info/app/' + g.basegame[0] + ')\n\n'
+            commenttext += ') | [Community Hub](https://steamcommunity.com/app/' + g.basegame[0] + ') | [SteamDB](https://steamdb.info/app/' + g.basegame[0] + ')'
+            if g.basegame[6]:
+                commenttext += ' | [PCGamingWiki](https://www.pcgamingwiki.com/api/appid.php?appid=' + g.basegame[0] + ')'
+            commenttext += '\n\n'
         elif g.gettype == "music" and g.basegame is not None:
             if removed:
                 commenttext += '* Base game ([' + g.basegame[1] + '](' + g.basegame[6] + ')) not required\n\n'
@@ -199,7 +206,10 @@ def buildcommenttext(g, removed, source):
                     commenttext += " (purchases + keys)"
                 commenttext += ": " + g.reviewdetails
             elif g.reviewdetails != "" and g.reviewdetails is not None:
-                commenttext += ": " + g.reviewsummary + g.reviewdetails
+                if "user reviews" in g.reviewsummary:
+                    commenttext += ": " + g.reviewdetails
+                else:
+                    commenttext += ": " + g.reviewsummary + g.reviewdetails
             else:
                 commenttext += ": " + g.reviewsummary
             commenttext += '\n\n'
@@ -212,7 +222,7 @@ def buildcommenttext(g, removed, source):
                 commenttext += ' * ' + g.unreleasedtext + '\n'
         if not removed and not (g.unreleased and g.price[0] == "No price found"):
             commenttext += ' * '
-            if g.price[0] == "Free" and g.price[1] == "" and g.basegame is not None and g.basegame[2] == "Free" and g.basegame[3] == "" and g.gettype == "dlc":
+            if g.gettype == "dlc" and g.price[0] == "Free" and g.price[1] == "" and g.basegame is not None and g.basegame[2] == "Free" and g.basegame[3] == "":
                 commenttext += 'Game and '
             if g.gettype == "dlc":
                 commenttext += 'DLC '
@@ -698,7 +708,7 @@ class CommentWatch(threading.Thread):
                         appids = []
                         commenttext = ""
                         source_platform = "Steam"
-                        if not re.search(STEAM_TITLE_REGEX, comment.submission.title, re.IGNORECASE) and not re.search(STEAM_APPURL_REGEX, comment.submission.url):
+                        if not re.search(STEAM_PLATFORM_REGEX, comment.submission.title, re.IGNORECASE):
                             source_platform = "nonSteam"
                         for i in range(len(games)):
                             appid = re.search('\d+', games[i]).group(0)
