@@ -402,7 +402,7 @@ class SteamGame:
             if review_div_count is None or (review_div_count["content"] is not None and int(review_div_count["content"]) < 100):
                 lowreviews, total = SteamGame.lowreviews(self)
                 if total == 0:
-                    return None, total
+                    return details, False
             details_span = review_div_agg.select('span[class*="responsive_reviewdesc"]')
             details = next(iter(details_span), None)
             if details is not None:
