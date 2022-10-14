@@ -274,6 +274,12 @@ def buildcommenttext(g, removed, source):
                     if g.cards[3]:
                         commenttext += ' [^(view on Steam Market)](' + g.cards[2] + ')'
                     commenttext += '\n'
+                if len(g.cards) == 3 and g.cards[0] != 0:
+                    if int(g.achievements) == 0:
+                        commenttext += ' * Has no achievements\n'
+                    commenttext += ' * Has trading cards'
+                    commenttext += ' [^(view on Steam Market)](' + g.cards[2] + ')'
+                    commenttext += '\n'
                 if g.cards[0] == 0:
                     commenttext += ' * Has no trading cards'
                     if int(g.achievements) == 0:

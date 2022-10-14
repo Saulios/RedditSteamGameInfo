@@ -235,6 +235,15 @@ class SteamGame:
                 print("Steam market timeout: sleep for 30 seconds and try again")
                 time.sleep(30)
         total = marketpage.find("span", id="searchResults_total")
+        error_message = marketpage.find("div", class_="market_listing_table_message")
+        if error_message is not None and "There was an error performing your search" in error_message.text:
+            # market error, use steam tag backup
+            category_block = self.gamePage.find("div", id="category_block")
+
+            if category_block is None:
+                return 0, 0
+            if "Steam Trading Cards" in category_block.text:
+                return 999, 0, marketurl
         if total is not None:
             while True:
                 try:
