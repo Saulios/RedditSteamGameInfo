@@ -74,6 +74,10 @@ class AlienwareArena:
             if country is not None:
                 if country.name == "Russian Federation":
                     country_names.append("Russia")
+                elif country.name == "Korea, Republic of":
+                    country_names.append("South Korea")
+                elif country.name == "Venezuela, Bolivarian Republic of":
+                    country_names.append("Venezuela")
                 else:
                     country_names.append(country.name)
         country_names.sort()
