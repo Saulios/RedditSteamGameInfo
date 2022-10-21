@@ -35,7 +35,7 @@ STEELSERIES_URL_REGEX = r"((https?:\/\/)?)(games.steelseries.com\/giveaway\/\d+)
 CRUCIAL_URL_REGEX = r"((https?:\/\/)?)(games.crucial.com\/promotions\/\d+)"
 IGAMES_URL_REGEX = r"((https?:\/\/)?)(igames.gg\/promotions\/\d+)"
 KEYHUB_URL_REGEX = r"((https?:\/\/)?)(key-hub.eu\/giveaway\/\d+)"
-GLEAMIO_URL_REGEX = r"((https?:\/\/)?)(gleam.io\/)"
+GLEAMIO_URL_REGEX = r"((https?:\/\/)?)(gleam.io)"
 
 
 def fitscriteria(s):
