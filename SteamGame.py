@@ -83,6 +83,7 @@ class SteamGame:
         self.releasedate = self.releasedate()
         self.nsfw = self.nsfw()
         self.plusone = self.plusone()
+        self.developers, self.developers_num = self.developers()
         if self.gettype == "game":
             self.cards = self.getcards()
             self.pcgamingwiki = self.pcgamingwiki(self.appID)
@@ -660,3 +661,15 @@ class SteamGame:
             return True
         else:
             return False
+
+    def developers(self):
+        if "developers" in self.json:
+            developers = self.json["developers"]
+            devs = []
+            for developer in developers:
+                # Filter commas from names, devs are separated by comma
+                dev = developer.replace(",", "").strip()
+                devs.append(dev)
+            count = len(developers)
+            return ", ".join(devs), count
+        return False

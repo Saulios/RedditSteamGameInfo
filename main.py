@@ -219,7 +219,10 @@ def buildcommenttext(g, removed, source):
             if g.unreleasedtext is None:
                 commenttext += " * Isn't released yet\n"
             else:
-                commenttext += ' * ' + g.unreleasedtext + '\n'
+                commenttext += ' * ' + g.unreleasedtext
+                if g.isearlyaccess:
+                    commenttext += ' (Early Access)'
+                commenttext += '\n'
         if not removed and not (g.unreleased and g.price[0] == "No price found"):
             commenttext += ' * '
             if g.gettype == "dlc" and g.price[0] == "Free" and g.price[1] == "" and g.basegame is not None and g.basegame[2] == "Free" and g.basegame[3] == "":
@@ -248,9 +251,15 @@ def buildcommenttext(g, removed, source):
                     commenttext += ' (' + g.basegame[5] + ')'
                 commenttext += '\n'
         if not g.unreleased and g.releasedate:
-            commenttext += ' * Release Date: ' + g.releasedate + '\n'
-        if g.isearlyaccess and g.gettype == "game":
-            commenttext += ' * Is an Early Access Game\n'
+            commenttext += ' * Release Date: ' + g.releasedate
+            if g.isearlyaccess:
+                commenttext += ' (Early Access)'
+            commenttext += '\n'
+        if g.developers:
+            commenttext += ' * Developer'
+            if g.developers_num > 1:
+                commenttext += 's'
+            commenttext += ': ' + g.developers + '\n'
         if g.usertags and g.usertags != "":
             commenttext += ' * Genre/Tags: ' + g.usertags + '\n'
         elif g.genres:

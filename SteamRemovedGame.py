@@ -82,6 +82,7 @@ class SteamRemovedGame:
         self.releasedate = self.releasedate()
         self.nsfw = SteamGame.nsfw(self)
         self.plusone = False
+        self.developers, self.developers_num = self.developers()
         if self.gettype == "game":
             self.cards = SteamGame.getcards(self)
             self.pcgamingwiki = SteamGame.pcgamingwiki(self, self.appID)
@@ -279,4 +280,16 @@ class SteamRemovedGame:
                 return release_date
             else:
                 return date_full.replace("  ", " ")
+        return False
+
+    def developers(self):
+        developers_div = self.gamePage.find("div", id="developers_list")
+        if developers_div is not None:
+            count_a = developers_div.find_all("a")
+            if count_a is not None:
+                count = len(count_a)
+            else:
+                count = 1
+            developers = developers_div.text.strip()
+            return developers, count
         return False

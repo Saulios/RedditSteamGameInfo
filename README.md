@@ -30,6 +30,7 @@ Original bot modified specifically for r/FreeGameFindings, with added functional
 |   Description  | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |
 |      Price     | &#10004; |      &#10060;      |       &#10004;      |  &#10004; |
 |  Release Date  | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |
+|   Developers   | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |
 |   Genre/Tags   | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |
 |  Achievements  | &#10004; |      &#10004;      |       &#10060;      |  &#10060; |
 |  Trading Cards | &#10004; |      &#10004;      |       &#10060;      |  &#10060; |
