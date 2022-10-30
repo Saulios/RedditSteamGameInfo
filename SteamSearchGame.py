@@ -230,8 +230,7 @@ class SteamSearchGame:
                     or set(get_title.split(" ")) == set(game_name.split(" "))
                     # typo in target
                     or sorted(get_title.replace(" ", "")) == sorted(game_name.replace(" ", ""))
-                    or game_name in get_title
-                    or set(game_name.split(" ")) <= set(get_title.split(" "))
+                    or ("random" not in game_name and game_name in get_title)
                 ):
                     href = game.get('href').split("/")
                     app = href.index("app") + 1
@@ -244,11 +243,11 @@ class SteamSearchGame:
                     get_title == game_name_roman
                     or set(get_title.split(" ")) == set(game_name_roman.split(" "))
                     or sorted(get_title.replace(" ", "")) == sorted(game_name_roman.replace(" ", ""))
-                    or game_name_roman in get_title
+                    or ("random" not in game_name_roman and game_name_roman in get_title)
                     or get_title == game_name_number
                     or set(get_title.split(" ")) == set(game_name_number.split(" "))
                     or sorted(get_title.replace(" ", "")) == sorted(game_name_number.replace(" ", ""))
-                    or game_name_number in get_title
+                    or ("random" not in game_name_number and game_name_number in get_title)
                 ):
                     href = game.get('href').split("/")
                     app = href.index("app") + 1
