@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 class Keyhub:
 
     def __init__(self, url, source):
-        self.url = url
+        self.url = url.replace("share.", "")
         self.g_id = re.findall(r'\d+', self.url)
         if self.g_id:
             # Get key amount
