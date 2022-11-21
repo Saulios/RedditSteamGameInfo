@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "FGF_Info_Bot"
+version = "1.0"
+description = "Bot for Reddit that comments on submissions if they link to Steam games"
+authors = ["u/Saulios"]
+homepage = "https://reddit.com/r/FreeGameFindings"
+repository = "https://github.com/Saulios/RedditSteamGameInfo"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+
+[tool.poetry.dependencies]
+python = ">=3.8.0,<3.9"
+numpy = "^1.22.2"
+replit = "^3.2.4"
+Flask = "^2.2.0"
+urllib3 = "^1.26.12"
+bs4 = "^0.0.1"
+countryinfo = "^0.1.2"
+praw = "^7.6.0"
+prawcore = "^2.3.0"
+pycountry = "^22.3.5"
+pycountry-convert = "^0.7.2"
+requests = "^2.28.1"
+python-dateutil = "^2.8.2"
+beautifulsoup4 = "^4.11.1"
+
+[tool.poetry.dev-dependencies]
+debugpy = "^1.6.2"
+replit-python-lsp-server = {extras = ["yapf", "rope", "pyflakes"], version = "^1.5.9"}
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

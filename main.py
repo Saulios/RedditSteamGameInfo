@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# Reddit Steam Game info Bot
+# Reddit FreeGameFindings Bot
 # Resolves Steam URLs from submissions, and comments information about them
 
 import os
@@ -9,6 +8,7 @@ import time
 
 import praw
 from prawcore.exceptions import PrawcoreException
+from keep_alive import keep_alive
 
 from SteamGame import SteamGame
 from SteamRemovedGame import SteamRemovedGame
@@ -364,7 +364,7 @@ class SubWatch(threading.Thread):
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
                                     print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
-                                    submission.reply(commenttext)
+                                    submission.reply(body=commenttext)
                                     if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                         # Set post as NSFW
                                         submission.mod.nsfw()
@@ -406,7 +406,7 @@ class SubWatch(threading.Thread):
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
                                         print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
-                                        submission.reply(commenttext)
+                                        submission.reply(body=commenttext)
                                         if commenttext_awa is not None and commenttext_awa != "":
                                             flair_text = submission.link_flair_text
                                             tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
@@ -483,7 +483,7 @@ class SubWatch(threading.Thread):
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name)
-                                            submission.reply(commenttext)
+                                            submission.reply(body=commenttext)
                                             flair_text = submission.link_flair_text
                                             if commenttext.startswith("*Removed from Steam"):
                                                 if flair_text is None:
@@ -561,7 +561,7 @@ class SubWatch(threading.Thread):
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
-                                            submission.reply(commenttext)
+                                            submission.reply(body=commenttext)
                                             flair_text = submission.link_flair_text
                                             if g_website == "alienware" and commenttext is not None and commenttext != "":
                                                 tier_number = commenttext.split("Tier required: ")[1].split()[0]
@@ -624,7 +624,7 @@ class SubWatch(threading.Thread):
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
                                         print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
-                                        submission.reply(commenttext)
+                                        submission.reply(body=commenttext)
                                         if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                             # Set post as NSFW
                                             submission.mod.nsfw()
@@ -635,7 +635,7 @@ class SubWatch(threading.Thread):
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
                                     print('Commenting on post ' + str(submission) + ' after finding Alienware Arena domain')
-                                    submission.reply(commenttext)
+                                    submission.reply(body=commenttext)
                                     flair_text = submission.link_flair_text
                                     if commenttext != "":
                                         tier_number = commenttext.split("Tier required: ")[1].split()[0]
@@ -688,7 +688,7 @@ class SubWatch(threading.Thread):
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
                                     print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
-                                    submission.reply(commenttext)
+                                    submission.reply(body=commenttext)
                     elif re.search(KEYHUB_URL_REGEX, submission.url):
                         if fitscriteria(submission):
                             commenttext = buildcommenttext_keyhub(Keyhub(submission.url, "new"), "new")
@@ -696,7 +696,7 @@ class SubWatch(threading.Thread):
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
                                     print('Commenting on post ' + str(submission) + ' after finding Keyhub domain')
-                                    submission.reply(commenttext)
+                                    submission.reply(body=commenttext)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
@@ -735,7 +735,7 @@ class CommentWatch(threading.Thread):
                             commenttext += buildfootertext()
                             if len(commenttext) < 10000:
                                 print('Replying to comment ' + str(comment) + ' after finding game ' + ', '.join(appids))
-                                comment.reply(commenttext)
+                                comment.reply(body=commenttext)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
@@ -811,7 +811,7 @@ class EditCommentWatch(threading.Thread):
                                 except TypeError:
                                     continue
                                 if len(edited_comment) < 10000:
-                                    comment.edit(edited_comment)
+                                    comment.edit(body=edited_comment)
                                     if "Available keys: 0\n" in edited_part:
                                         # flair post as expired
                                         comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
@@ -893,7 +893,7 @@ class EditCommentWatchLong(threading.Thread):
                                 except TypeError:
                                     continue
                                 if len(edited_comment) < 10000:
-                                    comment.edit(edited_comment)
+                                    comment.edit(body=edited_comment)
                                     if "Available keys: 0\n" in edited_part:
                                         # flair post as expired
                                         comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
@@ -915,7 +915,7 @@ class RepostWatch(threading.Thread):
                         if repostwatch_duplicate(submission):
                             commenttext = buildcommenttext_repost(submission)
                             submission.mod.remove(spam=True)
-                            comment = submission.reply(commenttext)
+                            comment = submission.reply(body=commenttext)
                             comment.mod.distinguish(sticky=True)
             except PrawcoreException:
                 print('Trying to reach Reddit')
@@ -932,6 +932,8 @@ if __name__ == "__main__":
         password=os.getenv('RSGIB_PASSWORD')
     )
     reddit.validate_on_submit = True
+
+    keep_alive()
 
     subwatch = SubWatch()
     commentwatch = CommentWatch()
