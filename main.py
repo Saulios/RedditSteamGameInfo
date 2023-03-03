@@ -419,7 +419,12 @@ class SubWatch(threading.Thread):
                                                 elif "prior work" not in flair_text.lower() and "regional" not in flair_text.lower():
                                                     # if not yet in flair
                                                     flair_id = submission.link_flair_template_id
-                                                    new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues" + flair_text
+                                                    new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues | " + flair_text
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                elif "regional" not in flair_text.lower():
+                                                    # if regional not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = "Tier " + tier_number + "+ | Regional Issues | " + flair_text
                                                     submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                             if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" in commenttext_awa:
                                                 # flair post with prior work required and add tier
@@ -442,6 +447,18 @@ class SubWatch(threading.Thread):
                                                     flair_id = submission.link_flair_template_id
                                                     new_text = flair_text + " | Regional Issues"
                                                     submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                        if commenttext_keyhub is not None and commenttext_keyhub != "":
+                                            flair_text = submission.link_flair_text
+                                            level_number = commenttext_keyhub.split("Steam level required: ")[1].split()[0]
+                                            if flair_text is None:
+                                                # if no flair exists
+                                                new_text = "Steam level " + level_number + "+"
+                                                submission.mod.flair(text=new_text, css_class="ReadComments", flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                            elif "level" not in flair_text.lower():
+                                                # if not yet in flair
+                                                flair_id = submission.link_flair_template_id
+                                                new_text = "Steam level " + level_number + "+ | " + flair_text
+                                                submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                         if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                             # Set post as NSFW
                                             submission.mod.nsfw()
@@ -507,6 +524,11 @@ class SubWatch(threading.Thread):
                                                         flair_id = submission.link_flair_template_id
                                                         new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues" + flair_text
                                                         submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                    elif "regional" not in flair_text.lower():
+                                                        # if regional not yet in flair
+                                                        flair_id = submission.link_flair_template_id
+                                                        new_text = "Tier " + tier_number + "+ | Regional Issues | " + flair_text
+                                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                                 if "Tier required: 1" not in commenttext_awa and "* Keys available for all countries\n" in commenttext_awa:
                                                     # flair post with prior work required and add tier
                                                     if flair_text is None:
@@ -528,6 +550,18 @@ class SubWatch(threading.Thread):
                                                         flair_id = submission.link_flair_template_id
                                                         new_text = flair_text + " | Regional Issues"
                                                         submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            if commenttext_keyhub is not None and commenttext_keyhub != "":
+                                                flair_text = submission.link_flair_text
+                                                level_number = commenttext_keyhub.split("Steam level required: ")[1].split()[0]
+                                                if flair_text is None:
+                                                    # if no flair exists
+                                                    new_text = "Steam level " + level_number + "+"
+                                                    submission.mod.flair(text=new_text, css_class="ReadComments", flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                                elif "level" not in flair_text.lower():
+                                                    # if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = "Steam level " + level_number + "+ | " + flair_text
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                             if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                                 # Set post as NSFW
                                                 submission.mod.nsfw()
@@ -576,6 +610,11 @@ class SubWatch(threading.Thread):
                                                         flair_id = submission.link_flair_template_id
                                                         new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues" + flair_text
                                                         submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                    elif "regional" not in flair_text.lower():
+                                                        # if regional not yet in flair
+                                                        flair_id = submission.link_flair_template_id
+                                                        new_text = "Tier " + tier_number + "+ | Regional Issues | " + flair_text
+                                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                                 if "Tier required: 1" not in commenttext and "* Keys available for all countries\n" in commenttext:
                                                     # flair post with prior work required and add tier
                                                     if flair_text is None:
@@ -597,6 +636,18 @@ class SubWatch(threading.Thread):
                                                         flair_id = submission.link_flair_template_id
                                                         new_text = flair_text + " | Regional Issues"
                                                         submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            if g_website == "keyhub" and commenttext is not None and commenttext != "":
+                                                flair_text = submission.link_flair_text
+                                                level_number = commenttext.split("Steam level required: ")[1].split()[0]
+                                                if flair_text is None:
+                                                    # if no flair exists
+                                                    new_text = "Steam level " + level_number + "+"
+                                                    submission.mod.flair(text=new_text, css_class="ReadComments", flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                                elif "level" not in flair_text.lower():
+                                                    # if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = "Steam level " + level_number + "+ | " + flair_text
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                             if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                                 # Set post as NSFW
                                                 submission.mod.nsfw()
@@ -650,6 +701,11 @@ class SubWatch(threading.Thread):
                                                 flair_id = submission.link_flair_template_id
                                                 new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues" + flair_text
                                                 submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            elif "regional" not in flair_text.lower():
+                                                # if regional not yet in flair
+                                                flair_id = submission.link_flair_template_id
+                                                new_text = "Tier " + tier_number + "+ | Regional Issues | " + flair_text
+                                                submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                         if "Tier required: 1" not in commenttext and "* Keys available for all countries\n" in commenttext:
                                             # flair post with prior work required and add tier
                                             if flair_text is None:
@@ -697,6 +753,18 @@ class SubWatch(threading.Thread):
                                 if len(commenttext) < 10000:
                                     print('Commenting on post ' + str(submission) + ' after finding Keyhub domain')
                                     submission.reply(body=commenttext)
+                                    if commenttext is not None and commenttext != "":
+                                        flair_text = submission.link_flair_text
+                                        level_number = commenttext.split("Steam level required: ")[1].split()[0]
+                                        if flair_text is None:
+                                            # if no flair exists
+                                            new_text = "Steam level " + level_number + "+"
+                                            submission.mod.flair(text=new_text, css_class="ReadComments", flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                        elif "level" not in flair_text.lower():
+                                            # if not yet in flair
+                                            flair_id = submission.link_flair_template_id
+                                            new_text = "Steam level " + level_number + "+ | " + flair_text
+                                            submission.mod.flair(text=new_text, flair_template_id=flair_id)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
