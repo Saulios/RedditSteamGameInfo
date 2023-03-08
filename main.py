@@ -36,6 +36,7 @@ CRUCIAL_URL_REGEX = r"((https?:\/\/)?)(games.crucial.com\/promotions\/\d+)"
 IGAMES_URL_REGEX = r"((https?:\/\/)?)(igames.gg\/promotions\/\d+)"
 KEYHUB_URL_REGEX = r"((https?:\/\/)?)(key-hub.eu\/giveaway\/\d+)"
 GLEAMIO_URL_REGEX = r"((https?:\/\/)?)(gleam.io)"
+RANDOM_TITLE_REGEX = r"(Random).*(Game)"
 
 
 def fitscriteria(s):
@@ -765,6 +766,17 @@ class SubWatch(threading.Thread):
                                             flair_id = submission.link_flair_template_id
                                             new_text = "Steam level " + level_number + "+ | " + flair_text
                                             submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                    if re.search(RANDOM_TITLE_REGEX, submission.title, re.IGNORECASE):
+                        flair_text = submission.link_flair_text
+                        if flair_text is None:
+                            # if no flair exists
+                            new_text = "Random"
+                            submission.mod.flair(text=new_text, css_class="itchio", flair_template_id="2e9be5ce-8121-11ec-97f5-ae0ba3b1ee73")
+                        elif "random" not in flair_text.lower():
+                            # if not yet in flair
+                            flair_id = submission.link_flair_template_id
+                            new_text = flair_text + " | Random"
+                            submission.mod.flair(text=new_text, flair_template_id=flair_id)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
