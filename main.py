@@ -184,7 +184,12 @@ def buildcommenttext(g, removed, source):
             commenttext += ' | [PCGamingWiki](https://www.pcgamingwiki.com/api/appid.php?appid=' + g.appID + ')'
         commenttext += '\n'
         if (g.gettype == "dlc" or g.gettype == "mod") and g.basegame is not None:
-            commenttext += '* Game links (**' + g.basegame[1] + '**): '
+            commenttext += '* '
+            if g.basegame[2] == "Free":
+                commenttext += 'Free'
+            else:
+                commenttext += 'Paid'
+            commenttext += ' Base Game: **' + g.basegame[1] + '** - '
             if removed:
                 commenttext += '[Store Page (archived)](' + g.basegame[6]
             else:
@@ -201,6 +206,8 @@ def buildcommenttext(g, removed, source):
         else:
             commenttext += '\n'
         if not g.unreleased and (g.reviewsummary != "" or g.reviewdetails != ""):
+            if g.gettype == "dlc":
+                commenttext += 'DLC '
             commenttext += 'Reviews: '
             if g.reviewdetails != "" and g.lowreviews:
                 commenttext += g.reviewdetails
@@ -252,7 +259,10 @@ def buildcommenttext(g, removed, source):
                     commenttext += ' (' + g.basegame[5] + ')'
                 commenttext += '\n'
         if not g.unreleased and g.releasedate:
-            commenttext += ' * Release Date: ' + g.releasedate
+            commenttext += ' * '
+            if g.gettype == "dlc":
+                commenttext += 'DLC '
+            commenttext += 'Release Date: ' + g.releasedate
             if g.isearlyaccess:
                 commenttext += ' (Early Access)'
             commenttext += '\n'
@@ -369,6 +379,18 @@ class SubWatch(threading.Thread):
                                     if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                         # Set post as NSFW
                                         submission.mod.nsfw()
+                                    if "* Paid Base Game:" in commenttext:
+                                        # Check for paid base game DLC
+                                        flair_text = submission.link_flair_text
+                                        if flair_text is None:
+                                            # if no flair exists
+                                            new_text = "Paid Base Game"
+                                            submission.mod.flair(text=new_text, css_class="BasePaid", flair_template_id="129ebd48-becd-11ed-9399-b250c43c4702")
+                                        elif "paid base game" not in flair_text.lower():
+                                            # if not yet in flair
+                                            flair_id = submission.link_flair_template_id
+                                            new_text = flair_text + " | Paid Base Game"
+                                            submission.mod.flair(text=new_text, flair_template_id=flair_id)
                     elif re.search(STEAM_TITLE_REGEX, submission.title, re.IGNORECASE):
                         title_split = re.split(STEAM_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
                         game_name = title_split[-1].strip()
@@ -463,6 +485,18 @@ class SubWatch(threading.Thread):
                                         if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                             # Set post as NSFW
                                             submission.mod.nsfw()
+                                        if "* Paid Base Game:" in commenttext:
+                                            # Check for paid base game DLC
+                                            flair_text = submission.link_flair_text
+                                            if flair_text is None:
+                                                # if no flair exists
+                                                new_text = "Paid Base Game"
+                                                submission.mod.flair(text=new_text, css_class="BasePaid", flair_template_id="129ebd48-becd-11ed-9399-b250c43c4702")
+                                            elif "paid base game" not in flair_text.lower():
+                                                # if not yet in flair
+                                                flair_id = submission.link_flair_template_id
+                                                new_text = flair_text + " | Paid Base Game"
+                                                submission.mod.flair(text=new_text, flair_template_id=flair_id)
                             else:
                                 game = SteamSearchGame(game_name, True)
                                 appid = game.appid
@@ -566,6 +600,18 @@ class SubWatch(threading.Thread):
                                             if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                                 # Set post as NSFW
                                                 submission.mod.nsfw()
+                                            if "* Paid Base Game:" in commenttext:
+                                                # Check for paid base game DLC
+                                                flair_text = submission.link_flair_text
+                                                if flair_text is None:
+                                                    # if no flair exists
+                                                    new_text = "Paid Base Game"
+                                                    submission.mod.flair(text=new_text, css_class="BasePaid", flair_template_id="129ebd48-becd-11ed-9399-b250c43c4702")
+                                                elif "paid base game" not in flair_text.lower():
+                                                    # if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = flair_text + " | Paid Base Game"
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                 elif (
                                     re.search(STEELSERIES_URL_REGEX, submission.url)
                                     or re.search(CRUCIAL_URL_REGEX, submission.url)
