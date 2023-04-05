@@ -5,6 +5,7 @@ import os
 import re
 import threading
 import time
+from humanfriendly import format_timespan
 
 import praw
 from prawcore.exceptions import PrawcoreException
@@ -937,10 +938,14 @@ class EditCommentWatch(threading.Thread):
                                 except TypeError:
                                     continue
                                 if len(edited_comment) < 10000:
-                                    comment.edit(body=edited_comment)
                                     if "Available keys: 0\n" in edited_part:
-                                        # flair post as expired
+                                        # flair post as expired, replace update text with runtime
                                         comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
+                                        age = time.time() - comment.submission.created_utc  # in seconds
+                                        if "\n*Updating available keys every minute*\n" in edited_comment:
+                                            expire_time = "\n*Giveaway lasted for " + format_timespan(int(age), max_units=2) + "*\n"
+                                            edited_comment = edited_comment.replace("\n*Updating available keys every minute*\n", expire_time)
+                                    comment.edit(body=edited_comment)
                             # try edit(s) every minute
                             time.sleep(sleep_time)
             except PrawcoreException:
@@ -1019,10 +1024,14 @@ class EditCommentWatchLong(threading.Thread):
                                 except TypeError:
                                     continue
                                 if len(edited_comment) < 10000:
-                                    comment.edit(body=edited_comment)
                                     if "Available keys: 0\n" in edited_part:
-                                        # flair post as expired
+                                        # flair post as expired, replace update text with runtime
                                         comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
+                                        age = time.time() - comment.submission.created_utc  # in seconds
+                                        if "\n*Updating available keys every 30 minutes*\n" in edited_comment:
+                                            expire_time = "\n*Giveaway lasted for " + format_timespan(int(age), max_units=2) + "*\n"
+                                            edited_comment = edited_comment.replace("\n*Updating available keys every 30 minutes*\n", expire_time)
+                                    comment.edit(body=edited_comment)
                             # try edit(s) every 30 minutes
                             time.sleep(sleep_time)
             except PrawcoreException:
