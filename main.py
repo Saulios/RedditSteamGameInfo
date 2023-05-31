@@ -36,7 +36,7 @@ STEELSERIES_URL_REGEX = r"((https?:\/\/)?)(games.steelseries.com\/giveaway\/\d+)
 CRUCIAL_URL_REGEX = r"((https?:\/\/)?)(games.crucial.com\/promotions\/\d+)"
 IGAMES_URL_REGEX = r"((https?:\/\/)?)(igames.gg\/promotions\/\d+)"
 KEYHUB_URL_REGEX = r"((https?:\/\/)?)(key-hub.eu\/giveaway\/\d+)"
-GLEAMIO_URL_REGEX = r"((https?:\/\/)?)(gleam.io)"
+GLEAMIO_URL_REGEX = r"http[s]?://(?:www\.)?gleam\.io"
 RANDOM_TITLE_REGEX = r"(Random).*(Game)"
 
 
@@ -364,6 +364,8 @@ class SubWatch(threading.Thread):
         while True:
             try:
                 for submission in subreddit.stream.submissions(skip_existing=True):
+                    if submission.banned_by is not None:
+                        continue
                     if (
                         re.search(STEAM_APPURL_REGEX, submission.url)
                         or re.search(STEAMDB_APPURL_REGEX, submission.url)
@@ -613,6 +615,105 @@ class SubWatch(threading.Thread):
                                                     flair_id = submission.link_flair_template_id
                                                     new_text = flair_text + " | Paid Base Game"
                                                     submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                    elif (
+                                        re.search(STEELSERIES_URL_REGEX, submission.url)
+                                        or re.search(CRUCIAL_URL_REGEX, submission.url)
+                                        or re.search(IGAMES_URL_REGEX, submission.url)
+                                        or re.search(ALIENWARE_URL_REGEX, submission.url)
+                                        or re.search(KEYHUB_URL_REGEX, submission.url)
+                                    ):
+                                        # Not found on archive.org, post steamdb and key availability part
+                                        commenttext += '*Removed from Steam, no information found on archive.org*\n\n'
+                                        commenttext += '**' + game_name +'**\n\n'
+                                        commenttext += '[Community Hub](https://steamcommunity.com/app/' + game.appid + ') | '
+                                        commenttext += '[SteamDB](https://steamdb.info/app/' + game.appid + ')\n\n***\n'
+                                        g_website = "steelseries"
+                                        if re.search(CRUCIAL_URL_REGEX, submission.url):
+                                            g_website = "crucial"
+                                        elif re.search(IGAMES_URL_REGEX, submission.url):
+                                            g_website = "igames"
+                                        if (
+                                            re.search(STEELSERIES_URL_REGEX, submission.url)
+                                            or re.search(CRUCIAL_URL_REGEX, submission.url)
+                                            or re.search(IGAMES_URL_REGEX, submission.url)
+                                        ):
+                                            g_id = re.search('\d+', submission.url).group(0)
+                                            commenttext = buildcommenttext_igames(iGames(g_id, g_website), "new")
+                                        if re.search(ALIENWARE_URL_REGEX, submission.url):
+                                            g_website = "alienware"
+                                            commenttext = buildcommenttext_awa(AlienwareArena(submission.url, "new"), "new")
+                                        if re.search(KEYHUB_URL_REGEX, submission.url):
+                                            g_website = "keyhub"
+                                            commenttext = buildcommenttext_keyhub(Keyhub(submission.url, "new"), "new")
+                                        if commenttext is not None and commenttext != "":
+                                            commenttext += buildfootertext()
+                                            if len(commenttext) < 10000:
+                                                print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
+                                                submission.reply(body=commenttext)
+                                                flair_text = submission.link_flair_text
+                                                if commenttext.startswith("*Removed from Steam"):
+                                                    if flair_text is None:
+                                                        # flair post with delisted if no flair exists
+                                                        submission.mod.flair(text="Delisted Game", css_class="DelistedGame", flair_template_id="9a5196c4-8865-11ec-8a1f-8261ed8ecd20")
+                                                    elif "delisted" not in flair_text.lower():
+                                                        # flair post with delisted if not yet in flair
+                                                        flair_id = submission.link_flair_template_id
+                                                        new_text = flair_text + " | Delisted Game"
+                                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                if g_website == "alienware" and commenttext is not None and commenttext != "":
+                                                    tier_number = commenttext.split("Tier required: ")[1].split()[0]
+                                                    if "Tier required: 1" not in commenttext and "* Keys available for all countries\n" not in commenttext:
+                                                        # flair post with prior work required, regional issues and add tier
+                                                        if flair_text is None:
+                                                            # if no flair exists
+                                                            new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues"
+                                                            submission.mod.flair(text=new_text, css_class="restoften", flair_template_id="b204d6b4-0b90-11e4-9095-12313b0add52")
+                                                        elif "prior work" not in flair_text.lower() and "regional" not in flair_text.lower():
+                                                            # if not yet in flair
+                                                            flair_id = submission.link_flair_template_id
+                                                            new_text = "Tier " + tier_number + "+ | Prior Work Required | Regional Issues" + flair_text
+                                                            submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                        elif "regional" not in flair_text.lower():
+                                                            # if regional not yet in flair
+                                                            flair_id = submission.link_flair_template_id
+                                                            new_text = "Tier " + tier_number + "+ | Regional Issues | " + flair_text
+                                                            submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                    if "Tier required: 1" not in commenttext and "* Keys available for all countries\n" in commenttext:
+                                                        # flair post with prior work required and add tier
+                                                        if flair_text is None:
+                                                            # if no flair exists
+                                                            new_text = "Tier " + tier_number + "+ | Prior Work Required"
+                                                            submission.mod.flair(text=new_text, css_class="restoften", flair_template_id="b204d6b4-0b90-11e4-9095-12313b0add52")
+                                                        elif "prior work" not in flair_text.lower():
+                                                            # if not yet in flair
+                                                            flair_id = submission.link_flair_template_id
+                                                            new_text = "Tier " + tier_number + "+ | Prior Work Required | " + flair_text
+                                                            submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                    if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" in commenttext:
+                                                        # flair post with regional issues
+                                                        if flair_text is None:
+                                                            # if no flair exists
+                                                            submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
+                                                        elif "regional" not in flair_text.lower():
+                                                            # if not yet in flair
+                                                            flair_id = submission.link_flair_template_id
+                                                            new_text = flair_text + " | Regional Issues"
+                                                            submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                if g_website == "keyhub" and commenttext is not None and commenttext != "":
+                                                    flair_text = submission.link_flair_text
+                                                    level_number = commenttext.split("Steam level required: ")[1].split()[0]
+                                                    if flair_text is None:
+                                                        # if no flair exists
+                                                        new_text = "Steam level " + level_number + "+"
+                                                        submission.mod.flair(text=new_text, css_class="ReadComments", flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                                    elif "level" not in flair_text.lower():
+                                                        # if not yet in flair
+                                                        flair_id = submission.link_flair_template_id
+                                                        new_text = "Steam level " + level_number + "+ | " + flair_text
+                                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                if "*(NSFW)*" in commenttext and submission.over_18 is False:
+                                                    # Set post as NSFW
+                                                    submission.mod.nsfw()
                                 elif (
                                     re.search(STEELSERIES_URL_REGEX, submission.url)
                                     or re.search(CRUCIAL_URL_REGEX, submission.url)
@@ -620,7 +721,7 @@ class SubWatch(threading.Thread):
                                     or re.search(ALIENWARE_URL_REGEX, submission.url)
                                     or re.search(KEYHUB_URL_REGEX, submission.url)
                                 ):
-                                    # Not found on Steam, still post key availability part
+                                    # Not found on steam-tracker, still post key availability part
                                     g_website = "steelseries"
                                     if re.search(CRUCIAL_URL_REGEX, submission.url):
                                         g_website = "crucial"
@@ -835,6 +936,8 @@ class CommentWatch(threading.Thread):
         while True:
             try:
                 for comment in reddit.subreddit(SUBLIST).stream.comments(skip_existing=True):
+                    if comment.banned_by is not None:
+                        continue
                     test_comment_gleamio = re.search(GLEAMIO_URL_REGEX, comment.body)
                     test_comment_steam = re.search(STEAM_APPURL_REGEX, comment.body)
                     if test_comment_gleamio:
@@ -873,81 +976,81 @@ class EditCommentWatch(threading.Thread):
         print('Watching bot comments')
         while True:
             try:
-                count = 0
+                comments = []
                 for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=20):
                     now = time.time()
                     age = now - comment.created_utc  # in seconds
-                    if age <= 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
-                        count += 1
-                if count > 0:
+                    if comment.banned_by is None and age <= 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
+                        comments.append(comment)
+                if len(comments) > 0:
                     seconds = 60
-                    if count > 11:
+                    if len(comments) > 10:
                         seconds = 120
-                    sleep_time = seconds / count
-                    for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=20):
-                        now = time.time()
-                        age = now - comment.created_utc  # in seconds
-                        if age <= 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
-                            if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
-                                g_website = "alienware"
-                                split_part = "* No keys for:"
-                            elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
-                                g_website = "steelseries"
-                                split_part = "\n* Total keys:"
-                            elif re.search(CRUCIAL_URL_REGEX, comment.submission.url):
-                                g_website = "crucial"
-                                split_part = "\n* Total keys:"
-                            elif re.search(IGAMES_URL_REGEX, comment.submission.url):
-                                g_website = "igames"
-                                split_part = "\n* Total keys:"
-                            elif re.search(KEYHUB_URL_REGEX, comment.submission.url):
-                                g_website = "keyhub"
-                                split_part = "* Steam level required:"
-                            if g_website == "alienware":
-                                edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
-                            elif g_website == "steelseries" or g_website == "crucial" or g_website == "igames":
-                                g_id = re.search('\d+', comment.submission.url).group(0)
-                                edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
-                            elif g_website == "keyhub":
-                                edited_part = buildcommenttext_keyhub(Keyhub(comment.submission.url, "update"), "update")
-                            original_body = comment.body
-                            original_body_split = original_body.split("**Giveaway details**\n\n")
-                            if g_website == "alienware":
-                                split_test = original_body_split[1].split(split_part, 1)
-                                if len(split_test) == 1:
-                                    split_part = "* Keys available for"
-                            part_to_edit = original_body_split[1].split(split_part, 1)[0]
-                            if g_website == "steelseries" or g_website == "crucial" or g_website == "igames":
-                                test_out_of_keys = re.sub("[^0-9]", "", part_to_edit)
-                                if test_out_of_keys.startswith('0'):
-                                    # prevents edits on a restock, leads to incorrect keys
-                                    edited_part = part_to_edit
-                            if g_website == "alienware":
-                                try:
-                                    if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
-                                        original_tier_split = part_to_edit.split("Tier required")
-                                        zero_tier_split = edited_part.split("Tier required")
-                                        edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
-                                except TypeError:
-                                    continue
-                            original_body_part = original_body_split[1].split(split_part, 1)[1]
-                            edited_comment = ""
-                            if edited_part != part_to_edit:
-                                try:
-                                    edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part
-                                except TypeError:
-                                    continue
-                                if len(edited_comment) < 10000:
-                                    if "Available keys: 0\n" in edited_part:
-                                        # flair post as expired, replace update text with runtime
-                                        comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
-                                        age = time.time() - comment.submission.created_utc  # in seconds
-                                        if "\n*Updating available keys every minute*\n" in edited_comment:
-                                            expire_time = "\n*Giveaway lasted for " + format_timespan(int(age), max_units=2) + "*\n"
-                                            edited_comment = edited_comment.replace("\n*Updating available keys every minute*\n", expire_time)
-                                    comment.edit(body=edited_comment)
-                            # try edit(s) every minute
-                            time.sleep(sleep_time)
+                    sleep_time = seconds / len(comments)
+                    for comment in comments:
+                        g_website = ""
+                        submission_url = comment.submission.url
+                        if re.search(ALIENWARE_URL_REGEX, submission_url):
+                            g_website = "alienware"
+                            split_part = "* No keys for:"
+                        elif re.search(STEELSERIES_URL_REGEX, submission_url):
+                            g_website = "steelseries"
+                            split_part = "\n* Total keys:"
+                        elif re.search(CRUCIAL_URL_REGEX, submission_url):
+                            g_website = "crucial"
+                            split_part = "\n* Total keys:"
+                        elif re.search(IGAMES_URL_REGEX, submission_url):
+                            g_website = "igames"
+                            split_part = "\n* Total keys:"
+                        elif re.search(KEYHUB_URL_REGEX, submission_url):
+                            g_website = "keyhub"
+                            split_part = "* Steam level required:"
+                        if g_website == "alienware":
+                            edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
+                        elif g_website in ["steelseries", "crucial", "igames"]:
+                            g_id = re.search('\d+', comment.submission.url).group(0)
+                            edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
+                        elif g_website == "keyhub":
+                            edited_part = buildcommenttext_keyhub(Keyhub(comment.submission.url, "update"), "update")
+                        else:
+                            continue
+                        original_body = comment.body
+                        original_body_split = original_body.split("**Giveaway details**\n\n")
+                        split_test = original_body_split[1].split(split_part, 1)
+                        part_to_edit = split_test[0]
+                        if g_website == "alienware" and len(split_test) == 1:
+                            split_part = "* Keys available for"
+                        if g_website in ["steelseries", "crucial", "igames"]:
+                            test_out_of_keys = re.sub("[^0-9]", "", part_to_edit)
+                            if test_out_of_keys.startswith('0'):
+                                # prevents edits on a restock, leads to incorrect keys
+                                edited_part = part_to_edit
+                        if g_website == "alienware":
+                            try:
+                                if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
+                                    original_tier_split = part_to_edit.split("Tier required")
+                                    zero_tier_split = edited_part.split("Tier required")
+                                    edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
+                            except TypeError:
+                                continue
+                        original_body_part = split_test[1]
+                        edited_comment = ""
+                        if edited_part != part_to_edit:
+                            try:
+                                edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part
+                            except TypeError:
+                                continue
+                            if len(edited_comment) < 10000:
+                                if "Available keys: 0\n" in edited_part:
+                                    # flair post as expired, replace update text with runtime
+                                    comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
+                                    age = time.time() - comment.submission.created_utc  # in seconds
+                                    if "\n*Updating available keys every minute*\n" in edited_comment:
+                                        expire_time = "\n*Giveaway lasted for " + format_timespan(int(age), max_units=2) + "*\n"
+                                        edited_comment = edited_comment.replace("\n*Updating available keys every minute*\n", expire_time)
+                                comment.edit(body=edited_comment)
+                        # try edit(s) every minute
+                        time.sleep(sleep_time)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
@@ -958,82 +1061,81 @@ class EditCommentWatchLong(threading.Thread):
         print('Watching longlasting bot comments')
         while True:
             try:
-                count = 0
+                comments = []
                 for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=100):
                     now = time.time()
                     age = now - comment.created_utc  # in seconds
-                    if age > 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
-                        count += 1
-                if count > 0:
+                    if comment.banned_by is None and age > 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
+                        comments.append(comment)
+                if len(comments) > 0:
                     seconds = 1800
-                    if count > 11:
+                    if len(comments) > 10:
                         seconds = 3600
-                    sleep_time = seconds / count
-                    for comment in reddit.redditor(BOT_USERNAME).comments.new(limit=100):
-                        now = time.time()
-                        age = now - comment.created_utc  # in seconds
-                        if age > 14400 and comment.body.startswith('**Giveaway details**') and "* Available keys: 0\n" not in comment.body:
-                            g_website = ""
-                            if re.search(ALIENWARE_URL_REGEX, comment.submission.url):
-                                g_website = "alienware"
-                                split_part = "* No keys for:"
-                            elif re.search(STEELSERIES_URL_REGEX, comment.submission.url):
-                                g_website = "steelseries"
-                                split_part = "\n* Total keys:"
-                            elif re.search(CRUCIAL_URL_REGEX, comment.submission.url):
-                                g_website = "crucial"
-                                split_part = "\n* Total keys:"
-                            elif re.search(IGAMES_URL_REGEX, comment.submission.url):
-                                g_website = "igames"
-                                split_part = "\n* Total keys:"
-                            elif re.search(KEYHUB_URL_REGEX, comment.submission.url):
-                                g_website = "keyhub"
-                                split_part = "* Steam level required:"
-                            if g_website == "alienware":
-                                edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
-                            elif g_website == "steelseries" or g_website == "crucial" or g_website == "igames":
-                                g_id = re.search('\d+', comment.submission.url).group(0)
-                                edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
-                            elif g_website == "keyhub":
-                                edited_part = buildcommenttext_keyhub(Keyhub(comment.submission.url, "update"), "update")
-                            original_body = comment.body
-                            original_body_split = original_body.split("**Giveaway details**\n\n")
-                            if g_website == "alienware":
-                                split_test = original_body_split[1].split(split_part, 1)
-                                if len(split_test) == 1:
-                                    split_part = "* Keys available for"
-                            part_to_edit = original_body_split[1].split(split_part, 1)[0]
-                            if g_website == "steelseries" or g_website == "crucial" or g_website == "igames":
-                                test_out_of_keys = re.sub("[^0-9]", "", part_to_edit)
-                                if test_out_of_keys.startswith('0'):
-                                    # prevents edits on a restock, leads to incorrect keys
-                                    edited_part = part_to_edit
-                            if g_website == "alienware":
-                                try:
-                                    if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
-                                        original_tier_split = part_to_edit.split("Tier required")
-                                        zero_tier_split = edited_part.split("Tier required")
-                                        edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
-                                except TypeError:
-                                    continue
-                            original_body_part = original_body_split[1].split(split_part, 1)[1]
-                            edited_comment = ""
-                            if edited_part != part_to_edit:
-                                try:
-                                    edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part.replace("available keys every minute", "available keys every 30 minutes")
-                                except TypeError:
-                                    continue
-                                if len(edited_comment) < 10000:
-                                    if "Available keys: 0\n" in edited_part:
-                                        # flair post as expired, replace update text with runtime
-                                        comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
-                                        age = time.time() - comment.submission.created_utc  # in seconds
-                                        if "\n*Updating available keys every 30 minutes*\n" in edited_comment:
-                                            expire_time = "\n*Giveaway lasted for " + format_timespan(int(age), max_units=2) + "*\n"
-                                            edited_comment = edited_comment.replace("\n*Updating available keys every 30 minutes*\n", expire_time)
-                                    comment.edit(body=edited_comment)
-                            # try edit(s) every 30 minutes
-                            time.sleep(sleep_time)
+                    sleep_time = seconds / len(comments)
+                    for comment in comments:
+                        g_website = ""
+                        submission_url = comment.submission.url
+                        if re.search(ALIENWARE_URL_REGEX, submission_url):
+                            g_website = "alienware"
+                            split_part = "* No keys for:"
+                        elif re.search(STEELSERIES_URL_REGEX, submission_url):
+                            g_website = "steelseries"
+                            split_part = "\n* Total keys:"
+                        elif re.search(CRUCIAL_URL_REGEX, submission_url):
+                            g_website = "crucial"
+                            split_part = "\n* Total keys:"
+                        elif re.search(IGAMES_URL_REGEX, submission_url):
+                            g_website = "igames"
+                            split_part = "\n* Total keys:"
+                        elif re.search(KEYHUB_URL_REGEX, submission_url):
+                            g_website = "keyhub"
+                            split_part = "* Steam level required:"
+                        if g_website == "alienware":
+                            edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
+                        elif g_website in ["steelseries", "crucial", "igames"]:
+                            g_id = re.search('\d+', comment.submission.url).group(0)
+                            edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
+                        elif g_website == "keyhub":
+                            edited_part = buildcommenttext_keyhub(Keyhub(comment.submission.url, "update"), "update")
+                        else:
+                            continue
+                        original_body = comment.body
+                        original_body_split = original_body.split("**Giveaway details**\n\n")
+                        split_test = original_body_split[1].split(split_part, 1)
+                        part_to_edit = split_test[0]
+                        if g_website == "alienware" and len(split_test) == 1:
+                            split_part = "* Keys available for"
+                        if g_website in ["steelseries", "crucial", "igames"]:
+                            test_out_of_keys = re.sub("[^0-9]", "", part_to_edit)
+                            if test_out_of_keys.startswith('0'):
+                                # prevents edits on a restock, leads to incorrect keys
+                                edited_part = part_to_edit
+                        if g_website == "alienware":
+                            try:
+                                if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
+                                    original_tier_split = part_to_edit.split("Tier required")
+                                    zero_tier_split = edited_part.split("Tier required")
+                                    edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
+                            except TypeError:
+                                continue
+                        original_body_part = split_test[1]
+                        edited_comment = ""
+                        if edited_part != part_to_edit:
+                            try:
+                                edited_comment = "**Giveaway details**\n\n" + edited_part + split_part + original_body_part.replace("available keys every minute", "available keys every 30 minutes")
+                            except TypeError:
+                                continue
+                            if len(edited_comment) < 10000:
+                                if "Available keys: 0\n" in edited_part:
+                                    # flair post as expired, replace update text with runtime
+                                    comment.submission.mod.flair(text="Expired", css_class="Expired", flair_template_id="3f44a048-da47-11e3-8cba-12313d051ab0")
+                                    age = time.time() - comment.submission.created_utc  # in seconds
+                                    if "\n*Updating available keys every 30 minutes*\n" in edited_comment:
+                                        expire_time = "\n*Giveaway lasted for " + format_timespan(int(age), max_units=2) + "*\n"
+                                        edited_comment = edited_comment.replace("\n*Updating available keys every 30 minutes*\n", expire_time)
+                                comment.edit(body=edited_comment)
+                        # try edit(s) every 30 minutes
+                        time.sleep(sleep_time)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
@@ -1046,12 +1148,13 @@ class RepostWatch(threading.Thread):
         while True:
             try:
                 for submission in subreddit.stream.submissions(skip_existing=True):
-                    if repostwatch_title(submission.title):
-                        if repostwatch_duplicate(submission):
-                            commenttext = buildcommenttext_repost(submission)
-                            submission.mod.remove(spam=True)
-                            comment = submission.reply(body=commenttext)
-                            comment.mod.distinguish(sticky=True)
+                    if submission.banned_by is not None:
+                        continue
+                    if repostwatch_title(submission.title) and repostwatch_duplicate(submission):
+                        commenttext = buildcommenttext_repost(submission)
+                        submission.mod.remove(spam=True)
+                        comment = submission.reply(body=commenttext)
+                        comment.mod.distinguish(sticky=True)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
