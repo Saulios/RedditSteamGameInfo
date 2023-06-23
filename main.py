@@ -94,12 +94,8 @@ def buildcommenttext_awa(g, source):
         if source == "new":
             if len(g.country_names_with_keys) != 0 and len(g.country_names_with_keys) <= 10:
                 commenttext += "* Keys available for: " + ', '.join(g.country_names_with_keys) + "\n"
-            elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) <= 10:
+            elif len(g.country_names_without_keys) != 0:
                 commenttext += "* No keys for: " + ', '.join(g.country_names_without_keys) + "\n"
-            elif len(g.country_names_without_keys) != 0 and len(g.country_names_without_keys) > 10:
-                commenttext += "* No keys for: " + ', '.join(g.continents_without_keys) + "\n"
-            elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) > 10:
-                commenttext += "* Keys available for: " + ', '.join(g.continents_with_keys) + "\n"
             elif len(g.country_names_with_keys) > 10 and len(g.country_names_without_keys) == 0:
                 commenttext += "* Keys available for all countries\n"
             commenttext += "* Total keys: " + g.keys_tier[0][1] + "\n"
