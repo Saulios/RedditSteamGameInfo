@@ -105,6 +105,8 @@ class SteamGame:
                     discount_end_time = discount_end_time.text.strip()
                     discount_end_time = discount_end_time.replace("Some limitations apply. (?)", "").strip()
                     discount_end_time = discount_end_time.replace("Free to keep when you get it before", "").strip()
+                    if discount_end_time == "Free to keep when you get it during this limited-time promotion.":
+                        return None
                     try:
                         # convert to UTC
                         dateutil_end_time = discount_end_time.replace("@", "")
