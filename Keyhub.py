@@ -1,5 +1,6 @@
 import time
 import re
+import json
 
 import requests
 from bs4 import BeautifulSoup
@@ -24,7 +25,7 @@ class Keyhub:
         while True:
             try:
                 headers = {"Origin": "https://key-hub.eu"}
-                self.giveawaycount = requests.get(
+                giveawaycount = requests.get(
                     self.giveawaycount_url,
                     headers=headers,
                     timeout=10).text
@@ -32,7 +33,8 @@ class Keyhub:
             except requests.exceptions.RequestException:
                 print("Keyhub timeout: sleep for 10 seconds and try again")
                 time.sleep(10)
-        return self.giveawaycount.replace("\"", "")
+        self.giveawaycount = json.loads(giveawaycount)
+        return str(self.giveawaycount["data"])
 
     def level_info(self):
         level = 0
