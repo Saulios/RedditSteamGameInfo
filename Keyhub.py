@@ -27,7 +27,7 @@ class Keyhub:
                 self.giveawaycount = requests.get(
                     self.giveawaycount_url,
                     headers=headers,
-                    timeout=10).text
+                    timeout=10).json().get("data")
                 break
             except requests.exceptions.RequestException:
                 print("Keyhub timeout: sleep for 10 seconds and try again")
