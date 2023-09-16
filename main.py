@@ -14,6 +14,7 @@ from keep_alive import keep_alive
 from SteamGame import SteamGame
 from SteamRemovedGame import SteamRemovedGame
 from SteamSearchGame import SteamSearchGame
+from GOGGame import GOGGame
 from AlienwareArena import AlienwareArena
 from iGames import iGames
 from Keyhub import Keyhub
@@ -31,6 +32,8 @@ INDIEGALA_URL_REGEX = r"((https?:\/\/)?)(freebies.indiegala.com\/)"
 INDIEGALA_TITLE_REGEX = r"\[.*(Indiegala).*\]\s*\((Game)\)"
 EPIC_URL_REGEX = r"((https?:\/\/)?)(epicgames.com\/)"
 EPIC_TITLE_REGEX = r"\[.*(Epic).*\]\s*\((Game)\)"
+GOG_URL_REGEX = r"((https?:\/\/)?)(gog.com\/\w*\/*game)"
+GOG_TITLE_REGEX = r"\[.*(GOG).*\]\s*\((Game|DLC|Beta|Alpha|Other)\)"
 ALIENWARE_URL_REGEX = r"(https?:\/\/)?(\b)?\.?(alienwarearena.com\/\w+)"
 STEELSERIES_URL_REGEX = r"((https?:\/\/)?)(games.steelseries.com\/giveaway\/\d+)"
 CRUCIAL_URL_REGEX = r"((https?:\/\/)?)(games.crucial.com\/promotions\/\d+)"
@@ -144,6 +147,54 @@ def buildcommenttext_keyhub(g, source):
         return None
     if source == "new":
         commenttext += '\n*Updating available keys every minute*\n'
+        commenttext += '\n***\n'
+    return commenttext
+
+
+def buildcommenttext_gog(g):
+    commenttext = ''
+    if isinstance(g.title, str):
+        commenttext += '**' + g.title + '**'
+        commenttext += '\n\n'
+        commenttext += '[GOG Store Page](' + "https://www.gog.com/game/" + g.gog_link + ")"
+        if g.steamgame.appid != 0:
+            commenttext += " | [Steam Store Page](" + "https://store.steampowered.com/app/" + g.steamgame.appid + ")"
+        if g.gettype == "game" and g.pcgamingwiki:
+            commenttext += " | [PCGamingWiki](https://www.pcgamingwiki.com/api/appid.php?appid=" + g.steamgame.appid + ')'
+        commenttext += '\n\n'
+        if g.steamreviews:
+            commenttext += ' * '
+        commenttext += 'GOG Reviews: '
+        commenttext += g.reviewsummary
+        if g.reviewdetails:
+            commenttext += g.reviewdetails
+        if g.steamreviews:
+            commenttext += '\n'
+            commenttext += ' * Steam Reviews: '
+            commenttext += g.steamreviews
+        commenttext += '\n\n'
+        if g.blurb:
+            commenttext += '*' + g.blurb + '*\n\n'
+        if g.releasedate:
+            commenttext += ' * '
+            if g.gettype == "dlc":
+                commenttext += 'DLC '
+            commenttext += 'Release Date: ' + g.releasedate
+            commenttext += '\n'
+        if g.developers:
+            commenttext += ' * Developer'
+            if len(g.developers) > 1:
+                commenttext += 's'
+            commenttext += ': ' + ", ".join(g.developers) + '\n'
+        if g.features:
+            commenttext += ' * GOG Features: ' + ", ".join(g.features) + '\n'
+        if g.os:
+            commenttext += ' * Operating System'
+            if len(g.os) > 1:
+                commenttext += 's'
+            commenttext += ': ' + ", ".join(g.os) + '\n'
+        if g.genres_tags and len(g.genres_tags) != 0:
+            commenttext += ' * Genre/Tags: ' + ", ".join(g.genres_tags) + '\n'
         commenttext += '\n***\n'
     return commenttext
 
@@ -910,6 +961,19 @@ class SubWatch(threading.Thread):
                                             flair_id = submission.link_flair_template_id
                                             new_text = "Steam level " + level_number + "+ | " + flair_text
                                             submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                    elif re.search(GOG_TITLE_REGEX, submission.title, re.IGNORECASE) or re.search(GOG_URL_REGEX, submission.url):
+                        title_split = re.split(GOG_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
+                        game_name = title_split[-1].strip()
+                        if fitscriteria(submission) and game_name != "":
+                            gog_link = ""
+                            if re.search(GOG_URL_REGEX, submission.url):
+                                gog_link = re.split(re.search(GOG_URL_REGEX, submission.url).group(0), submission.url)[1].replace("/", "")
+                            commenttext = buildcommenttext_gog(GOGGame(game_name, gog_link))
+                            if commenttext is not None and commenttext != "":
+                                commenttext += buildfootertext()
+                                if len(commenttext) < 10000:
+                                    print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
+                                    submission.reply(body=commenttext)
                     if re.search(RANDOM_TITLE_REGEX, submission.title, re.IGNORECASE):
                         flair_text = submission.link_flair_text
                         if flair_text is None:

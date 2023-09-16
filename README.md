@@ -2,10 +2,10 @@
 Bot for Reddit that comments on submissions if they link to Steam games
 
 Original bot modified specifically for r/FreeGameFindings, with added functionality:
-- Works for SteamDB submissions
+- Works for SteamDB and GOG submissions
 - Works with FreeGameFindings title format by searching for the game/dlc on Steam
 - Works for games/dlc removed from Steam by searching for them on [archive.org/web](https://archive.org/web)
-- Provides giveaway details for Alienware Arena, SteelSeries, Crucial and iGames
+- Provides giveaway details for Alienware Arena, SteelSeries, Crucial, iGames and KeyHub
 - Add or edit submission flairs in certain situations (expired giveaway, delisted game)
 
 ## Workflows
@@ -19,23 +19,24 @@ Original bot modified specifically for r/FreeGameFindings, with added functional
 5. **Alienware Arena**: Retrieve details of Alienware Arena giveaways, based on [awa_key_checker](https://github.com/Saulios/awa_key_checker). Details include account level required, initial key amount and country/continent restrictions.
 6. **SteelSeries/Crucial/iGames**: Retrieve key availability from the website API
 7. **Keyhub**: Retrieve key availability from the website API and Steam level requirement from the giveaway link
+8. **GOG**: Use either the submission link or the title to look up details in the GOG API
 
 ## What information will the bot provide?
 
 ### Game/DLC details
-|                |   Steam  | Removed from Steam | Unreleased on Steam | Non-Steam |
-|:--------------:|:--------:|:------------------:|:-------------------:|:---------:|
-|      Links     | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |
-|     Reviews    | &#10004; |      &#10004;      |       &#10060;      |  &#10004; |
-|   Description  | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |
-|      Price     | &#10004; |      &#10060;      |       &#10004;      |  &#10004; |
-|  Release Date  | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |
-|   Developers   | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |
-|   Genre/Tags   | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |
-|  Achievements  | &#10004; |      &#10004;      |       &#10060;      |  &#10060; |
-|  Trading Cards | &#10004; |      &#10004;      |       &#10060;      |  &#10060; |
-|   Game Count   | &#10004; |      &#10004;      |       &#10004;      |  &#10060; |
-| ASF/addlicense | &#10004; |      &#10060;      |       &#10060;      |  &#10060; |
+|                |   Steam  | Removed from Steam | Unreleased on Steam | Non-Steam |    GOG    |
+|:--------------:|:--------:|:------------------:|:-------------------:|:---------:|:---------:|
+|      Links     | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |  &#10004; |
+|     Reviews    | &#10004; |      &#10004;      |       &#10060;      |  &#10004; |  &#10004; |
+|   Description  | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |  &#10004; |
+|      Price     | &#10004; |      &#10060;      |       &#10004;      |  &#10004; |  &#10060; |
+|  Release Date  | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |  &#10004; |
+|   Developers   | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |  &#10004; |
+|   Genre/Tags   | &#10004; |      &#10004;      |       &#10004;      |  &#10004; |  &#10004; |
+|  Achievements  | &#10004; |      &#10004;      |       &#10060;      |  &#10060; |  &#10004; |
+|  Trading Cards | &#10004; |      &#10004;      |       &#10060;      |  &#10060; |  &#10060; |
+|   Game Count   | &#10004; |      &#10004;      |       &#10004;      |  &#10060; |  &#10060; |
+| ASF/addlicense | &#10004; |      &#10060;      |       &#10060;      |  &#10060; |  &#10060; |
 
 ### Giveaway details
 |                   | Alienware Arena | SteelSeries |  Crucial |  iGames  |  Keyhub  |
