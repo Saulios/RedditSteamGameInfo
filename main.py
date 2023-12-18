@@ -39,7 +39,7 @@ STEELSERIES_URL_REGEX = r"((https?:\/\/)?)(games.steelseries.com\/giveaway\/\d+)
 CRUCIAL_URL_REGEX = r"((https?:\/\/)?)(games.crucial.com\/promotions\/\d+)"
 IGAMES_URL_REGEX = r"((https?:\/\/)?)(igames.gg\/promotions\/\d+)"
 KEYHUB_URL_REGEX = r"((https?:\/\/)?)(key-hub.eu\/giveaway\/\d+)"
-GLEAMIO_URL_REGEX = r"http[s]?://(?:www\.)?gleam\.io"
+GLEAMIO_URL_REGEX = r"((https?:\/\/)?)(gleam.io)"
 RANDOM_TITLE_REGEX = r"(Random).*(Game)"
 
 
@@ -201,6 +201,7 @@ def buildcommenttext_gog(g):
 
 def buildcommenttext(g, removed, source):
     commenttext = ''
+    javascripttext = ''
     if isinstance(g.title, str):
         if source == "Indiegala" or source == "Epic":
             commenttext += '*Game with the same name on Steam:* '
@@ -365,8 +366,11 @@ def buildcommenttext(g, removed, source):
             if g.gettype == "dlc" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4]:
                 commenttext += "a/" + g.basegame[0] + ","
             commenttext += g.asf[0] + '`\n'
+			if g.asf[1] == "sub":
+                javascripttext = f'javascript:AddFreeLicense({g.asf[0].strip("s/")})'
+                commenttext += f' * Can be added in browsers/mobile with `{javascripttext}`\n'
         commenttext += '\n***\n'
-    return commenttext
+    return commenttext, javascripttext
 
 
 def buildfootertext():
@@ -420,12 +424,14 @@ class SubWatch(threading.Thread):
                         appid = re.search('\d+', submission.url).group(0)
                         source_platform = "Steam"
                         if fitscriteria(submission):
-                            commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
+                            commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
                             if commenttext is not None and commenttext != "":
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
                                     print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
-                                    submission.reply(body=commenttext)
+                                    botcomment = submission.reply(commenttext)
+                                    if javascripttext is not None and javascripttext != "":
+                                        botcomment.reply(javascripttext)
                                     if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                         # Set post as NSFW
                                         submission.mod.nsfw()
@@ -449,7 +455,7 @@ class SubWatch(threading.Thread):
                             appid = game.appid
                             source_platform = "Steam"
                             if appid != 0:
-                                commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
+                                commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
                                 if commenttext is not None and commenttext != "":
                                     commenttext_awa = ""
                                     if re.search(ALIENWARE_URL_REGEX, submission.url):
@@ -479,7 +485,9 @@ class SubWatch(threading.Thread):
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
                                         print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
-                                        submission.reply(body=commenttext)
+                                        botcomment = submission.reply(commenttext)
+                                        if javascripttext is not None and javascripttext != "":
+                                            botcomment.reply(javascripttext)
                                         if commenttext_awa is not None and commenttext_awa != "":
                                             flair_text = submission.link_flair_text
                                             tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
@@ -552,10 +560,10 @@ class SubWatch(threading.Thread):
                                 appid = game.appid
                                 if appid != 0:
                                     # try for only removed store page
-                                    commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
+                                    commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
                                     if commenttext is None or commenttext == "":
                                         # not available on Steam
-                                        commenttext = buildcommenttext(SteamRemovedGame(appid), True, source_platform)
+                                        commenttext, javascripttext = buildcommenttext(SteamRemovedGame(appid), True, source_platform)
                                     if commenttext is not None and commenttext != "":
                                         commenttext_awa = ""
                                         if re.search(ALIENWARE_URL_REGEX, submission.url):
@@ -585,7 +593,9 @@ class SubWatch(threading.Thread):
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name)
-                                            submission.reply(body=commenttext)
+                                            botcomment = submission.reply(commenttext)
+                                            if javascripttext is not None and javascripttext != "":
+                                                botcomment.reply(javascripttext)
                                             flair_text = submission.link_flair_text
                                             if commenttext.startswith("*Removed from Steam"):
                                                 if flair_text is None:
@@ -866,7 +876,7 @@ class SubWatch(threading.Thread):
                                 game = SteamSearchGame(game_name, True, "non-Steam")
                             appid = game.appid
                             if appid != 0:
-                                commenttext = buildcommenttext(SteamGame(appid), False, source_platform)
+                                commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
                                 if commenttext is not None and commenttext != "":
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
@@ -996,13 +1006,13 @@ class CommentWatch(threading.Thread):
         while True:
             try:
                 for comment in reddit.subreddit(SUBLIST).stream.comments(skip_existing=True):
-                    if comment.banned_by is not None:
-                        continue
-                    test_comment_gleamio = re.search(GLEAMIO_URL_REGEX, comment.body)
-                    test_comment_steam = re.search(STEAM_APPURL_REGEX, comment.body)
+                    test_comment_gleamio = re.search(GLEAMIO_URL_REGEX, comment.body, re.IGNORECASE)
+                    test_comment_steam = re.search(STEAM_APPURL_REGEX, comment.body, re.IGNORECASE)
                     if test_comment_gleamio:
                         if comment.approved_by is None:
                             comment.mod.approve()
+                    if comment.banned_by is not None:
+                        continue
                     if test_comment_steam and fitscriteria(comment):
                         games = []
                         urlregex = re.finditer(STEAM_APPURL_REGEX, comment.body)
@@ -1012,20 +1022,26 @@ class CommentWatch(threading.Thread):
                         games = list(dict.fromkeys(games))
                         appids = []
                         commenttext = ""
+						javascripts = []
                         source_platform = "Steam"
                         if not re.search(STEAM_PLATFORM_REGEX, comment.submission.title, re.IGNORECASE):
                             source_platform = "nonSteam"
                         for i in range(len(games)):
                             appid = re.search('\d+', games[i]).group(0)
-                            make_comment = buildcommenttext(SteamGame(appid), False, source_platform)
+                            make_comment, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
                             if make_comment is not None and make_comment != "":
                                 commenttext += make_comment
                                 appids.append(appid)
+							if javascripttext is not None and javascripttext != "":
+                                javascripts.append(javascripttext)
                         if commenttext != "":
                             commenttext += buildfootertext()
                             if len(commenttext) < 10000:
                                 print('Replying to comment ' + str(comment) + ' after finding game ' + ', '.join(appids))
-                                comment.reply(body=commenttext)
+                                botcomment = comment.reply(commenttext)
+                                if len(javascripts) > 0:
+                                    for text in javascripts:
+                                        botcomment.reply(text)
             except PrawcoreException:
                 print('Trying to reach Reddit')
                 time.sleep(30)
@@ -1077,9 +1093,12 @@ class EditCommentWatch(threading.Thread):
                         original_body = comment.body
                         original_body_split = original_body.split("**Giveaway details**\n\n")
                         split_test = original_body_split[1].split(split_part, 1)
+                        if len(split_test) != 1 and len(split_test) != 2:
+                            continue
                         part_to_edit = split_test[0]
                         if g_website == "alienware" and len(split_test) == 1:
                             split_part = "* Keys available for"
+                            split_test = original_body_split[1].split(split_part, 1)
                         if g_website in ["steelseries", "crucial", "igames"]:
                             test_out_of_keys = re.sub("[^0-9]", "", part_to_edit)
                             if test_out_of_keys.startswith('0'):
@@ -1162,9 +1181,12 @@ class EditCommentWatchLong(threading.Thread):
                         original_body = comment.body
                         original_body_split = original_body.split("**Giveaway details**\n\n")
                         split_test = original_body_split[1].split(split_part, 1)
+                        if len(split_test) != 1 and len(split_test) != 2:
+                            continue
                         part_to_edit = split_test[0]
                         if g_website == "alienware" and len(split_test) == 1:
                             split_part = "* Keys available for"
+                            split_test = original_body_split[1].split(split_part, 1)
                         if g_website in ["steelseries", "crucial", "igames"]:
                             test_out_of_keys = re.sub("[^0-9]", "", part_to_edit)
                             if test_out_of_keys.startswith('0'):

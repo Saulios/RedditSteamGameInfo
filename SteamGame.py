@@ -44,7 +44,7 @@ class SteamGame:
                 print("Steam api timeout: sleep for 30 seconds and try again")
                 time.sleep(30)
 
-        if 'json' in steam_json.headers.get('Content-Type'):
+        if 'json' in steam_json.headers.get('Content-Type') and len(steam_json.content) != 0:
             self.json = json.loads(steam_json.content.decode('utf-8-sig'))
         else:
             # try once more
@@ -54,7 +54,7 @@ class SteamGame:
                     timeout=30)
             except requests.exceptions.RequestException:
                 return None
-            if 'json' in steam_json.headers.get('Content-Type'):
+            if 'json' in steam_json.headers.get('Content-Type') and len(steam_json.content) != 0:
                 self.json = json.loads(steam_json.content.decode('utf-8-sig'))
             else:
                 return None
@@ -318,15 +318,17 @@ class SteamGame:
         if (
             releasedate == time.strftime("%B %e, %Y", time.localtime())
             or releasedate == time.strftime("%b %e, %Y", time.localtime())
+            or releasedate == time.strftime("%B%e, %Y", time.localtime())
+            or releasedate == time.strftime("%b%e, %Y", time.localtime())
         ):
             # Skip review text if app released today and has no reviews
             return ""
         else:
             return "No user reviews"
 
-    def lowreviews(self):
+    def lowreviews(self, appid):
         # gives better review text when at low review amounts
-        reviews_url = 'https://store.steampowered.com/appreviews/' + self.appID + '?json=1&filter=summary&review_type=all&purchase_type=all&language=all'
+        reviews_url = 'https://store.steampowered.com/appreviews/' + appid + '?json=1&filter=summary&review_type=all&purchase_type=all&language=all'
         lowreviews = ""
         total = 0
         while True:
@@ -354,7 +356,7 @@ class SteamGame:
         negative = appreviews_json["query_summary"]["total_negative"]
         total = positive + negative
         if total == 0:
-            backup_reviews_url = 'https://store.steampowered.com/appreviews/' + self.appID + '?json=1'
+            backup_reviews_url = 'https://store.steampowered.com/appreviews/' + appid + '?json=1'
             while True:
                 try:
                     appreviews = requests.get(backup_reviews_url, timeout=30)
@@ -412,7 +414,7 @@ class SteamGame:
             review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
             review_div_count = review_div.find("meta", {"itemprop": "reviewCount"})
             if review_div_count is None or (review_div_count["content"] is not None and int(review_div_count["content"]) < 100):
-                lowreviews, total = SteamGame.lowreviews(self)
+                lowreviews, total = SteamGame.lowreviews(self, self.appID)
                 if total == 0:
                     return details, False
             details_span = review_div_agg.select('span[class*="responsive_reviewdesc"]')

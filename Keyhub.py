@@ -32,7 +32,7 @@ class Keyhub:
             except requests.exceptions.RequestException:
                 print("Keyhub timeout: sleep for 10 seconds and try again")
                 time.sleep(10)
-        return self.giveawaycount.replace("\"", "")
+        return str(self.giveawaycount)
 
     def level_info(self):
         level = 0

@@ -22,7 +22,7 @@ class GOGGame:
             except requests.exceptions.RequestException:
                 print("GOG request timeout: sleep for 15 seconds and try again")
                 time.sleep(15)
-        if 'json' in url_json.headers.get('Content-Type'):
+        if 'json' in url_json.headers.get('Content-Type') and len(url_json.content) != 0:
             self.json = json.loads(url_json.content.decode('utf-8-sig'))
         else:
             return None
@@ -109,7 +109,7 @@ class GOGGame:
             releasedate = self.product["releaseDate"]
             try:
                 date_abbr = dateutil.parser.parse(releasedate)
-            except ParserError:
+            except (ParserError, TypeError):
                 return releasedate
             try:
                 date_full = time.strftime('%B %e, %Y', date_abbr.timetuple())
@@ -128,6 +128,9 @@ class GOGGame:
         return None
 
     def reviewdetails(self, gog_link):
+        if "reviewsRating" in self.product:
+            if self.product["reviewsRating"] == 0:
+                return None
         while True:
             try:
                 session = requests.session()
@@ -200,7 +203,7 @@ class GOGGame:
                 print("Steam api timeout: sleep for 30 seconds and try again")
                 time.sleep(30)
 
-        if 'json' in steam_json.headers.get('Content-Type'):
+        if 'json' in steam_json.headers.get('Content-Type') and len(steam_json.content) != 0:
             steamgame_info_json = json.loads(steam_json.content.decode('utf-8-sig'))
         else:
             # try once more
@@ -209,15 +212,15 @@ class GOGGame:
                     "https://store.steampowered.com/api/appdetails/?appids=" + appid + "&cc=us",
                     timeout=30)
             except requests.exceptions.RequestException:
-                return None
-            if 'json' in steam_json.headers.get('Content-Type'):
+                return None, None
+            if 'json' in steam_json.headers.get('Content-Type') and len(steam_json.content) != 0:
                 self.json = json.loads(steam_json.content.decode('utf-8-sig'))
             else:
-                return None
+                return None, None
 
         if steamgame_info_json is None or steamgame_info_json[appid]["success"] is not True:
             # appid invalid
-            return None
+            return None, None
         steamgame_info_json = steamgame_info_json[appid]["data"]
 
         def getDescriptionSnippet():
