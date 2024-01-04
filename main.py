@@ -366,7 +366,7 @@ def buildcommenttext(g, removed, source):
             if g.gettype == "dlc" and g.basegame is not None and len(g.basegame) > 2 and g.basegame[4]:
                 commenttext += "a/" + g.basegame[0] + ","
             commenttext += g.asf[0] + '`\n'
-			if g.asf[1] == "sub":
+            if g.asf[1] == "sub":
                 javascripttext = f'javascript:AddFreeLicense({g.asf[0].strip("s/")})'
                 commenttext += f' * Can be added in browsers/mobile with `{javascripttext}`\n'
         commenttext += '\n***\n'
@@ -428,7 +428,7 @@ class SubWatch(threading.Thread):
                             if commenttext is not None and commenttext != "":
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
-                                    print('Commenting on post ' + str(submission) + ' after finding game ' + appid)
+                                    print('Commenting on post ' + str(submission) + ' after finding game ' + appid, flush=True)
                                     botcomment = submission.reply(commenttext)
                                     if javascripttext is not None and javascripttext != "":
                                         botcomment.reply(javascripttext)
@@ -484,7 +484,7 @@ class SubWatch(threading.Thread):
                                         commenttext = commenttext_keyhub + commenttext
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
-                                        print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
+                                        print('Commenting on post ' + str(submission) + ' after finding game ' + game_name, flush=True)
                                         botcomment = submission.reply(commenttext)
                                         if javascripttext is not None and javascripttext != "":
                                             botcomment.reply(javascripttext)
@@ -592,7 +592,7 @@ class SubWatch(threading.Thread):
                                             commenttext = commenttext_keyhub + commenttext
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
-                                            print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name)
+                                            print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name, flush=True)
                                             botcomment = submission.reply(commenttext)
                                             if javascripttext is not None and javascripttext != "":
                                                 botcomment.reply(javascripttext)
@@ -705,7 +705,7 @@ class SubWatch(threading.Thread):
                                         if commenttext is not None and commenttext != "":
                                             commenttext += buildfootertext()
                                             if len(commenttext) < 10000:
-                                                print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
+                                                print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain', flush=True)
                                                 submission.reply(body=commenttext)
                                                 flair_text = submission.link_flair_text
                                                 if commenttext.startswith("*Removed from Steam"):
@@ -800,7 +800,7 @@ class SubWatch(threading.Thread):
                                     if commenttext is not None and commenttext != "":
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
-                                            print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
+                                            print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain', flush=True)
                                             submission.reply(body=commenttext)
                                             flair_text = submission.link_flair_text
                                             if g_website == "alienware" and commenttext is not None and commenttext != "":
@@ -880,7 +880,7 @@ class SubWatch(threading.Thread):
                                 if commenttext is not None and commenttext != "":
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
-                                        print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
+                                        print('Commenting on post ' + str(submission) + ' after finding game ' + game_name, flush=True)
                                         submission.reply(body=commenttext)
                                         if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                             # Set post as NSFW
@@ -891,7 +891,7 @@ class SubWatch(threading.Thread):
                             if commenttext is not None and commenttext != "":
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
-                                    print('Commenting on post ' + str(submission) + ' after finding Alienware Arena domain')
+                                    print('Commenting on post ' + str(submission) + ' after finding Alienware Arena domain', flush=True)
                                     submission.reply(body=commenttext)
                                     flair_text = submission.link_flair_text
                                     if commenttext != "":
@@ -949,7 +949,7 @@ class SubWatch(threading.Thread):
                             if commenttext is not None and commenttext != "":
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
-                                    print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain')
+                                    print('Commenting on post ' + str(submission) + ' after finding ' + g_website + ' domain', flush=True)
                                     submission.reply(body=commenttext)
                     elif re.search(KEYHUB_URL_REGEX, submission.url):
                         if fitscriteria(submission):
@@ -957,7 +957,7 @@ class SubWatch(threading.Thread):
                             if commenttext is not None and commenttext != "":
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
-                                    print('Commenting on post ' + str(submission) + ' after finding Keyhub domain')
+                                    print('Commenting on post ' + str(submission) + ' after finding Keyhub domain', flush=True)
                                     submission.reply(body=commenttext)
                                     if commenttext is not None and commenttext != "":
                                         flair_text = submission.link_flair_text
@@ -982,7 +982,7 @@ class SubWatch(threading.Thread):
                             if commenttext is not None and commenttext != "":
                                 commenttext += buildfootertext()
                                 if len(commenttext) < 10000:
-                                    print('Commenting on post ' + str(submission) + ' after finding game ' + game_name)
+                                    print('Commenting on post ' + str(submission) + ' after finding game ' + game_name, flush=True)
                                     submission.reply(body=commenttext)
                     if re.search(RANDOM_TITLE_REGEX, submission.title, re.IGNORECASE):
                         flair_text = submission.link_flair_text
@@ -996,7 +996,7 @@ class SubWatch(threading.Thread):
                             new_text = flair_text + " | Random"
                             submission.mod.flair(text=new_text, flair_template_id=flair_id)
             except PrawcoreException:
-                print('Trying to reach Reddit')
+                print('Trying to reach Reddit', flush=True)
                 time.sleep(30)
 
 
@@ -1022,7 +1022,7 @@ class CommentWatch(threading.Thread):
                         games = list(dict.fromkeys(games))
                         appids = []
                         commenttext = ""
-						javascripts = []
+                        javascripts = []
                         source_platform = "Steam"
                         if not re.search(STEAM_PLATFORM_REGEX, comment.submission.title, re.IGNORECASE):
                             source_platform = "nonSteam"
@@ -1032,18 +1032,18 @@ class CommentWatch(threading.Thread):
                             if make_comment is not None and make_comment != "":
                                 commenttext += make_comment
                                 appids.append(appid)
-							if javascripttext is not None and javascripttext != "":
+                            if javascripttext is not None and javascripttext != "":
                                 javascripts.append(javascripttext)
                         if commenttext != "":
                             commenttext += buildfootertext()
                             if len(commenttext) < 10000:
-                                print('Replying to comment ' + str(comment) + ' after finding game ' + ', '.join(appids))
+                                print('Replying to comment ' + str(comment) + ' after finding game ' + ', '.join(appids), flush=True)
                                 botcomment = comment.reply(commenttext)
                                 if len(javascripts) > 0:
                                     for text in javascripts:
                                         botcomment.reply(text)
             except PrawcoreException:
-                print('Trying to reach Reddit')
+                print('Trying to reach Reddit', flush=True)
                 time.sleep(30)
 
 
@@ -1131,7 +1131,7 @@ class EditCommentWatch(threading.Thread):
                         # try edit(s) every minute
                         time.sleep(sleep_time)
             except PrawcoreException:
-                print('Trying to reach Reddit')
+                print('Trying to reach Reddit', flush=True)
                 time.sleep(30)
 
 
@@ -1219,7 +1219,7 @@ class EditCommentWatchLong(threading.Thread):
                         # try edit(s) every 30 minutes
                         time.sleep(sleep_time)
             except PrawcoreException:
-                print('Trying to reach Reddit')
+                print('Trying to reach Reddit', flush=True)
                 time.sleep(30)
 
 
@@ -1238,7 +1238,7 @@ class RepostWatch(threading.Thread):
                         comment = submission.reply(body=commenttext)
                         comment.mod.distinguish(sticky=True)
             except PrawcoreException:
-                print('Trying to reach Reddit')
+                print('Trying to reach Reddit', flush=True)
                 time.sleep(30)
 
 
