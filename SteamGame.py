@@ -228,56 +228,71 @@ class SteamGame:
         return 0
 
     def getcards(self):
+        barter_app_url = 'https://barter.vg/steam/app/' + self.appID + '/json'
         marketurl = 'https://steamcommunity.com/market/search?q=&category_753_Game%5B0%5D=tag_app_' + self.appID + '&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
         marketable_url = 'https://steamcommunity.com/market/search?q=This+item+can+no+longer+be+bought+or+sold+on+the+Community+Market&category_753_Game%5B0%5D=tag_app_' + self.appID + '&descriptions=1&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
         while True:
             try:
-                marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
+                barter_app_json = requests.get(barter_app_url, timeout=30).json()
                 break
             except requests.exceptions.RequestException:
-                print("Steam market timeout: sleep for 30 seconds and try again")
+                print("Barter.vg timeout: sleep for 30 seconds and try again")
                 time.sleep(30)
-        total = marketpage.find("span", id="searchResults_total")
-        error_message = marketpage.find("div", class_="market_listing_table_message")
-        if error_message is not None and "There was an error performing your search" in error_message.text:
-            # market error, use steam tag backup
-            category_block = self.gamePage.find("div", id="category_block")
-
-            if category_block is None:
-                return 0, 0
-            if "Steam Trading Cards" in category_block.text:
-                return 999, 0, marketurl
-        if total is not None:
+        total = 0
+        marketable = True
+        if "id" in barter_app_json and barter_app_json["id"] is not None:
+            if "cards" in barter_app_json:
+                total = barter_app_json["cards"]
+                print(barter_app_json["cards_marketable"])
+                if "cards_marketable" in barter_app_json and barter_app_json["cards_marketable"] != 1:
+                    marketable = False
+        else:
             while True:
                 try:
-                    marketable_check = BeautifulSoup(requests.get(marketable_url, timeout=30).text, "html.parser")
+                    marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
                     break
                 except requests.exceptions.RequestException:
                     print("Steam market timeout: sleep for 30 seconds and try again")
                     time.sleep(30)
-            nonmarketable = marketable_check.find("span", id="searchResults_total")
-            marketable = True
-            if nonmarketable is not None:
-                if int(nonmarketable.string.strip()) != 0:
-                    marketable = False
-            total = int(total.string.strip())
-            if total == 0:
-                # Get the page again, something might have parsed wrong
+            total = marketpage.find("span", id="searchResults_total")
+            error_message = marketpage.find("div", class_="market_listing_table_message")
+            if error_message is not None and "There was an error performing your search" in error_message.text:
+                # market error, use steam tag backup
+                category_block = self.gamePage.find("div", id="category_block")
+
+                if category_block is None:
+                    return 0, 0
+                if "Steam Trading Cards" in category_block.text:
+                    return 999, 0, marketurl
+            if total is not None:
                 while True:
                     try:
-                        marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
+                        marketable_check = BeautifulSoup(requests.get(marketable_url, timeout=30).text, "html.parser")
                         break
                     except requests.exceptions.RequestException:
                         print("Steam market timeout: sleep for 30 seconds and try again")
                         time.sleep(30)
-                total = marketpage.find("span", id="searchResults_total")
-                if total is not None:
-                    total = int(total.string.strip())
-                else:
-                    total = 0
-            drops = total//2 + (total % 2 > 0)
-            return total, drops, marketurl, marketable
-        return 0, 0
+                nonmarketable = marketable_check.find("span", id="searchResults_total")
+                if nonmarketable is not None:
+                    if int(nonmarketable.string.strip()) != 0:
+                        marketable = False
+                total = int(total.string.strip())
+                if total == 0:
+                    # Get the page again, something might have parsed wrong
+                    while True:
+                        try:
+                            marketpage = BeautifulSoup(requests.get(marketurl, timeout=30).text, "html.parser")
+                            break
+                        except requests.exceptions.RequestException:
+                            print("Steam market timeout: sleep for 30 seconds and try again")
+                            time.sleep(30)
+                    total = marketpage.find("span", id="searchResults_total")
+                    if total is not None:
+                        total = int(total.string.strip())
+                    else:
+                        total = 0
+        drops = total//2 + (total % 2 > 0)
+        return total, drops, marketurl, marketable
 
     def isunreleased(self):
         unreleased = self.gamePage.find("div", class_="game_area_comingsoon")
