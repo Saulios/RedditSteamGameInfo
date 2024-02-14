@@ -243,7 +243,6 @@ class SteamGame:
         if "id" in barter_app_json and barter_app_json["id"] is not None:
             if "cards" in barter_app_json:
                 total = barter_app_json["cards"]
-                print(barter_app_json["cards_marketable"])
                 if "cards_marketable" in barter_app_json and barter_app_json["cards_marketable"] != 1:
                     marketable = False
         else:
