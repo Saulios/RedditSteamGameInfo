@@ -414,7 +414,7 @@ class SubWatch(threading.Thread):
         subreddit = reddit.subreddit(SUBLIST)
         while True:
             try:
-                for submission in subreddit.stream.submissions(skip_existing=True):
+                for submission in subreddit.stream.submissions():
                     if submission.banned_by is not None:
                         continue
                     if (
