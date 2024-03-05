@@ -1005,12 +1005,20 @@ class CommentWatch(threading.Thread):
         print('Watching all comments on: ' + SUBLIST)
         while True:
             try:
-                for comment in reddit.subreddit(SUBLIST).stream.comments(skip_existing=True):
+                for comment in reddit.subreddit(SUBLIST).stream.comments():
                     test_comment_gleamio = re.search(GLEAMIO_URL_REGEX, comment.body, re.IGNORECASE)
                     test_comment_steam = re.search(STEAM_APPURL_REGEX, comment.body, re.IGNORECASE)
                     if test_comment_gleamio:
                         if comment.approved_by is None:
                             comment.mod.approve()
+                    test_comment_expired_words = ['expired', 'ended']
+                    test_comment_expired_phrases = ['attention this giveaway has ended', 'this reward has ended', 'this giveaway has ended']
+                    # Remove punctuation
+                    comment_expired = re.compile(r'[^\w\s]').sub('', comment.body.lower())
+                    # Check if the comment contains one of the expired words or matches one of the phrases
+                    if len(comment_expired.split()) <= 3 and any(word in comment_expired.split() for word in test_comment_expired_words) or any(phrase in comment_expired for phrase in test_comment_expired_phrases):
+                        # Report the post as expired
+                        comment.submission.report(reason='Expired')
                     if comment.banned_by is not None:
                         continue
                     if test_comment_steam and fitscriteria(comment):
