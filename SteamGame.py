@@ -128,20 +128,27 @@ class SteamGame:
                 if discount_countdown is not None:
                     discount_countdown = discount_countdown.text.strip()
                     if "ends in" in discount_countdown:
-                        game_area_purchase = self.gamePage.find("div", {"class": "game_area_purchase_game"})
-                        daily_deal_timer = game_area_purchase.find('script').string
-                        daily_deal_timer_unix = [int(s) for s in daily_deal_timer.split() if s.isdigit()]
-                        if len(daily_deal_timer_unix) == 1:
-                            daily_deal_timer_unix = daily_deal_timer_unix[0]
-                            try:
-                                # convert unix to UTC
-                                daily_deal_timer_convert = time.gmtime(daily_deal_timer_unix)
-                                daily_deal_timer_convert = time.strftime("%B %e, %H:%M", daily_deal_timer_convert)
-                                daily_deal_timer_convert = daily_deal_timer_convert.replace("  ", " ")
-                            except TypeError:
+                        game_area_purchase = self.gamePage.find("div", {"class": "game_area_purchase_game_wrapper"})
+                        daily_deal_timer = game_area_purchase.find('script')
+                        if daily_deal_timer is not None:
+                            daily_deal_timer = daily_deal_timer.string
+                            daily_deal_timer_unix = [int(s) for s in daily_deal_timer.split() if s.isdigit()]
+                            if len(daily_deal_timer_unix) == 1:
+                                daily_deal_timer_unix = daily_deal_timer_unix[0]
+                                try:
+                                    # convert unix to UTC
+                                    daily_deal_timer_convert = time.gmtime(daily_deal_timer_unix)
+                                    daily_deal_timer_convert = time.strftime("%B %e, %H:%M", daily_deal_timer_convert)
+                                    daily_deal_timer_convert = daily_deal_timer_convert.replace("  ", " ")
+                                except TypeError:
+                                    return amount
+                                amount += " until " + daily_deal_timer_convert + " UTC"
                                 return amount
-                            amount += " until " + daily_deal_timer_convert + " UTC"
-                            return amount
+                        else:
+                            amount = self.json["price_overview"]["discount_percent"]
+                            return "-" + str(amount) + "%"
+                    elif discount_countdown == "Limited Time Offer":
+                        discount_countdown = "unknown"
                     else:
                         discount_countdown = discount_countdown.split()[-2:]
                     amount += " until " + " ".join(discount_countdown)
