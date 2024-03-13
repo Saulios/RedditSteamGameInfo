@@ -89,7 +89,7 @@ class SteamGame:
             self.pcgamingwiki = self.pcgamingwiki(self.appID)
 
     def title(self):
-        return self.json["name"]
+        return self.json["name"].strip()
 
     def gettype(self):
         return self.json["type"]
