@@ -1116,8 +1116,9 @@ class EditCommentWatch(threading.Thread):
                             try:
                                 if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
                                     original_tier_split = part_to_edit.split("Tier required")
+                                    original_tier_split_2 = original_tier_split[1].split(split_part)
                                     zero_tier_split = edited_part.split("Tier required")
-                                    edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
+                                    edited_part = zero_tier_split[0] + "Tier required" + original_tier_split_2[0]
                             except TypeError:
                                 continue
                         original_body_part = split_test[1]
@@ -1204,8 +1205,9 @@ class EditCommentWatchLong(threading.Thread):
                             try:
                                 if "Tier required: 0" in edited_part and "Tier required: 0" not in part_to_edit:
                                     original_tier_split = part_to_edit.split("Tier required")
+                                    original_tier_split_2 = original_tier_split[1].split(split_part)
                                     zero_tier_split = edited_part.split("Tier required")
-                                    edited_part = zero_tier_split[0] + "Tier required" + original_tier_split[1]
+                                    edited_part = zero_tier_split[0] + "Tier required" + original_tier_split_2[0]
                             except TypeError:
                                 continue
                         original_body_part = split_test[1]
