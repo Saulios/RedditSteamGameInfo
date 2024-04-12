@@ -1,4 +1,3 @@
-import os
 import time
 import json
 
@@ -9,7 +8,7 @@ class iGames:
 
     def __init__(self, g_id, website):
         self.g_id = g_id
-        api_url = os.getenv("IGAMES_API")
+        api_url = "https://api.igsp.io/promotions"
         x_client_key = ""
         if website == "crucial":
             x_client_key = "micron"
