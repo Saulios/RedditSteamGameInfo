@@ -18,6 +18,7 @@ from GOGGame import GOGGame
 from AlienwareArena import AlienwareArena
 from iGames import iGames
 from Keyhub import Keyhub
+from EpicGame import EpicGame
 
 BLOCKED_USER_FILE = 'blockedusers.txt'  # Will not reply to these people
 SUBLIST = "FreeGameFindings"
@@ -196,6 +197,21 @@ def buildcommenttext_gog(g):
         if g.genres_tags and len(g.genres_tags) != 0:
             commenttext += ' * Genre/Tags: ' + ", ".join(g.genres_tags) + '\n'
         commenttext += '\n***\n'
+    return commenttext
+
+
+def buildcommenttext_epic(g):
+    commenttext = ''
+    if isinstance(g.checkout_link, str) and g.checkout_link != "":
+        commenttext += "**Giveaway details**\n\n"
+        commenttext += "* Instant checkout: " + g.checkout_link
+        commenttext += "\n"
+        if g.blacklisted_countries != "":
+            commenttext += "* Blacklisted countries: " + ', '.join(g.blacklisted_countries)
+            commenttext += "\n"
+        commenttext += '\n***\n'
+    else:
+        return None
     return commenttext
 
 
@@ -857,18 +873,9 @@ class SubWatch(threading.Thread):
                                             if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                                 # Set post as NSFW
                                                 submission.mod.nsfw()
-                    elif (
-                        (indiegala := re.search(INDIEGALA_TITLE_REGEX, submission.title, re.IGNORECASE)
-                            and re.search(INDIEGALA_URL_REGEX, submission.url))
-                        or (epic := re.search(EPIC_TITLE_REGEX, submission.title, re.IGNORECASE)
-                            and re.search(EPIC_URL_REGEX, submission.url))
-                    ):
-                        if indiegala is not None:
-                            title_split = re.split(INDIEGALA_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
-                            source_platform = "Indiegala"
-                        elif epic is not None:
-                            title_split = re.split(EPIC_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
-                            source_platform = "Epic"
+                    elif re.search(INDIEGALA_TITLE_REGEX, submission.title, re.IGNORECASE) and re.search(INDIEGALA_URL_REGEX, submission.url):
+                        title_split = re.split(INDIEGALA_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
+                        source_platform = "Indiegala"
                         game_name = title_split[-1].strip()
                         if fitscriteria(submission) and game_name != "":
                             game = SteamSearchGame(game_name, False, "non-Steam")
@@ -885,6 +892,44 @@ class SubWatch(threading.Thread):
                                         if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                             # Set post as NSFW
                                             submission.mod.nsfw()
+                    elif re.search(EPIC_TITLE_REGEX, submission.title, re.IGNORECASE) and re.search(EPIC_URL_REGEX, submission.url):
+                        title_split = re.split(EPIC_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
+                        source_platform = "Epic"
+                        game_name = title_split[-1].strip()
+                        if fitscriteria(submission) and game_name != "":
+                            game = SteamSearchGame(game_name, False, "non-Steam")
+                            if game.appid == 0:
+                                game = SteamSearchGame(game_name, True, "non-Steam")
+                            appid = game.appid
+                            commenttext = buildcommenttext_epic(EpicGame(game_name))
+                            if commenttext is not None and commenttext != "":
+                                if appid != 0:
+                                    steam_commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
+                                    if steam_commenttext is not None and steam_commenttext != "":
+                                        commenttext += steam_commenttext
+                                commenttext += buildfootertext()
+                            elif appid != 0:
+                                steam_commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
+                                if steam_commenttext is not None and steam_commenttext != "":
+                                    steam_commenttext += buildfootertext()
+                                    commenttext = steam_commenttext
+                            if commenttext is not None and commenttext != "" and len(commenttext) < 10000:
+                                print('Commenting on post ' + str(submission) + ' after finding game ' + game_name, flush=True)
+                                submission.reply(body=commenttext)
+                                flair_text = submission.link_flair_text
+                                if "*(NSFW)*" in commenttext and submission.over_18 is False:
+                                    # Set post as NSFW
+                                    submission.mod.nsfw()
+                                if "* Blacklisted countries" in commenttext:
+                                    # flair post with regional issues
+                                    if flair_text is None:
+                                        # if no flair exists
+                                        submission.mod.flair(text="Regional Issues", css_class="Regionlocked", flair_template_id="b3a089de-2437-11e6-8bda-0e93018c4773")
+                                    elif "regional" not in flair_text.lower():
+                                        # if not yet in flair
+                                        flair_id = submission.link_flair_template_id
+                                        new_text = flair_text + " | Regional Issues"
+                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
                     elif re.search(ALIENWARE_URL_REGEX, submission.url):
                         if fitscriteria(submission):
                             commenttext = buildcommenttext_awa(AlienwareArena(submission.url, "new"), "new")

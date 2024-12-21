@@ -1,5 +1,6 @@
 beautifulsoup4==4.12.2
 country_converter==1.2
+epicstore_api==0.1.9
 Flask==2.1.2
 humanfriendly==10.0
 praw==7.7.1
