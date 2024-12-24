@@ -31,10 +31,8 @@ class EpicGame:
         if game["customAttributes"]:
             key_to_find = 'com.epicgames.app.blacklist'
             blacklisted_countries_string = next((item['value'] for item in game["customAttributes"] if item['key'] == key_to_find), None)
-            if blacklisted_countries_string is not None:
-                blacklisted_countries_string = re.sub(r'[\W_]+', u'', blacklisted_countries_string, flags=re.UNICODE)
-                if blacklisted_countries_string:
-                    blacklisted_countries = self.get_country_names(blacklisted_countries_string.split(","))
+            if blacklisted_countries_string is not None and blacklisted_countries_string != "[]":
+                blacklisted_countries = self.get_country_names(blacklisted_countries_string.split(","))
         return blacklisted_countries
 
     def get_country_names(self, country_list):
