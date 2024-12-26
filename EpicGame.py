@@ -1,5 +1,6 @@
 import re
 from epicstore_api import EpicGamesStoreAPI
+from epicstore_api.exc import EGSException
 import country_converter
 
 
@@ -9,22 +10,35 @@ class EpicGame:
     def __init__(self, game_name):
         keyword = re.sub(r'[™®]', '', game_name)
         game_data = self.api.fetch_store_games(keywords=keyword)
-
         games = game_data.get('data', {}).get('Catalog', {}).get('searchStore', {}).get('elements')
-        if not games:
-            return None
-
+        process_keyword = re.sub(r'[\W_]+', u' ', keyword, flags=re.UNICODE).lower().strip()
         self.checkout_link = ""
 
         for game in games:
             # Skip Epic Dev Test Account
             if game["seller"]["id"] == "o-ufmrk5furrrxgsp5tdngefzt5rxdcn":
                 continue
-            process_keyword = re.sub(r'[\W_]+', u' ', keyword, flags=re.UNICODE).lower().strip()
             if game["title"].lower() == process_keyword or game["title"].lower() == game_name.lower():
                 self.blacklisted_countries = self.blacklisted_countries(game)
                 self.checkout_link = "https://store.epicgames.com/purchase?offers=1-" + game["namespace"] + "-" + game["id"]
                 break
+
+        if self.checkout_link == "":
+            # Fallback: Check free games if no game was found
+            free_games_data = self.api.get_free_games()
+            free_games = free_games_data.get('data', {}).get('Catalog', {}).get('searchStore', {}).get('elements')
+            for game in free_games:
+                if game["title"].lower() == process_keyword or game["title"].lower() == game_name.lower():
+                    self.blacklisted_countries = self.blacklisted_countries(game)
+                    namespace, id = self.find_free_game_promotion(game, game_name)
+                    if namespace != "" and id != "":
+                        self.checkout_link = "https://store.epicgames.com/purchase?offers=1-" + namespace + "-" + id
+                        break
+                    else:
+                        return None
+
+        if not games and not free_games:
+            return None
 
     def blacklisted_countries(self, game):
         blacklisted_countries = ""
@@ -42,3 +56,24 @@ class EpicGame:
         country_names = [i for i in country_names if i != "not found"]
         country_names.sort()
         return country_names
+
+    def find_free_game_promotion(self, game, game_name):
+        namespace = ""
+        id = ""
+        if game["customAttributes"]:
+            key_to_find = 'com.epicgames.app.productSlug'
+            productslug_string = next((item['value'] for item in game["customAttributes"] if item['key'] == key_to_find), None)
+            if productslug_string is None:
+                # If productSlug is not found, check offerMappings
+                productslug_string = next((item['pageSlug'] for item in game["offerMappings"]), None)
+            if productslug_string is not None and productslug_string != "[]":
+                try:
+                    product = self.api.get_product(productslug_string)
+                except EGSException:
+                    return namespace, id
+                else:
+                    for page in product.get("pages", []):
+                        if page["data"]["about"]["title"].lower() == game_name.lower():
+                            namespace = page["offer"]["namespace"]
+                            id = page["offer"]["id"]
+        return namespace, id
