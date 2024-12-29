@@ -1,4 +1,5 @@
 import re
+import time
 from epicstore_api import EpicGamesStoreAPI
 from epicstore_api.exc import EGSException
 import country_converter
@@ -8,8 +9,13 @@ class EpicGame:
     api = EpicGamesStoreAPI()
 
     def __init__(self, game_name):
-        keyword = re.sub(r'[™®]', '', game_name)
-        game_data = self.api.fetch_store_games(keywords=keyword)
+        keyword = self.clean_game_name(game_name)
+        try:
+            game_data = self.api.fetch_store_games(keywords=keyword)
+        except:
+            print("Epic API timeout: sleep for 30 seconds and try again")
+            time.sleep(30)
+
         games = game_data.get('data', {}).get('Catalog', {}).get('searchStore', {}).get('elements')
         process_keyword = re.sub(r'[\W_]+', u' ', keyword, flags=re.UNICODE).lower().strip()
         self.checkout_link = ""
@@ -18,7 +24,8 @@ class EpicGame:
             # Skip Epic Dev Test Account
             if game["seller"]["id"] == "o-ufmrk5furrrxgsp5tdngefzt5rxdcn":
                 continue
-            if game["title"].lower() == process_keyword or game["title"].lower() == game_name.lower():
+            clean_game_name = self.clean_game_name(game["title"]).lower()
+            if clean_game_name == process_keyword or clean_game_name == game_name.lower():
                 self.blacklisted_countries = self.blacklisted_countries(game)
                 self.checkout_link = "https://store.epicgames.com/purchase?offers=1-" + game["namespace"] + "-" + game["id"]
                 break
@@ -28,7 +35,8 @@ class EpicGame:
             free_games_data = self.api.get_free_games()
             free_games = free_games_data.get('data', {}).get('Catalog', {}).get('searchStore', {}).get('elements')
             for game in free_games:
-                if game["title"].lower() == process_keyword or game["title"].lower() == game_name.lower():
+                clean_game_name = self.clean_game_name(game["title"]).lower()
+                if clean_game_name == process_keyword or clean_game_name == game_name.lower():
                     self.blacklisted_countries = self.blacklisted_countries(game)
                     namespace, id = self.find_free_game_promotion(game, game_name)
                     if namespace != "" and id != "":
@@ -39,6 +47,9 @@ class EpicGame:
 
         if not games and not free_games:
             return None
+
+    def clean_game_name(self, game_name):
+        return re.sub(r'[™®]', '', game_name)
 
     def blacklisted_countries(self, game):
         blacklisted_countries = ""
