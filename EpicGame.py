@@ -10,11 +10,12 @@ class EpicGame:
 
     def __init__(self, game_name):
         keyword = self.clean_game_name(game_name)
-        try:
-            game_data = self.api.fetch_store_games(keywords=keyword)
-        except:
-            print("Epic API timeout: sleep for 30 seconds and try again")
-            time.sleep(30)
+        while True:
+            try:
+                game_data = self.api.fetch_store_games(keywords=keyword)
+            except:
+                print("Epic API timeout: sleep for 30 seconds and try again")
+                time.sleep(30)
 
         games = game_data.get('data', {}).get('Catalog', {}).get('searchStore', {}).get('elements')
         process_keyword = re.sub(r'[\W_]+', u' ', keyword, flags=re.UNICODE).lower().strip()
@@ -56,12 +57,14 @@ class EpicGame:
         if game["customAttributes"]:
             key_to_find = 'com.epicgames.app.blacklist'
             blacklisted_countries_string = next((item['value'] for item in game["customAttributes"] if item['key'] == key_to_find), None)
-            if blacklisted_countries_string is not None and blacklisted_countries_string != "[]":
+            if blacklisted_countries_string is not None and blacklisted_countries_string != "[]" and blacklisted_countries_string != "{}":
                 blacklisted_countries = self.get_country_names(blacklisted_countries_string.split(","))
         return blacklisted_countries
 
     def get_country_names(self, country_list):
         country_names = country_converter.convert(names=country_list, to='name_short')
+        if country_names == "not found":
+            return ""
         if isinstance(country_names, str):
             country_names = country_names.split()
         country_names = [i for i in country_names if i != "not found"]
