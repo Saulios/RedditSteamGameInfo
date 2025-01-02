@@ -13,6 +13,7 @@ class EpicGame:
         while True:
             try:
                 game_data = self.api.fetch_store_games(keywords=keyword)
+                break
             except:
                 print("Epic API timeout: sleep for 30 seconds and try again")
                 time.sleep(30)
