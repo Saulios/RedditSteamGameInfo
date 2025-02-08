@@ -1,6 +1,7 @@
 import re
 import json
 import time
+import math
 
 import requests
 import dateutil.parser
@@ -76,6 +77,7 @@ class SteamGame:
         self.blurb = self.getDescriptionSnippet()
         self.reviewsummary = self.reviewsummary()
         self.reviewdetails, self.lowreviews = self.reviewdetails()
+        self.steamdbrating = self.steamdbrating()
         self.genres = self.genres()
         self.usertags = self.usertags()
         if self.gettype != "game":
@@ -457,6 +459,19 @@ class SteamGame:
             return lowreviews, True
         else:
             return details, False
+
+    def steamdbrating(self):
+        review_div = self.gamePage.find("div", {"class": "user_reviews_filter_menu_flyout_content"})
+        if review_div is not None:
+            details_span = review_div.select('span[class*="user_reviews_count"]')
+            positive = re.sub("[^0-9]", "", details_span[1].text)
+            negative = re.sub("[^0-9]", "", details_span[2].text)
+            total = int(positive) + int(negative)
+            average = int(positive) / total
+            score = average - (average - 0.5) * math.pow(2, - math.log10(total + 1))
+            return str(int(score * 100))
+        else:
+            return ""
 
     def genres(self):
         if "genres" in self.json:

@@ -285,6 +285,8 @@ def buildcommenttext(g, removed, source):
                     commenttext += g.reviewsummary + g.reviewdetails
             else:
                 commenttext += g.reviewsummary
+            if g.steamdbrating:
+                commenttext += ' | SteamDB Rating: ' + g.steamdbrating + '%'
             commenttext += '\n\n'
         if g.blurb != "":
             commenttext += '*' + g.blurb + '*\n\n'
