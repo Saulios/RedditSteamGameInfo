@@ -75,6 +75,7 @@ class SteamRemovedGame:
         self.blurb = self.getDescriptionSnippet()
         self.reviewsummary = SteamGame.reviewsummary(self)
         self.reviewdetails, self.lowreviews = SteamGame.reviewdetails(self)
+        self.steamdbrating = SteamGame.steamdbrating(self)
         self.genres = self.genres()
         self.usertags = SteamGame.usertags(self)
         if self.gettype != "game":
