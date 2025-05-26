@@ -238,8 +238,8 @@ class SteamGame:
 
     def getcards(self):
         barter_app_url = 'https://barter.vg/steam/app/' + self.appID + '/json'
-        marketurl = 'https://steamcommunity.com/market/search?q=&category_753_Game%5B0%5D=tag_app_' + self.appID + '&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2#p1_name_asc'
-        marketable_url = 'https://steamcommunity.com/market/search?q=This+item+can+no+longer+be+bought+or+sold+on+the+Community+Market&category_753_Game%5B0%5D=tag_app_' + self.appID + '&descriptions=1&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2#p1_name_asc'
+        marketurl = 'https://steamcommunity.com/market/search?sort_column=name&sort_dir=asc&category_753_Game%5B0%5D=tag_app_' + self.appID + '&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
+        marketable_url = 'https://steamcommunity.com/market/search?q=This+item+can+no+longer+be+bought+or+sold+on+the+Community+Market&sort_column=name&sort_dir=asc&category_753_Game%5B0%5D=tag_app_' + self.appID + '&descriptions=1&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
         while True:
             try:
                 barter_app_json = requests.get(barter_app_url, timeout=30).json()
