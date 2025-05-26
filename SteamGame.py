@@ -265,7 +265,7 @@ class SteamGame:
                     time.sleep(30)
             total = marketpage.find("span", id="searchResults_total")
             error_message = marketpage.find("div", class_="market_listing_table_message")
-            if error_message is not None and "There was an error performing your search" in error_message.text:
+            if error_message is not None and ("There was an error performing your search" in error_message.text or "There were no items matching your search" in error_message.text):
                 # market error, use steam tag backup
                 category_block = self.gamePage.find("div", id="category_block")
 
