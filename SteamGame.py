@@ -337,7 +337,7 @@ class SteamGame:
         if review_div is None:
             review_div = self.gamePage.find("div", {"id": "userReviews"})
         if review_div is not None:
-            review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
+            review_div_agg = review_div.find("a", {"itemprop": "aggregateRating"})
             summary = review_div_agg.find("span", {"class": "game_review_summary"})
             if summary is not None:
                 return summary.string
@@ -438,7 +438,7 @@ class SteamGame:
         if review_div is None:
             review_div = self.gamePage.find("div", {"id": "userReviews"})
         if review_div is not None:
-            review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
+            review_div_agg = review_div.find("a", {"itemprop": "aggregateRating"})
             review_div_count = review_div.find("meta", {"itemprop": "reviewCount"})
             if review_div_count is None or (review_div_count["content"] is not None and int(review_div_count["content"]) < 100):
                 lowreviews, total = SteamGame.lowreviews(self, self.appID)
