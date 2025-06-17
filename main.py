@@ -9,7 +9,6 @@ from humanfriendly import format_timespan
 
 import praw
 from prawcore.exceptions import PrawcoreException
-from keep_alive import keep_alive
 
 from SteamGame import SteamGame
 from SteamRemovedGame import SteamRemovedGame
@@ -202,11 +201,48 @@ def buildcommenttext_gog(g):
 
 def buildcommenttext_epic(g):
     commenttext = ''
-    if isinstance(g.checkout_link, str) and g.checkout_link != "":
+    if isinstance(g.checkout_link, str) and (g.checkout_link != "" or g.android_checkout != "" or g.ios_checkout != ""):
         commenttext += "**Giveaway details**\n\n"
-        commenttext += "* Instant checkout: " + g.checkout_link
+        commenttext += "Instant checkout: "
+        if g.android_checkout != "" or g.ios_checkout != "":
+            commenttext += "\n"
+            if g.checkout_link != "":
+                commenttext += "\n * [PC](https://store.epicgames.com/purchase?"
+                commenttext += g.checkout_link
+                commenttext += ")"
+            if g.android_checkout != "":
+                commenttext += "\n * [Android](https://store.epicgames.com/purchase?"
+                commenttext += g.android_checkout
+                commenttext += ")"
+            if g.ios_checkout != "":
+                commenttext += "\n * [iOS](https://store.epicgames.com/purchase?"
+                commenttext += g.ios_checkout
+                commenttext += ")"
+            if (
+                    (g.checkout_link and g.android_checkout) or
+                    (g.checkout_link and g.ios_checkout) or
+                    (g.android_checkout and g.ios_checkout)
+            ):
+                if g.checkout_link and g.android_checkout and g.ios_checkout:
+                    commenttext += "\n * [PC + Android + iOS](https://store.epicgames.com/purchase?"
+                elif g.checkout_link and g.android_checkout and not g.ios_checkout:
+                    commenttext += "\n * [PC + Android](https://store.epicgames.com/purchase?"
+                elif g.checkout_link and g.ios_checkout and not g.android_checkout:
+                    commenttext += "\n * [PC + iOS](https://store.epicgames.com/purchase?"
+                elif g.android_checkout and g.ios_checkout and not g.checkout_link:
+                    commenttext += "\n * [Android + iOS](https://store.epicgames.com/purchase?"
+                if g.checkout_link != "":
+                    commenttext += g.checkout_link + "&"
+                if g.android_checkout != "":
+                    commenttext += g.android_checkout + "&"
+                if g.ios_checkout != "":
+                    commenttext += g.ios_checkout
+                commenttext += ")"
+        elif g.checkout_link != "":
+            commenttext += "https://store.epicgames.com/purchase?"
+            commenttext += g.checkout_link
         commenttext += "\n"
-        if g.blacklisted_countries != "":
+        if isinstance(g.blacklisted_countries, str) and g.blacklisted_countries != "":
             commenttext += "* Blacklisted countries: " + ', '.join(g.blacklisted_countries)
             commenttext += "\n"
         commenttext += '\n***\n'
@@ -439,7 +475,7 @@ class SubWatch(threading.Thread):
                         re.search(STEAM_APPURL_REGEX, submission.url)
                         or re.search(STEAMDB_APPURL_REGEX, submission.url)
                     ):
-                        appid = re.search('\d+', submission.url).group(0)
+                        appid = re.search(r'\d+', submission.url).group(0)
                         source_platform = "Steam"
                         if fitscriteria(submission):
                             commenttext, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
@@ -491,7 +527,7 @@ class SubWatch(threading.Thread):
                                         or re.search(CRUCIAL_URL_REGEX, submission.url)
                                         or re.search(IGAMES_URL_REGEX, submission.url)
                                     ):
-                                        g_id = re.search('\d+', submission.url).group(0)
+                                        g_id = re.search(r'\d+', submission.url).group(0)
                                         commenttext_igames = buildcommenttext_igames(iGames(g_id, g_website), "new")
                                     if commenttext_igames is not None and commenttext_igames != "":
                                         commenttext = commenttext_igames + commenttext
@@ -599,7 +635,7 @@ class SubWatch(threading.Thread):
                                             or re.search(CRUCIAL_URL_REGEX, submission.url)
                                             or re.search(IGAMES_URL_REGEX, submission.url)
                                         ):
-                                            g_id = re.search('\d+', submission.url).group(0)
+                                            g_id = re.search(r'\d+', submission.url).group(0)
                                             commenttext_igames = buildcommenttext_igames(iGames(g_id, g_website), "new")
                                         if commenttext_igames is not None and commenttext_igames != "":
                                             commenttext = commenttext_igames + commenttext
@@ -712,7 +748,7 @@ class SubWatch(threading.Thread):
                                             or re.search(CRUCIAL_URL_REGEX, submission.url)
                                             or re.search(IGAMES_URL_REGEX, submission.url)
                                         ):
-                                            g_id = re.search('\d+', submission.url).group(0)
+                                            g_id = re.search(r'\d+', submission.url).group(0)
                                             commenttext = buildcommenttext_igames(iGames(g_id, g_website), "new")
                                         if re.search(ALIENWARE_URL_REGEX, submission.url):
                                             g_website = "alienware"
@@ -807,7 +843,7 @@ class SubWatch(threading.Thread):
                                         or re.search(CRUCIAL_URL_REGEX, submission.url)
                                         or re.search(IGAMES_URL_REGEX, submission.url)
                                     ):
-                                        g_id = re.search('\d+', submission.url).group(0)
+                                        g_id = re.search(r'\d+', submission.url).group(0)
                                         commenttext = buildcommenttext_igames(iGames(g_id, g_website), "new")
                                     if re.search(ALIENWARE_URL_REGEX, submission.url):
                                         g_website = "alienware"
@@ -894,7 +930,7 @@ class SubWatch(threading.Thread):
                                         if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                             # Set post as NSFW
                                             submission.mod.nsfw()
-                    elif re.search(EPIC_TITLE_REGEX, submission.title, re.IGNORECASE) and re.search(EPIC_URL_REGEX, submission.url):
+                    elif re.search(EPIC_TITLE_REGEX, submission.title, re.IGNORECASE) or re.search(EPIC_URL_REGEX, submission.url):
                         title_split = re.split(EPIC_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
                         source_platform = "Epic"
                         game_name = title_split[-1].strip()
@@ -991,7 +1027,7 @@ class SubWatch(threading.Thread):
                                 g_website = "crucial"
                             elif re.search(IGAMES_URL_REGEX, submission.url):
                                 g_website = "igames"
-                            g_id = re.search('\d+', submission.url).group(0)
+                            g_id = re.search(r'\d+', submission.url).group(0)
                             commenttext = buildcommenttext_igames(iGames(g_id, g_website), "new")
                             if commenttext is not None and commenttext != "":
                                 commenttext += buildfootertext()
@@ -1082,7 +1118,7 @@ class CommentWatch(threading.Thread):
                         if not re.search(STEAM_PLATFORM_REGEX, comment.submission.title, re.IGNORECASE):
                             source_platform = "nonSteam"
                         for i in range(len(games)):
-                            appid = re.search('\d+', games[i]).group(0)
+                            appid = re.search(r'\d+', games[i]).group(0)
                             make_comment, javascripttext = buildcommenttext(SteamGame(appid), False, source_platform)
                             if make_comment is not None and make_comment != "":
                                 commenttext += make_comment
@@ -1139,7 +1175,7 @@ class EditCommentWatch(threading.Thread):
                         if g_website == "alienware":
                             edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
                         elif g_website in ["steelseries", "crucial", "igames"]:
-                            g_id = re.search('\d+', comment.submission.url).group(0)
+                            g_id = re.search(r'\d+', comment.submission.url).group(0)
                             edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
                         elif g_website == "keyhub":
                             edited_part = buildcommenttext_keyhub(Keyhub(comment.submission.url, "update"), "update")
@@ -1228,7 +1264,7 @@ class EditCommentWatchLong(threading.Thread):
                         if g_website == "alienware":
                             edited_part = buildcommenttext_awa(AlienwareArena(comment.submission.url, "update"), "update")
                         elif g_website in ["steelseries", "crucial", "igames"]:
-                            g_id = re.search('\d+', comment.submission.url).group(0)
+                            g_id = re.search(r'\d+', comment.submission.url).group(0)
                             edited_part = buildcommenttext_igames(iGames(g_id, g_website), "update")
                         elif g_website == "keyhub":
                             edited_part = buildcommenttext_keyhub(Keyhub(comment.submission.url, "update"), "update")
@@ -1309,8 +1345,6 @@ if __name__ == "__main__":
         password=os.getenv('RSGIB_PASSWORD')
     )
     reddit.validate_on_submit = True
-
-    keep_alive()
 
     subwatch = SubWatch()
     commentwatch = CommentWatch()
