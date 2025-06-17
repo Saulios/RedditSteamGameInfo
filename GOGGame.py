@@ -258,7 +258,7 @@ class GOGGame:
             if review_div is None:
                 review_div = steam_gamePage.find("div", {"id": "userReviews"})
             if review_div is not None:
-                review_div_agg = review_div.find("div", {"itemprop": "aggregateRating"})
+                review_div_agg = review_div.find(["a", "div"], {"itemprop": "aggregateRating"})
                 reviews_summary = review_div_agg.find("span", {"class": "game_review_summary"})
                 if reviews_summary is not None:
                     details = reviews_summary.string
