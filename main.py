@@ -30,7 +30,6 @@ STEAM_TITLE_REGEX = r"\[.*(Steam).*\]\s*\((Game|DLC|Beta|Alpha)\)"
 STEAM_PLATFORM_REGEX = r"\[.*(Steam).*\]"
 INDIEGALA_URL_REGEX = r"((https?:\/\/)?)(freebies.indiegala.com\/)"
 INDIEGALA_TITLE_REGEX = r"\[.*(Indiegala).*\]\s*\((Game)\)"
-EPIC_URL_REGEX = r"((https?:\/\/)?)(epicgames.com\/)"
 EPIC_TITLE_REGEX = r"\[.*(Epic).*\]\s*\((Game)\)"
 GOG_URL_REGEX = r"((https?:\/\/)?)(gog.com\/\w*\/*game)"
 GOG_TITLE_REGEX = r"\[.*(GOG).*\]\s*\((Game|DLC|Beta|Alpha|Other)\)"
@@ -930,7 +929,7 @@ class SubWatch(threading.Thread):
                                         if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                             # Set post as NSFW
                                             submission.mod.nsfw()
-                    elif re.search(EPIC_TITLE_REGEX, submission.title, re.IGNORECASE) or re.search(EPIC_URL_REGEX, submission.url):
+                    elif re.search(EPIC_TITLE_REGEX, submission.title, re.IGNORECASE):
                         title_split = re.split(EPIC_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
                         source_platform = "Epic"
                         game_name = title_split[-1].strip()
