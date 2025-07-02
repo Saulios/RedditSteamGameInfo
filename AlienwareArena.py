@@ -63,6 +63,9 @@ class AlienwareArena:
     @classmethod
     def get_country_names(cls, country_list):
         country_names = country_converter.convert(names=country_list, to='name_short')
+        if isinstance(country_names, str):
+            # Single country gives back a string, convert it to a list for the loop
+            country_names = [country_names]
         country_names = [i for i in country_names if i != "not found"]
         country_names.sort()
         return country_names
