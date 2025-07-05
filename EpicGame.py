@@ -6,12 +6,16 @@ from epicstore_api.exc import EGSException
 import country_converter
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.common.by import By
 
 
 class EpicGame:
     api = EpicGamesStoreAPI()
 
     def __init__(self, game_name):
+        self.blacklisted_countries = None
         self.game_name = game_name
         self.keyword = self.clean_game_name(game_name)
 
@@ -19,6 +23,8 @@ class EpicGame:
         self.android_checkout, self.ios_checkout = self.mobile_checkout()
 
     def pc_checkout(self):
+        game_data = []
+        checkout_link = ""
         while True:
             try:
                 game_data = self.api.fetch_store_games(keywords=self.keyword)
@@ -29,7 +35,6 @@ class EpicGame:
 
         games = game_data.get('data', {}).get('Catalog', {}).get('searchStore', {}).get('elements')
         process_keyword = re.sub(r'[\W_]+', u' ', self.keyword, flags=re.UNICODE).lower().strip()
-        checkout_link = ""
 
         for game in games:
             # Skip Epic Dev Test Account
@@ -39,7 +44,7 @@ class EpicGame:
                 continue
             clean_game_name = self.clean_game_name(game["title"]).lower()
             if clean_game_name == process_keyword or clean_game_name == self.game_name.lower():
-                self.blacklisted_countries = self.blacklisted_countries(game)
+                self.blacklisted_countries = self.get_blacklisted_countries(game)
                 checkout_link = "offers=1-" + game["namespace"] + "-" + game["id"]
                 break
 
@@ -48,37 +53,37 @@ class EpicGame:
             try:
                 free_games_data = self.api.get_free_games()
             except TypeError:
-                return None
+                return ""
             free_games = free_games_data.get('data', {}).get('Catalog', {}).get('searchStore', {}).get('elements')
             for game in free_games:
                 clean_game_name = self.clean_game_name(game["title"]).lower()
                 if clean_game_name == process_keyword or clean_game_name == self.game_name.lower():
-                    self.blacklisted_countries = self.blacklisted_countries(game)
-                    namespace, id = self.find_free_game_promotion(game)
-                    if namespace != "" and id != "":
-                        checkout_link = "offers=1-" + namespace + "-" + id
+                    self.blacklisted_countries = self.get_blacklisted_countries(game)
+                    namespace, game_id = self.find_free_game_promotion(game)
+                    if namespace != "" and game_id != "":
+                        checkout_link = "offers=1-" + namespace + "-" + game_id
                         break
                     else:
-                        return None
-
-        if not games and not free_games:
-            return None
+                        return ""
 
         return checkout_link
 
-    def clean_game_name(self, game_name):
+    @staticmethod
+    def clean_game_name(game_name):
         return re.sub(r'[™®]', '', game_name)
 
-    def blacklisted_countries(self, game):
+    def get_blacklisted_countries(self, game):
         blacklisted_countries = ""
         if game["customAttributes"]:
             key_to_find = 'com.epicgames.app.blacklist'
-            blacklisted_countries_string = next((item['value'] for item in game["customAttributes"] if item['key'] == key_to_find), None)
-            if blacklisted_countries_string is not None and blacklisted_countries_string != "[]" and blacklisted_countries_string != "{}":
-                blacklisted_countries = self.get_country_names(blacklisted_countries_string.split(","))
+            blacklisted_countries_string = next((item['value'] for item in game["customAttributes"] if item['key'] == key_to_find), "")
+            if blacklisted_countries_string and blacklisted_countries_string not in ("[]", "{}"):
+                country_codes = blacklisted_countries_string.split(",")
+                blacklisted_countries = self.get_country_names(country_codes)
         return blacklisted_countries
 
-    def get_country_names(self, country_list):
+    @staticmethod
+    def get_country_names(country_list):
         country_names = country_converter.convert(names=country_list, to='name_short')
         if country_names == "not found":
             return ""
@@ -90,26 +95,27 @@ class EpicGame:
 
     def find_free_game_promotion(self, game):
         namespace = ""
-        id = ""
+        game_id = ""
         if game["customAttributes"]:
             key_to_find = 'com.epicgames.app.productSlug'
-            productslug_string = next((item['value'] for item in game["customAttributes"] if item['key'] == key_to_find), None)
-            if productslug_string is None:
+            productslug_string = next((item['value'] for item in game["customAttributes"] if item['key'] == key_to_find), "")
+            if not productslug_string:
                 # If productSlug is not found, check offerMappings
-                productslug_string = next((item['pageSlug'] for item in game["offerMappings"]), None)
-            if productslug_string is not None and productslug_string != "[]":
+                productslug_string = next((item['pageSlug'] for item in game["offerMappings"]), "")
+            if productslug_string and productslug_string != "[]":
                 try:
                     product = self.api.get_product(productslug_string)
                 except EGSException:
-                    return namespace, id
+                    return namespace, game_id
                 else:
                     for page in product.get("pages", []):
                         if page["data"]["about"]["title"].lower() == self.game_name.lower():
                             namespace = page["offer"]["namespace"]
-                            id = page["offer"]["id"]
-        return namespace, id
+                            game_id = page["offer"]["id"]
+        return namespace, game_id
 
-    def selenium_response(self, urls):
+    @staticmethod
+    def selenium_response(urls):
         # Set up Selenium with headless Chrome
         options = Options()
         options.add_argument('--headless')
@@ -123,7 +129,9 @@ class EpicGame:
 
         for url in urls:
             driver.get(url)
-            time.sleep(3)  # Wait for JavaScript to load
+            WebDriverWait(driver, 10).until(
+                expected_conditions.presence_of_element_located((By.TAG_NAME, 'pre'))
+            )
             body_text = driver.find_element('tag name', 'pre').text
             responses.append(body_text)
 
@@ -136,12 +144,11 @@ class EpicGame:
         mobile_checkout = ""
 
         for offers in data:
-            if offers["topicId"] == "mobile-android-free-game" or offers["topicId"] == "mobile-ios-free-game":
-                for offer in offers["offers"]:
-                    clean_game_name = self.clean_game_name(offer["content"]["title"]).lower()
-                    if clean_game_name == process_keyword or clean_game_name == self.game_name.lower():
-                        mobile_checkout = "offers=1-" + offer["sandboxId"] + "-" + offer["offerId"]
-                        break
+            for offer in offers["offers"]:
+                clean_game_name = self.clean_game_name(offer["content"]["title"]).lower()
+                if clean_game_name == process_keyword or clean_game_name == self.game_name.lower():
+                    mobile_checkout = "offers=1-" + offer["sandboxId"] + "-" + offer["offerId"]
+                    break
         return mobile_checkout
 
     def mobile_checkout(self):

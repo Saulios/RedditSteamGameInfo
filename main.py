@@ -200,12 +200,12 @@ def buildcommenttext_gog(g):
 
 def buildcommenttext_epic(g):
     commenttext = ''
-    if isinstance(g.checkout_link, str) and (g.checkout_link != "" or g.android_checkout != "" or g.ios_checkout != ""):
+    if g.checkout_link != "" or g.android_checkout != "" or g.ios_checkout != "":
         commenttext += "**Giveaway details**\n\n"
         commenttext += "Instant checkout: "
         if g.android_checkout != "" or g.ios_checkout != "":
             commenttext += "\n"
-            if g.checkout_link != "":
+            if g.checkout_link and g.checkout_link != "":
                 commenttext += "\n * [PC](https://store.epicgames.com/purchase?"
                 commenttext += g.checkout_link
                 commenttext += ")"
@@ -230,14 +230,14 @@ def buildcommenttext_epic(g):
                     commenttext += "\n * [PC + iOS](https://store.epicgames.com/purchase?"
                 elif g.android_checkout and g.ios_checkout and not g.checkout_link:
                     commenttext += "\n * [Android + iOS](https://store.epicgames.com/purchase?"
-                if g.checkout_link != "":
+                if g.checkout_link and g.checkout_link != "":
                     commenttext += g.checkout_link + "&"
                 if g.android_checkout != "":
                     commenttext += g.android_checkout + "&"
                 if g.ios_checkout != "":
                     commenttext += g.ios_checkout
                 commenttext += ")"
-        elif g.checkout_link != "":
+        elif g.checkout_link and g.checkout_link != "":
             commenttext += "https://store.epicgames.com/purchase?"
             commenttext += g.checkout_link
         commenttext += "\n"
