@@ -18,6 +18,7 @@ from AlienwareArena import AlienwareArena
 from iGames import iGames
 from Keyhub import Keyhub
 from EpicGame import EpicGame
+from Giveeclub import GiveeClub
 
 BLOCKED_USER_FILE = 'blockedusers.txt'  # Will not reply to these people
 SUBLIST = "FreeGameFindings"
@@ -40,6 +41,7 @@ IGAMES_URL_REGEX = r"((https?:\/\/)?)(igames.gg\/promotions\/\d+)"
 KEYHUB_URL_REGEX = r"((https?:\/\/)?)(key-hub.eu\/giveaway\/\d+)"
 GLEAMIO_URL_REGEX = r"((https?:\/\/)?)(gleam.io)"
 RANDOM_TITLE_REGEX = r"(Random).*(Game)"
+GIVEECLUB_URL_REGEX = r"((https?:\/\/)?)givee\.club(?:/[^/]+)?/event/(\d+)"
 
 
 def fitscriteria(s):
@@ -247,6 +249,18 @@ def buildcommenttext_epic(g):
         commenttext += '\n***\n'
     else:
         return None
+    return commenttext
+
+
+def buildcommenttext_giveeclub(g):
+    commenttext = ''
+    if not g.tasks:
+        return None
+    commenttext += "**Giveaway details**\n\n"
+    for i, task in enumerate(g.tasks, 1):
+        commenttext += f" * Task {i}:"
+        commenttext += f" {task['description']}\n"
+    commenttext += '\n***\n'
     return commenttext
 
 
@@ -535,6 +549,11 @@ class SubWatch(threading.Thread):
                                         commenttext_keyhub = buildcommenttext_keyhub(Keyhub(submission.url, "new"), "new")
                                     if commenttext_keyhub is not None and commenttext_keyhub != "":
                                         commenttext = commenttext_keyhub + commenttext
+                                    commenttext_giveeclub = ""
+                                    if re.search(GIVEECLUB_URL_REGEX, submission.url):
+                                        commenttext_giveeclub = buildcommenttext_giveeclub(GiveeClub(submission.url))
+                                    if commenttext_giveeclub is not None and commenttext_keyhub != "":
+                                        commenttext = commenttext_giveeclub + commenttext
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
                                         print('Commenting on post ' + str(submission) + ' after finding game ' + game_name, flush=True)
@@ -593,6 +612,19 @@ class SubWatch(threading.Thread):
                                                 flair_id = submission.link_flair_template_id
                                                 new_text = "Steam level " + level_number + "+ | " + flair_text
                                                 submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                        if commenttext_giveeclub is not None and commenttext_giveeclub != "":
+                                            flair_text = submission.link_flair_text
+                                            level_number = commenttext_giveeclub.split("profile level on Steam")[0].split()[-1]
+                                            if flair_text is None:
+                                                # if no flair exists
+                                                new_text = "Steam level " + level_number
+                                                submission.mod.flair(text=new_text, css_class="ReadComments",
+                                                                     flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                            elif "level" not in flair_text.lower():
+                                                # if not yet in flair
+                                                flair_id = submission.link_flair_template_id
+                                                new_text = "Steam level " + level_number + " | " + flair_text
+                                                submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                         if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                             # Set post as NSFW
                                             submission.mod.nsfw()
@@ -643,6 +675,12 @@ class SubWatch(threading.Thread):
                                             commenttext_keyhub = buildcommenttext_keyhub(Keyhub(submission.url, "new"), "new")
                                         if commenttext_keyhub is not None and commenttext_keyhub != "":
                                             commenttext = commenttext_keyhub + commenttext
+                                        commenttext_giveeclub = ""
+                                        if re.search(GIVEECLUB_URL_REGEX, submission.url):
+                                            commenttext_giveeclub = buildcommenttext_giveeclub(
+                                                GiveeClub(submission.url))
+                                        if commenttext_giveeclub is not None and commenttext_keyhub != "":
+                                            commenttext = commenttext_giveeclub + commenttext
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name, flush=True)
@@ -710,6 +748,19 @@ class SubWatch(threading.Thread):
                                                     flair_id = submission.link_flair_template_id
                                                     new_text = "Steam level " + level_number + "+ | " + flair_text
                                                     submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            if commenttext_giveeclub is not None and commenttext_giveeclub != "":
+                                                flair_text = submission.link_flair_text
+                                                level_number = commenttext.split("profile level on Steam")[0].split()[-1]
+                                                if flair_text is None:
+                                                    # if no flair exists
+                                                    new_text = "Steam level " + level_number
+                                                    submission.mod.flair(text=new_text, css_class="ReadComments",
+                                                                         flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                                elif "level" not in flair_text.lower():
+                                                    # if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = "Steam level " + level_number + " | " + flair_text
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                             if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                                 # Set post as NSFW
                                                 submission.mod.nsfw()
@@ -731,6 +782,7 @@ class SubWatch(threading.Thread):
                                         or re.search(IGAMES_URL_REGEX, submission.url)
                                         or re.search(ALIENWARE_URL_REGEX, submission.url)
                                         or re.search(KEYHUB_URL_REGEX, submission.url)
+                                        or re.search(GIVEECLUB_URL_REGEX, submission.url)
                                     ):
                                         # Not found on archive.org, post steamdb and key availability part
                                         commenttext += '*Removed from Steam, no information found on archive.org*\n\n'
@@ -755,6 +807,9 @@ class SubWatch(threading.Thread):
                                         if re.search(KEYHUB_URL_REGEX, submission.url):
                                             g_website = "keyhub"
                                             commenttext = buildcommenttext_keyhub(Keyhub(submission.url, "new"), "new")
+                                        if re.search(GIVEECLUB_URL_REGEX, submission.url):
+                                            g_website = "giveeclub"
+                                            commenttext = buildcommenttext_giveeclub(GiveeClub(submission.url))
                                         if commenttext is not None and commenttext != "":
                                             commenttext += buildfootertext()
                                             if len(commenttext) < 10000:
@@ -821,6 +876,19 @@ class SubWatch(threading.Thread):
                                                         flair_id = submission.link_flair_template_id
                                                         new_text = "Steam level " + level_number + "+ | " + flair_text
                                                         submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                                if g_website == "giveeclub" and commenttext is not None and commenttext != "":
+                                                    flair_text = submission.link_flair_text
+                                                    level_number = commenttext.split("profile level on Steam")[0].split()[-1]
+                                                    if flair_text is None:
+                                                        # if no flair exists
+                                                        new_text = "Steam level " + level_number
+                                                        submission.mod.flair(text=new_text, css_class="ReadComments",
+                                                                             flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                                    elif "level" not in flair_text.lower():
+                                                        # if not yet in flair
+                                                        flair_id = submission.link_flair_template_id
+                                                        new_text = "Steam level " + level_number + " | " + flair_text
+                                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                                 if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                                     # Set post as NSFW
                                                     submission.mod.nsfw()
@@ -830,6 +898,7 @@ class SubWatch(threading.Thread):
                                     or re.search(IGAMES_URL_REGEX, submission.url)
                                     or re.search(ALIENWARE_URL_REGEX, submission.url)
                                     or re.search(KEYHUB_URL_REGEX, submission.url)
+                                    or re.search(GIVEECLUB_URL_REGEX, submission.url)
                                 ):
                                     # Not found on steam-tracker, still post key availability part
                                     g_website = "steelseries"
@@ -850,6 +919,9 @@ class SubWatch(threading.Thread):
                                     if re.search(KEYHUB_URL_REGEX, submission.url):
                                         g_website = "keyhub"
                                         commenttext = buildcommenttext_keyhub(Keyhub(submission.url, "new"), "new")
+                                    if re.search(GIVEECLUB_URL_REGEX, submission.url):
+                                        g_website = "giveeclub"
+                                        commenttext = buildcommenttext_giveeclub(GiveeClub(submission.url))
                                     if commenttext is not None and commenttext != "":
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
@@ -906,6 +978,18 @@ class SubWatch(threading.Thread):
                                                     # if not yet in flair
                                                     flair_id = submission.link_flair_template_id
                                                     new_text = "Steam level " + level_number + "+ | " + flair_text
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            if g_website == "giveeclub" and commenttext is not None and commenttext != "":
+                                                flair_text = submission.link_flair_text
+                                                level_number = commenttext.split("profile level on Steam")[0].split()[-1]
+                                                if flair_text is None:
+                                                    # if no flair exists
+                                                    new_text = "Steam level " + level_number
+                                                    submission.mod.flair(text=new_text, css_class="ReadComments", flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                                elif "level" not in flair_text.lower():
+                                                    # if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = "Steam level " + level_number + " | " + flair_text
                                                     submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                             if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                                 # Set post as NSFW
@@ -1066,6 +1150,26 @@ class SubWatch(threading.Thread):
                                 if len(commenttext) < 10000:
                                     print('Commenting on post ' + str(submission) + ' after finding game ' + game_name, flush=True)
                                     submission.reply(body=commenttext)
+                    elif re.search(GIVEECLUB_URL_REGEX, submission.url):
+                        if fitscriteria(submission):
+                            commenttext = buildcommenttext_giveeclub(GiveeClub(submission.url))
+                            if commenttext is not None and commenttext != "":
+                                commenttext += buildfootertext()
+                                if len(commenttext) < 10000:
+                                    print('Commenting on post ' + str(submission) + ' after finding Giveeclub domain', flush=True)
+                                    submission.reply(body=commenttext)
+                                    if commenttext is not None and commenttext != "":
+                                        flair_text = submission.link_flair_text
+                                        level_number = commenttext.split("profile level on Steam")[0].split()[-1]
+                                        if flair_text is None:
+                                            # if no flair exists
+                                            new_text = "Steam level " + level_number
+                                            submission.mod.flair(text=new_text, css_class="ReadComments", flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                        elif "level" not in flair_text.lower():
+                                            # if not yet in flair
+                                            flair_id = submission.link_flair_template_id
+                                            new_text = "Steam level " + level_number + " | " + flair_text
+                                            submission.mod.flair(text=new_text, flair_template_id=flair_id)
                     if re.search(RANDOM_TITLE_REGEX, submission.title, re.IGNORECASE):
                         flair_text = submission.link_flair_text
                         if flair_text is None:
