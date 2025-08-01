@@ -552,7 +552,7 @@ class SubWatch(threading.Thread):
                                     commenttext_giveeclub = ""
                                     if re.search(GIVEECLUB_URL_REGEX, submission.url):
                                         commenttext_giveeclub = buildcommenttext_giveeclub(GiveeClub(submission.url))
-                                    if commenttext_giveeclub is not None and commenttext_keyhub != "":
+                                    if commenttext_giveeclub is not None and commenttext_giveeclub != "":
                                         commenttext = commenttext_giveeclub + commenttext
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
@@ -679,7 +679,7 @@ class SubWatch(threading.Thread):
                                         if re.search(GIVEECLUB_URL_REGEX, submission.url):
                                             commenttext_giveeclub = buildcommenttext_giveeclub(
                                                 GiveeClub(submission.url))
-                                        if commenttext_giveeclub is not None and commenttext_keyhub != "":
+                                        if commenttext_giveeclub is not None and commenttext_giveeclub != "":
                                             commenttext = commenttext_giveeclub + commenttext
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
