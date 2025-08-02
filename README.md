@@ -8,7 +8,6 @@ Bot for Reddit that comments on [r/FreeGameFindings](https://www.reddit.com/r/Fr
 - [How It Works](#wrench-how-it-works)
 - [Information Provided](#book-information-provided)
 - [Giveaway details](#gift-giveaway-details)
-- [Installation & Usage](#computer-installation--usage)
 - [Contributing](#handshake-contributing)
 
 ## :rocket: Features
@@ -22,7 +21,7 @@ It currently supports:
 - **Epic Games Store** submissions, including instant checkout links for all platforms (PC, Android and iOS)
 - All work with FreeGameFindings title format, by searching for the game/dlc on Steam
 - Also works for games/dlc removed from Steam, by searching for them on [archive.org/web](https://archive.org/web)
-- Additionally provides giveaway information for **Alienware Arena**, **SteelSeries**, **Crucial**, **iGames** and **KeyHub** giveaways
+- Additionally provides giveaway information for **Alienware Arena**, **SteelSeries**, **Crucial**, **iGames**, **KeyHub**, **GiveeClub** and **Gleam** giveaways
 - Flair automation for posts (e.g., marking expired, delisted or region-locked offers)
 
 ## :wrench: How It Works
@@ -45,9 +44,13 @@ The bot handles a wide variety of submission types. Here's how it interprets eac
    Retrieve key availability from the website API
 7. **Keyhub**  
    Retrieve key availability from the website API and Steam level requirement from the giveaway link
-8. **GOG**  
+8. **GiveeClub**  
+   Retrieve tasks from the giveaway link
+9. **Gleam**  
+   Retrieve tasks, required accounts and ASF commands for Steam games from the giveaway link
+10. **GOG**  
    Use either the submission link or the title to look up details in the GOG API
-9. **Epic Games**  
+11. **Epic Games**  
     Searches the Epic Store via its API and adds instant checkout links for all platforms. Adds Steam game data if available.
 
 ## :book: Information Provided
@@ -80,24 +83,6 @@ Giveaway details vary by website. Available keys is updated automatically every 
 | Total keys        |    &#10004;     |  &#10004;   | &#10004; | &#10004; | &#10004; |
 | Level requirement |    &#10004;     |  &#10060;   | &#10060; | &#10060; | &#10004; |
 | Regional issues   |    &#10004;     |  &#10060;   | &#10060; | &#10060; | &#10060; |
-
-## :computer: Installation & Usage
-
-1. Clone the repository  
-   `git clone https://github.com/Saulios/RedditSteamGameInfo.git`
-2. Navigate to the project directory  
-   `cd RedditSteamGameInfo`
-3. Install dependencies  
-   `pip install -r requirements.txt`
-4. Mock environment variables for local testing (optional):  
-   To test the bot without connecting to Reddit, you can mock its environment. Create a .env file or set these manually:
-
-   - `RSGIB_USERNAME`
-   - `RSGIB_PASSWORD`
-   - `RSGIB_CLIENT_ID`
-   - `RSGIB_CLIENT_SECRET`
-5. Run the bot  
-   `python main.py`
 
 ## :handshake: Contributing
 

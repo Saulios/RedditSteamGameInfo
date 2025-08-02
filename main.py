@@ -19,6 +19,7 @@ from iGames import iGames
 from Keyhub import Keyhub
 from EpicGame import EpicGame
 from Giveeclub import GiveeClub
+from Gleam import Gleam
 
 BLOCKED_USER_FILE = 'blockedusers.txt'  # Will not reply to these people
 SUBLIST = "FreeGameFindings"
@@ -257,9 +258,20 @@ def buildcommenttext_giveeclub(g):
     if not g.tasks:
         return None
     commenttext += "**Giveaway details**\n\n"
+    commenttext += "Tasks:\n\n"
     for i, task in enumerate(g.tasks, 1):
-        commenttext += f" * Task {i}:"
-        commenttext += f" {task['description']}\n"
+        commenttext += f"{i}. {task['description']}\n"
+    commenttext += '\n***\n'
+    return commenttext
+
+
+def buildcommenttext_gleam(g):
+    commenttext = ''
+    if not g.tasks:
+        return None
+    commenttext += "**Giveaway details**\n\n"
+    commenttext += "\n".join(g.commenttext)
+    commenttext += '\n'
     commenttext += '\n***\n'
     return commenttext
 
@@ -554,6 +566,11 @@ class SubWatch(threading.Thread):
                                         commenttext_giveeclub = buildcommenttext_giveeclub(GiveeClub(submission.url))
                                     if commenttext_giveeclub is not None and commenttext_giveeclub != "":
                                         commenttext = commenttext_giveeclub + commenttext
+                                    commenttext_gleam = ""
+                                    if re.search(GLEAMIO_URL_REGEX, submission.url):
+                                        commenttext_gleam = buildcommenttext_gleam(Gleam(submission.url))
+                                    if commenttext_gleam is not None and commenttext_gleam != "":
+                                        commenttext = commenttext_gleam + commenttext
                                     commenttext += buildfootertext()
                                     if len(commenttext) < 10000:
                                         print('Commenting on post ' + str(submission) + ' after finding game ' + game_name, flush=True)
@@ -681,6 +698,11 @@ class SubWatch(threading.Thread):
                                                 GiveeClub(submission.url))
                                         if commenttext_giveeclub is not None and commenttext_giveeclub != "":
                                             commenttext = commenttext_giveeclub + commenttext
+                                        commenttext_gleam = ""
+                                        if re.search(GLEAMIO_URL_REGEX, submission.url):
+                                            commenttext_gleam = buildcommenttext_gleam(Gleam(submission.url))
+                                        if commenttext_gleam is not None and commenttext_gleam != "":
+                                            commenttext = commenttext_gleam + commenttext
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
                                             print('Commenting on post ' + str(submission) + ' after finding removed game ' + game_name, flush=True)
@@ -783,6 +805,7 @@ class SubWatch(threading.Thread):
                                         or re.search(ALIENWARE_URL_REGEX, submission.url)
                                         or re.search(KEYHUB_URL_REGEX, submission.url)
                                         or re.search(GIVEECLUB_URL_REGEX, submission.url)
+                                        or re.search(GLEAMIO_URL_REGEX, submission.url)
                                     ):
                                         # Not found on archive.org, post steamdb and key availability part
                                         commenttext += '*Removed from Steam, no information found on archive.org*\n\n'
@@ -810,6 +833,9 @@ class SubWatch(threading.Thread):
                                         if re.search(GIVEECLUB_URL_REGEX, submission.url):
                                             g_website = "giveeclub"
                                             commenttext = buildcommenttext_giveeclub(GiveeClub(submission.url))
+                                        if re.search(GLEAMIO_URL_REGEX, submission.url):
+                                            g_website = "gleam"
+                                            commenttext = buildcommenttext_gleam(Gleam(submission.url))
                                         if commenttext is not None and commenttext != "":
                                             commenttext += buildfootertext()
                                             if len(commenttext) < 10000:
@@ -899,6 +925,7 @@ class SubWatch(threading.Thread):
                                     or re.search(ALIENWARE_URL_REGEX, submission.url)
                                     or re.search(KEYHUB_URL_REGEX, submission.url)
                                     or re.search(GIVEECLUB_URL_REGEX, submission.url)
+                                    or re.search(GLEAMIO_URL_REGEX, submission.url)
                                 ):
                                     # Not found on steam-tracker, still post key availability part
                                     g_website = "steelseries"
@@ -922,6 +949,9 @@ class SubWatch(threading.Thread):
                                     if re.search(GIVEECLUB_URL_REGEX, submission.url):
                                         g_website = "giveeclub"
                                         commenttext = buildcommenttext_giveeclub(GiveeClub(submission.url))
+                                    if re.search(GLEAMIO_URL_REGEX, submission.url):
+                                        g_website = "gleam"
+                                        commenttext = buildcommenttext_gleam(Gleam(submission.url))
                                     if commenttext is not None and commenttext != "":
                                         commenttext += buildfootertext()
                                         if len(commenttext) < 10000:
@@ -1170,6 +1200,14 @@ class SubWatch(threading.Thread):
                                             flair_id = submission.link_flair_template_id
                                             new_text = "Steam level " + level_number + " | " + flair_text
                                             submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                    elif re.search(GLEAMIO_URL_REGEX, submission.url):
+                        if fitscriteria(submission):
+                            commenttext = buildcommenttext_gleam(Gleam(submission.url))
+                            if commenttext is not None and commenttext != "":
+                                commenttext += buildfootertext()
+                                if len(commenttext) < 10000:
+                                    print('Commenting on post ' + str(submission) + ' after finding Gleam domain', flush=True)
+                                    submission.reply(body=commenttext)
                     if re.search(RANDOM_TITLE_REGEX, submission.title, re.IGNORECASE):
                         flair_text = submission.link_flair_text
                         if flair_text is None:
@@ -1197,6 +1235,22 @@ class CommentWatch(threading.Thread):
                     if test_comment_gleamio:
                         if comment.approved_by is None:
                             comment.mod.approve()
+                        gleam_links = []
+                        urlregex = re.finditer(GLEAMIO_URL_REGEX, comment.body)
+                        for url in urlregex:
+                            gleam_links.append(url.group(0))
+                        # remove duplicates
+                        gleam_links = list(dict.fromkeys(gleam_links))
+                        commenttext = ""
+                        for url in range(len(gleam_links)):
+                            make_comment = buildcommenttext_gleam(Gleam(url))
+                            if make_comment is not None and make_comment != "":
+                                commenttext += make_comment
+                        if commenttext != "":
+                            commenttext += buildfootertext()
+                            if len(commenttext) < 10000:
+                                print('Replying to comment ' + str(comment) + ' after finding Gleam domain', flush=True)
+                                comment.reply(commenttext)
                     test_comment_expired_words = ['expired', 'ended']
                     test_comment_expired_phrases = ['attention this giveaway has ended', 'this reward has ended', 'this giveaway has ended']
                     # Remove punctuation
