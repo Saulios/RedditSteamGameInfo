@@ -580,28 +580,34 @@ class SubWatch(threading.Thread):
                                         if commenttext_awa is not None and commenttext_awa != "":
                                             flair_text = submission.link_flair_text or ""
                                             tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
-                                            if f"tier {tier_number}" not in flair_text.lower():
-                                                if flair_text:
-                                                    flair_text = f"Tier {tier_number}+ | {flair_text}"
-                                                else:
-                                                    flair_text = f"Tier {tier_number}+"
-                                            if "Tier required: 1" not in commenttext_awa:
+                                            if "Tier required: 1" not in commenttext:
+                                                if f"tier {tier_number}" not in flair_text.lower():
+                                                    if flair_text:
+                                                        flair_text = f"Tier {tier_number}+ | {flair_text}"
+                                                    else:
+                                                        flair_text = f"Tier {tier_number}+"
                                                 if "prior work" not in flair_text.lower():
-                                                    flair_text = f"{flair_text} | Prior Work Required"
-                                            if "* Keys available for all countries\n" not in commenttext_awa:
+                                                    if flair_text:
+                                                        flair_text = f"{flair_text} | Prior Work Required"
+                                                    else:
+                                                        flair_text = "Prior Work Required"
+                                            if "* Keys available for all countries\n" not in commenttext:
                                                 if "regional" not in flair_text.lower():
-                                                    flair_text = f"{flair_text} | Regional Issues"
-                                            if "* Keys available for all countries\n" not in commenttext_awa and "Tier required: 1" in commenttext_awa:
-                                                flair_text = "Regional Issues"
+                                                    if flair_text:
+                                                        flair_text = f"{flair_text} | Regional Issues"
+                                                    else:
+                                                        flair_text = "Regional Issues"
+                                            if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" in commenttext:
                                                 flair_id = "b3a089de-2437-11e6-8bda-0e93018c4773"
                                                 css_class = "Regionlocked"
                                             else:
-                                                flair_id = submission.link_flair_template_id or "b204d6b4-0b90-11e4-9095-12313b0add52"
+                                                flair_id = getattr(submission, "link_flair_template_id", None) or "b204d6b4-0b90-11e4-9095-12313b0add52"
                                                 css_class = "restoften"
-                                            if submission.link_flair_text is None:
-                                                submission.mod.flair(text=flair_text, css_class=css_class, flair_template_id=flair_id)
-                                            else:
-                                                submission.mod.flair(text=flair_text, flair_template_id=flair_id)
+                                            if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" not in commenttext:
+                                                if submission.link_flair_text is None:
+                                                    submission.mod.flair(text=flair_text, css_class=css_class, flair_template_id=flair_id)
+                                                else:
+                                                    submission.mod.flair(text=flair_text, flair_template_id=flair_id)
                                         if commenttext_keyhub is not None and commenttext_keyhub != "":
                                             flair_text = submission.link_flair_text
                                             level_number = commenttext_keyhub.split("Steam level required: ")[1].split()[0]
@@ -707,29 +713,37 @@ class SubWatch(threading.Thread):
                                             if commenttext_awa is not None and commenttext_awa != "":
                                                 flair_text = submission.link_flair_text or ""
                                                 tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
-                                                if f"tier {tier_number}" not in flair_text.lower():
-                                                    if flair_text:
-                                                        flair_text = f"Tier {tier_number}+ | {flair_text}"
-                                                    else:
-                                                        flair_text = f"Tier {tier_number}+"
-                                                if "Tier required: 1" not in commenttext_awa:
+                                                if "Tier required: 1" not in commenttext:
+                                                    if f"tier {tier_number}" not in flair_text.lower():
+                                                        if flair_text:
+                                                            flair_text = f"Tier {tier_number}+ | {flair_text}"
+                                                        else:
+                                                            flair_text = f"Tier {tier_number}+"
                                                     if "prior work" not in flair_text.lower():
-                                                        flair_text = f"{flair_text} | Prior Work Required"
-                                                if "* Keys available for all countries\n" not in commenttext_awa:
+                                                        if flair_text:
+                                                            flair_text = f"{flair_text} | Prior Work Required"
+                                                        else:
+                                                            flair_text = "Prior Work Required"
+                                                if "* Keys available for all countries\n" not in commenttext:
                                                     if "regional" not in flair_text.lower():
-                                                        flair_text = f"{flair_text} | Regional Issues"
-                                                if "* Keys available for all countries\n" not in commenttext_awa and "Tier required: 1" in commenttext_awa:
-                                                    flair_text = "Regional Issues"
+                                                        if flair_text:
+                                                            flair_text = f"{flair_text} | Regional Issues"
+                                                        else:
+                                                            flair_text = "Regional Issues"
+                                                if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" in commenttext:
                                                     flair_id = "b3a089de-2437-11e6-8bda-0e93018c4773"
                                                     css_class = "Regionlocked"
                                                 else:
-                                                    flair_id = submission.link_flair_template_id or "b204d6b4-0b90-11e4-9095-12313b0add52"
+                                                    flair_id = getattr(submission, "link_flair_template_id",
+                                                                       None) or "b204d6b4-0b90-11e4-9095-12313b0add52"
                                                     css_class = "restoften"
-                                                if submission.link_flair_text is None:
-                                                    submission.mod.flair(text=flair_text, css_class=css_class,
-                                                                         flair_template_id=flair_id)
-                                                else:
-                                                    submission.mod.flair(text=flair_text, flair_template_id=flair_id)
+                                                if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" not in commenttext:
+                                                    if submission.link_flair_text is None:
+                                                        submission.mod.flair(text=flair_text, css_class=css_class,
+                                                                             flair_template_id=flair_id)
+                                                    else:
+                                                        submission.mod.flair(text=flair_text,
+                                                                             flair_template_id=flair_id)
                                             if commenttext_keyhub is not None and commenttext_keyhub != "":
                                                 flair_text = submission.link_flair_text
                                                 level_number = commenttext_keyhub.split("Steam level required: ")[1].split()[0]
@@ -826,28 +840,37 @@ class SubWatch(threading.Thread):
                                                 if g_website == "alienware" and commenttext is not None and commenttext != "":
                                                     flair_text = submission.link_flair_text or ""
                                                     tier_number = commenttext.split("Tier required: ")[1].split()[0]
-                                                    if f"tier {tier_number}" not in flair_text.lower():
-                                                        if flair_text:
-                                                            flair_text = f"Tier {tier_number}+ | {flair_text}"
-                                                        else:
-                                                            flair_text = f"Tier {tier_number}+"
                                                     if "Tier required: 1" not in commenttext:
+                                                        if f"tier {tier_number}" not in flair_text.lower():
+                                                            if flair_text:
+                                                                flair_text = f"Tier {tier_number}+ | {flair_text}"
+                                                            else:
+                                                                flair_text = f"Tier {tier_number}+"
                                                         if "prior work" not in flair_text.lower():
-                                                            flair_text = f"{flair_text} | Prior Work Required"
+                                                            if flair_text:
+                                                                flair_text = f"{flair_text} | Prior Work Required"
+                                                            else:
+                                                                flair_text = "Prior Work Required"
                                                     if "* Keys available for all countries\n" not in commenttext:
                                                         if "regional" not in flair_text.lower():
-                                                            flair_text = f"{flair_text} | Regional Issues"
+                                                            if flair_text:
+                                                                flair_text = f"{flair_text} | Regional Issues"
+                                                            else:
+                                                                flair_text = "Regional Issues"
                                                     if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" in commenttext:
-                                                        flair_text = "Regional Issues"
                                                         flair_id = "b3a089de-2437-11e6-8bda-0e93018c4773"
                                                         css_class = "Regionlocked"
                                                     else:
-                                                        flair_id = submission.link_flair_template_id or "b204d6b4-0b90-11e4-9095-12313b0add52"
+                                                        flair_id = getattr(submission, "link_flair_template_id",
+                                                                           None) or "b204d6b4-0b90-11e4-9095-12313b0add52"
                                                         css_class = "restoften"
-                                                    if submission.link_flair_text is None:
-                                                        submission.mod.flair(text=flair_text, css_class=css_class, flair_template_id=flair_id)
-                                                    else:
-                                                        submission.mod.flair(text=flair_text, flair_template_id=flair_id)
+                                                    if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" not in commenttext:
+                                                        if submission.link_flair_text is None:
+                                                            submission.mod.flair(text=flair_text, css_class=css_class,
+                                                                                 flair_template_id=flair_id)
+                                                        else:
+                                                            submission.mod.flair(text=flair_text,
+                                                                                 flair_template_id=flair_id)
                                                 if g_website == "keyhub" and commenttext is not None and commenttext != "":
                                                     flair_text = submission.link_flair_text
                                                     level_number = commenttext.split("Steam level required: ")[1].split()[0]
@@ -919,28 +942,37 @@ class SubWatch(threading.Thread):
                                             if g_website == "alienware" and commenttext is not None and commenttext != "":
                                                 flair_text = submission.link_flair_text or ""
                                                 tier_number = commenttext.split("Tier required: ")[1].split()[0]
-                                                if f"tier {tier_number}" not in flair_text.lower():
-                                                    if flair_text:
-                                                        flair_text = f"Tier {tier_number}+ | {flair_text}"
-                                                    else:
-                                                        flair_text = f"Tier {tier_number}+"
                                                 if "Tier required: 1" not in commenttext:
+                                                    if f"tier {tier_number}" not in flair_text.lower():
+                                                        if flair_text:
+                                                            flair_text = f"Tier {tier_number}+ | {flair_text}"
+                                                        else:
+                                                            flair_text = f"Tier {tier_number}+"
                                                     if "prior work" not in flair_text.lower():
-                                                        flair_text = f"{flair_text} | Prior Work Required"
+                                                        if flair_text:
+                                                            flair_text = f"{flair_text} | Prior Work Required"
+                                                        else:
+                                                            flair_text = "Prior Work Required"
                                                 if "* Keys available for all countries\n" not in commenttext:
                                                     if "regional" not in flair_text.lower():
-                                                        flair_text = f"{flair_text} | Regional Issues"
+                                                        if flair_text:
+                                                            flair_text = f"{flair_text} | Regional Issues"
+                                                        else:
+                                                            flair_text = "Regional Issues"
                                                 if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" in commenttext:
-                                                    flair_text = "Regional Issues"
                                                     flair_id = "b3a089de-2437-11e6-8bda-0e93018c4773"
                                                     css_class = "Regionlocked"
                                                 else:
-                                                    flair_id = submission.link_flair_template_id or "b204d6b4-0b90-11e4-9095-12313b0add52"
+                                                    flair_id = getattr(submission, "link_flair_template_id",
+                                                                       None) or "b204d6b4-0b90-11e4-9095-12313b0add52"
                                                     css_class = "restoften"
-                                                if submission.link_flair_text is None:
-                                                    submission.mod.flair(text=flair_text, css_class=css_class, flair_template_id=flair_id)
-                                                else:
-                                                    submission.mod.flair(text=flair_text, flair_template_id=flair_id)
+                                                if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" not in commenttext:
+                                                    if submission.link_flair_text is None:
+                                                        submission.mod.flair(text=flair_text, css_class=css_class,
+                                                                             flair_template_id=flair_id)
+                                                    else:
+                                                        submission.mod.flair(text=flair_text,
+                                                                             flair_template_id=flair_id)
                                             if g_website == "keyhub" and commenttext is not None and commenttext != "":
                                                 flair_text = submission.link_flair_text
                                                 level_number = commenttext.split("Steam level required: ")[1].split()[0]
@@ -1036,28 +1068,34 @@ class SubWatch(threading.Thread):
                                     if commenttext != "":
                                         flair_text = submission.link_flair_text or ""
                                         tier_number = commenttext.split("Tier required: ")[1].split()[0]
-                                        if f"tier {tier_number}" not in flair_text.lower():
-                                            if flair_text:
-                                                flair_text = f"Tier {tier_number}+ | {flair_text}"
-                                            else:
-                                                flair_text = f"Tier {tier_number}+"
                                         if "Tier required: 1" not in commenttext:
+                                            if f"tier {tier_number}" not in flair_text.lower():
+                                                if flair_text:
+                                                    flair_text = f"Tier {tier_number}+ | {flair_text}"
+                                                else:
+                                                    flair_text = f"Tier {tier_number}+"
                                             if "prior work" not in flair_text.lower():
-                                                flair_text = f"{flair_text} | Prior Work Required"
+                                                if flair_text:
+                                                    flair_text = f"{flair_text} | Prior Work Required"
+                                                else:
+                                                    flair_text = "Prior Work Required"
                                         if "* Keys available for all countries\n" not in commenttext:
                                             if "regional" not in flair_text.lower():
-                                                flair_text = f"{flair_text} | Regional Issues"
+                                                if flair_text:
+                                                    flair_text = f"{flair_text} | Regional Issues"
+                                                else:
+                                                    flair_text = "Regional Issues"
                                         if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" in commenttext:
-                                            flair_text = "Regional Issues"
                                             flair_id = "b3a089de-2437-11e6-8bda-0e93018c4773"
                                             css_class = "Regionlocked"
                                         else:
-                                            flair_id = submission.link_flair_template_id or "b204d6b4-0b90-11e4-9095-12313b0add52"
+                                            flair_id = getattr(submission, "link_flair_template_id", None) or "b204d6b4-0b90-11e4-9095-12313b0add52"
                                             css_class = "restoften"
-                                        if submission.link_flair_text is None:
-                                            submission.mod.flair(text=flair_text, css_class=css_class, flair_template_id=flair_id)
-                                        else:
-                                            submission.mod.flair(text=flair_text, flair_template_id=flair_id)
+                                        if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" not in commenttext:
+                                            if submission.link_flair_text is None:
+                                                submission.mod.flair(text=flair_text, css_class=css_class, flair_template_id=flair_id)
+                                            else:
+                                                submission.mod.flair(text=flair_text, flair_template_id=flair_id)
                     elif (
                         re.search(STEELSERIES_URL_REGEX, submission.url)
                         or re.search(CRUCIAL_URL_REGEX, submission.url)
