@@ -258,6 +258,8 @@ def buildcommenttext_giveeclub(g):
     if not g.tasks:
         return None
     commenttext += "**Giveaway details**\n\n"
+    if any("Twitter" in task["description"] for task in g.tasks):
+        commenttext += "There has been a recent rise in possible false/incorrect bans being given on Twitter stemming from Twitter tasks in Giveaways. See this thread for details on precautions and support - https://redd.it/1o7whxs\n\n"
     commenttext += "Tasks:\n\n"
     for i, task in enumerate(g.tasks, 1):
         commenttext += f"{i}. {task['description']}\n"

@@ -112,6 +112,8 @@ class Gleam:
         commenttext_optional = []
         if required_accounts:
             commenttext.append(f"Required accounts: {', '.join(sorted(required_accounts))}\n")
+            if "Twitter" in required_accounts:
+                commenttext.append("There has been a recent rise in possible false/incorrect bans being given on Twitter stemming from Twitter tasks in Giveaways. See this thread for details on precautions and support - https://redd.it/1o7whxs\n")
 
         commenttext.append("Tasks:\n")
         for idx, task in enumerate(self.tasks, start=1):
