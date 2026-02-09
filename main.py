@@ -353,6 +353,8 @@ def buildcommenttext(g, removed, source):
             commenttext += '\n\n'
         if g.blurb != "":
             commenttext += '*' + g.blurb + '*\n\n'
+        if g.ai_text != "":
+            commenttext += '^(AI Disclosure: ' + g.ai_text + ')\n\n'
         if g.unreleased:
             if g.unreleasedtext is None:
                 commenttext += " * Isn't released yet\n"

@@ -86,6 +86,7 @@ class SteamGame:
         self.nsfw = self.nsfw()
         self.plusone = self.plusone()
         self.developers, self.developers_num = self.developers()
+        self.ai_text = self.ai_text()
         if self.gettype == "game":
             self.cards = self.getcards()
             self.pcgamingwiki = self.pcgamingwiki(self.appID)
@@ -717,3 +718,15 @@ class SteamGame:
             count = len(developers)
             return ", ".join(devs), count
         return False
+
+    def ai_text(self):
+        ai_notice = self.gamePage.find("h2", string="AI Generated Content Disclosure")
+        if ai_notice:
+            ai_p1 = self.gamePage.find("p", string="The developers describe how their game uses AI Generated Content like this:")
+            ai_p2 = ai_p1.find_next()
+            ai_text = ai_p2.text.strip()
+            clean_ai_text = " ".join(ai_text.splitlines())
+            for ch in "*()^":
+                clean_ai_text = clean_ai_text.replace(ch, "")
+            return clean_ai_text
+        return ""
