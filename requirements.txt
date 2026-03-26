@@ -1,7 +1,7 @@
 praw==7.8.1
 humanfriendly==10.0
 prawcore==2.4.0
-requests==2.32.4
+requests==2.33.0
 beautifulsoup4==4.13.4
 python-dateutil==2.9.0.post0
 country_converter==1.3
