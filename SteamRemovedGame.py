@@ -84,6 +84,7 @@ class SteamRemovedGame:
         self.nsfw = SteamGame.nsfw(self)
         self.plusone = False
         self.developers, self.developers_num = self.developers()
+        self.ai_text = SteamGame.ai_text(self)
         if self.gettype == "game":
             self.cards = SteamGame.getcards(self)
             self.pcgamingwiki = SteamGame.pcgamingwiki(self, self.appID)

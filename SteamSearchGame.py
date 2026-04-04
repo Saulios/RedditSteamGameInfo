@@ -17,7 +17,7 @@ class SteamSearchGame:
             if self.appid == 0:
                 self.appid = self.appidremoved(self.url_delisted)
         else:
-            self.url = 'https://store.steampowered.com/search/?term=' + self.game_name + '&ignore_preferences=1'
+            self.url = 'https://store.steampowered.com/search/suggest?term=' + self.game_name + '&f=games&cc=us&lang=english'
             while True:
                 try:
                     self.gamePage = BeautifulSoup(requests.get(self.url, timeout=30).text, "html.parser")
@@ -100,8 +100,7 @@ class SteamSearchGame:
         if removed:
             games = self.gamePage.select('tr[data-type="app"]')
         else:
-            search_data = self.gamePage.find("div", id="search_result_container")
-            games = search_data.find_all('a', {'class': 'search_result_row'})
+            games = self.gamePage.find_all('a', {'class': 'match'})
         appid = 0
         game_name = ""
 
@@ -116,7 +115,7 @@ class SteamSearchGame:
             if removed:
                 get_title = game.find('a').text.strip()
             else:
-                get_title = game.find('span', {"class": "title"}).text
+                get_title = game.find('div', {"class": "match_name"}).text
             # Get rid of commas to avoid number issues
             get_title = get_title.replace(",", "")
             game_name = self.game_name.replace(",", "")
@@ -161,33 +160,6 @@ class SteamSearchGame:
             appid = self.appidbackup(self.urlbackup_banned)
             if appid == 0:
                 self.appid = self.appidbackup(self.urlbackup_delisted)
-        if not removed and appid == 0 and "random" not in game_name and source == "Steam":
-            # If nothing found, try again but allow one word to be missing from target
-            for game in games:
-                # game_name is used from previous loop
-                get_title = game.find('span', {"class": "title"}).text
-                get_title = get_title.replace(",", "")
-                get_title = re.sub(r'[\W_]+', u' ', get_title, flags=re.UNICODE).lower()
-                get_title = get_title.replace("dlc", "").replace("  ", " ")
-                if len(get_title.split(" ")) <= len(game_name.split(" ")) + 1:
-                    if (
-                        # target name is fully in search result
-                        game_name in get_title
-                        # target words are all in search result
-                        or all(x in get_title for x in game_name.split(" "))
-                    ):
-                        appid = game['data-ds-appid']
-                        break
-                # Check for Roman numeral variant if posted with number
-                if len(get_title.split(" ")) <= len(game_name_roman.split(" ")) + 1:
-                    if (
-                        game_name_roman in get_title
-                        or all(x in get_title for x in game_name_roman.split(" "))
-                        or game_name_number in get_title
-                        or all(x in get_title for x in game_name_number.split(" "))
-                    ):
-                        appid = game['data-ds-appid']
-                        break
 
         return appid
 
