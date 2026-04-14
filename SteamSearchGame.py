@@ -29,12 +29,11 @@ class SteamSearchGame:
 
     @classmethod
     def game_name_searchable(cls, game_name):
-        # Put a space after a dash otherwise the word is excluded from search
-        game_name = re.sub(r'[-?]', '', game_name.strip())
+        # Clean up the game name so it searches better
         game_name = re.sub("dlc", '', game_name, flags=re.IGNORECASE)
         game_name = game_name.replace("  ", " ")
         game_name = game_name.strip()
-        return re.sub(r'-(\w)', r'- \1', game_name)
+        return game_name
 
     @classmethod
     def write_roman(cls, num):
