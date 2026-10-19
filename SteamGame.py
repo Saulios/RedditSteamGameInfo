@@ -228,19 +228,17 @@ class SteamGame:
         return "a/" + str(app_id), "app"
 
     def getachev(self):
-        achblock = self.gamePage.find("div", id="achievement_block")
-
-        if achblock is not None:
-            ach_number = re.sub(r"\D", "", achblock.contents[1].string).strip()  # Remove all non numbers
-            if ach_number == "":
-                return 0
-            return ach_number
+        if "achievements" in self.json:
+            achievements = self.json["achievements"]
+            if "total" in achievements:
+                ach_number = achievements["total"]
+                return ach_number
         return 0
 
     def getcards(self):
         barter_app_url = 'https://barter.vg/steam/app/' + self.appID + '/json'
         barter_app_json = {}
-        marketurl = 'https://steamcommunity.com/market/search?sort_column=name&sort_dir=asc&category_753_Game%5B0%5D=tag_app_' + self.appID + '&category_753_cardborder%5B0%5D=tag_cardborder_0&category_753_item_class%5B0%5D=tag_item_class_2'
+        marketurl = 'https://steamcommunity.com/market/search?appid=753&category_Game=app_' + self.appID + '&category_cardborder=cardborder_0&category_item_class=item_class_2'
         while True:
             try:
                 barter_app_json = requests.get(barter_app_url, timeout=30).json()

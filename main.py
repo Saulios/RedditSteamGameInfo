@@ -530,6 +530,17 @@ class SubWatch(threading.Thread):
                                             flair_id = submission.link_flair_template_id
                                             new_text = flair_text + " | Paid Base Game"
                                             submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                    if "AI Disclosure:" in commenttext:
+                                        flair_text = submission.link_flair_text
+                                        if flair_text is None:
+                                            # if no flair exists
+                                            new_text = "AI Used"
+                                            submission.mod.flair(text=new_text, css_class="ReadComments", flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                        elif "ai used" not in flair_text.lower():
+                                            # if not yet in flair
+                                            flair_id = submission.link_flair_template_id
+                                            new_text = flair_text + " | AI Used"
+                                            submission.mod.flair(text=new_text, flair_template_id=flair_id)
                     elif re.search(STEAM_TITLE_REGEX, submission.title, re.IGNORECASE):
                         title_split = re.split(STEAM_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
                         game_name = title_split[-1].strip()
@@ -651,6 +662,17 @@ class SubWatch(threading.Thread):
                                                 # if not yet in flair
                                                 flair_id = submission.link_flair_template_id
                                                 new_text = flair_text + " | Paid Base Game"
+                                                submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                        if "AI Disclosure:" in commenttext:
+                                            flair_text = submission.link_flair_text
+                                            if flair_text is None:
+                                                # if no flair exists
+                                                new_text = "AI Used"
+                                                submission.mod.flair(text=new_text, css_class="ReadComments", flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                            elif "ai used" not in flair_text.lower():
+                                                # if not yet in flair
+                                                flair_id = submission.link_flair_template_id
+                                                new_text = flair_text + " | AI Used"
                                                 submission.mod.flair(text=new_text, flair_template_id=flair_id)
                             else:
                                 game = SteamSearchGame(game_name, True)
@@ -787,6 +809,17 @@ class SubWatch(threading.Thread):
                                                     # if not yet in flair
                                                     flair_id = submission.link_flair_template_id
                                                     new_text = flair_text + " | Paid Base Game"
+                                                    submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                            if "AI Disclosure:" in commenttext:
+                                                flair_text = submission.link_flair_text
+                                                if flair_text is None:
+                                                    # if no flair exists
+                                                    new_text = "AI Used"
+                                                    submission.mod.flair(text=new_text, css_class="ReadComments", flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                                elif "ai used" not in flair_text.lower():
+                                                    # if not yet in flair
+                                                    flair_id = submission.link_flair_template_id
+                                                    new_text = flair_text + " | AI Used"
                                                     submission.mod.flair(text=new_text, flair_template_id=flair_id)
                                     elif (
                                         re.search(STEELSERIES_URL_REGEX, submission.url)
@@ -1023,6 +1056,18 @@ class SubWatch(threading.Thread):
                                         if "*(NSFW)*" in commenttext and submission.over_18 is False:
                                             # Set post as NSFW
                                             submission.mod.nsfw()
+                                        if "AI Disclosure:" in commenttext:
+                                            flair_text = submission.link_flair_text
+                                            if flair_text is None:
+                                                # if no flair exists
+                                                new_text = "AI Used"
+                                                submission.mod.flair(text=new_text, css_class="ReadComments",
+                                                                     flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                            elif "ai used" not in flair_text.lower():
+                                                # if not yet in flair
+                                                flair_id = submission.link_flair_template_id
+                                                new_text = flair_text + " | AI Used"
+                                                submission.mod.flair(text=new_text, flair_template_id=flair_id)
                     elif re.search(EPIC_TITLE_REGEX, submission.title, re.IGNORECASE):
                         title_split = re.split(EPIC_TITLE_REGEX, submission.title, flags=re.IGNORECASE)
                         source_platform = "Epic"
@@ -1060,6 +1105,18 @@ class SubWatch(threading.Thread):
                                         # if not yet in flair
                                         flair_id = submission.link_flair_template_id
                                         new_text = flair_text + " | Regional Issues"
+                                        submission.mod.flair(text=new_text, flair_template_id=flair_id)
+                                if "AI Disclosure:" in commenttext:
+                                    flair_text = submission.link_flair_text
+                                    if flair_text is None:
+                                        # if no flair exists
+                                        new_text = "AI Used"
+                                        submission.mod.flair(text=new_text, css_class="ReadComments",
+                                                             flair_template_id="c7e83006-e1b5-11e4-b507-22000b2681f9")
+                                    elif "ai used" not in flair_text.lower():
+                                        # if not yet in flair
+                                        flair_id = submission.link_flair_template_id
+                                        new_text = flair_text + " | AI Used"
                                         submission.mod.flair(text=new_text, flair_template_id=flair_id)
                     elif re.search(ALIENWARE_URL_REGEX, submission.url):
                         if fitscriteria(submission):
