@@ -324,7 +324,7 @@ class SteamGame:
 
     def lowreviews(self, appid):
         # gives better review text when at low review amounts
-        reviews_url = 'https://store.steampowered.com/appreviews/' + appid + '?json=1&filter=summary&review_type=all&purchase_type=all&language=all'
+        reviews_url = 'https://api.steampowered.com/IUserReviewsService/GetAppReviews/v1/?appid=' + appid + '&review_type=0&purchase_type=1&languages[0]=all&filter_offtopic_activity=false'
         lowreviews = ""
         total = 0
         while True:
@@ -334,41 +334,12 @@ class SteamGame:
             except requests.exceptions.RequestException:
                 print("Steam store timeout: sleep for 30 seconds and try again")
                 time.sleep(30)
-        if 'json' in appreviews.headers.get('Content-Type'):
-            appreviews_json = json.loads(appreviews.content.decode('utf-8-sig'))
-        else:
-            # try once more
-            try:
-                appreviews = requests.get(reviews_url, timeout=30)
-            except requests.exceptions.RequestException:
-                return lowreviews, total
-            if 'json' in appreviews.headers.get('Content-Type'):
-                appreviews_json = json.loads(appreviews.content.decode('utf-8-sig'))
-            else:
-                return lowreviews, total
-        if appreviews_json is None or appreviews_json["success"] != 1:
+        if not appreviews.ok:
             return lowreviews, total
+        appreviews_json = appreviews.json()["response"]
         positive = appreviews_json["query_summary"]["total_positive"]
         negative = appreviews_json["query_summary"]["total_negative"]
         total = positive + negative
-        if total == 0:
-            backup_reviews_url = 'https://store.steampowered.com/appreviews/' + appid + '?json=1'
-            while True:
-                try:
-                    appreviews = requests.get(backup_reviews_url, timeout=30)
-                    break
-                except requests.exceptions.RequestException:
-                    print("Steam store timeout: sleep for 30 seconds and try again")
-                    time.sleep(30)
-            if 'json' in appreviews.headers.get('Content-Type'):
-                appreviews_json = json.loads(appreviews.content.decode('utf-8-sig'))
-            else:
-                return lowreviews, total
-            positive = appreviews_json["query_summary"]["total_positive"]
-            negative = appreviews_json["query_summary"]["total_negative"]
-            total = positive + negative
-            if total == 0:
-                return lowreviews, total
         percentage = positive / total * 100
         reviewscore = [[80, "Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Negative"]]
         reviewscore_50 = [[80, "Very Positive"], [70, "Mostly Positive"], [40, "Mixed"], [20, "Mostly Negative"], [0, "Very Negative"]]
