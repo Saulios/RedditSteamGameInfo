@@ -94,6 +94,8 @@ def buildcommenttext_awa(g, source):
         if source == "update" or len(g.keys_tier) != 0:
             commenttext += "* Available keys: " + g.keys_tier[0][1] + "\n"
             commenttext += "* Tier required: " + g.keys_tier[0][0] + "\n"
+            if g.arp != 0:
+                commenttext += "* ARP required: " + str(g.arp) + "\n"
         else:
             return None
         if source == "new":
@@ -107,6 +109,8 @@ def buildcommenttext_awa(g, source):
     elif isinstance(g.keys_tier, list) and source == "update" and len(g.keys_tier) > 0 and g.keys_tier[0][1] == '0':
         commenttext += "* Available keys: " + g.keys_tier[0][1] + "\n"
         commenttext += "* Tier required: " + g.keys_tier[0][0] + "\n"
+        if g.arp != 0:
+            commenttext += "* ARP required: " + str(g.arp) + "\n"
     else:
         return None
     if source == "new":
@@ -595,6 +599,7 @@ class SubWatch(threading.Thread):
                                         if commenttext_awa is not None and commenttext_awa != "":
                                             flair_text = submission.link_flair_text or ""
                                             tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
+                                            arp_number = commenttext_awa.split("ARP required: ")[1].split()[0]
                                             if "Tier required: 1" not in commenttext:
                                                 if f"tier {tier_number}" not in flair_text.lower():
                                                     if flair_text:
@@ -612,17 +617,22 @@ class SubWatch(threading.Thread):
                                                         flair_text = f"{flair_text} | Regional Issues"
                                                     else:
                                                         flair_text = "Regional Issues"
+                                            if "* ARP required:" in commenttext:
+                                                if f"{arp_number} ARP" not in flair_text.lower():
+                                                    if flair_text:
+                                                        flair_text = f"{flair_text} | {arp_number} ARP"
+                                                    else:
+                                                        flair_text = f"{arp_number} ARP"
                                             if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" in commenttext:
                                                 flair_id = "b3a089de-2437-11e6-8bda-0e93018c4773"
                                                 css_class = "Regionlocked"
                                             else:
                                                 flair_id = getattr(submission, "link_flair_template_id", None) or "b204d6b4-0b90-11e4-9095-12313b0add52"
                                                 css_class = "restoften"
-                                            if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" not in commenttext:
-                                                if submission.link_flair_text is None:
-                                                    submission.mod.flair(text=flair_text, css_class=css_class, flair_template_id=flair_id)
-                                                else:
-                                                    submission.mod.flair(text=flair_text, flair_template_id=flair_id)
+                                            if submission.link_flair_text is None:
+                                                submission.mod.flair(text=flair_text, css_class=css_class, flair_template_id=flair_id)
+                                            else:
+                                                submission.mod.flair(text=flair_text, flair_template_id=flair_id)
                                         if commenttext_keyhub is not None and commenttext_keyhub != "":
                                             flair_text = submission.link_flair_text
                                             level_number = commenttext_keyhub.split("Steam level required: ")[1].split()[0]
@@ -739,6 +749,7 @@ class SubWatch(threading.Thread):
                                             if commenttext_awa is not None and commenttext_awa != "":
                                                 flair_text = submission.link_flair_text or ""
                                                 tier_number = commenttext_awa.split("Tier required: ")[1].split()[0]
+                                                arp_number = commenttext_awa.split("ARP required: ")[1].split()[0]
                                                 if "Tier required: 1" not in commenttext:
                                                     if f"tier {tier_number}" not in flair_text.lower():
                                                         if flair_text:
@@ -756,6 +767,12 @@ class SubWatch(threading.Thread):
                                                             flair_text = f"{flair_text} | Regional Issues"
                                                         else:
                                                             flair_text = "Regional Issues"
+                                                if "* ARP required:" in commenttext:
+                                                    if f"{arp_number} ARP" not in flair_text.lower():
+                                                        if flair_text:
+                                                            flair_text = f"{flair_text} | {arp_number} ARP"
+                                                        else:
+                                                            flair_text = f"{arp_number} ARP"
                                                 if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" in commenttext:
                                                     flair_id = "b3a089de-2437-11e6-8bda-0e93018c4773"
                                                     css_class = "Regionlocked"
@@ -763,13 +780,12 @@ class SubWatch(threading.Thread):
                                                     flair_id = getattr(submission, "link_flair_template_id",
                                                                        None) or "b204d6b4-0b90-11e4-9095-12313b0add52"
                                                     css_class = "restoften"
-                                                if "* Keys available for all countries\n" not in commenttext and "Tier required: 1" not in commenttext:
-                                                    if submission.link_flair_text is None:
-                                                        submission.mod.flair(text=flair_text, css_class=css_class,
-                                                                             flair_template_id=flair_id)
-                                                    else:
-                                                        submission.mod.flair(text=flair_text,
-                                                                             flair_template_id=flair_id)
+                                                if submission.link_flair_text is None:
+                                                    submission.mod.flair(text=flair_text, css_class=css_class,
+                                                                        flair_template_id=flair_id)
+                                                else:
+                                                    submission.mod.flair(text=flair_text,
+                                                                        flair_template_id=flair_id)
                                             if commenttext_keyhub is not None and commenttext_keyhub != "":
                                                 flair_text = submission.link_flair_text
                                                 level_number = commenttext_keyhub.split("Steam level required: ")[1].split()[0]
