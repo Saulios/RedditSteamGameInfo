@@ -70,7 +70,8 @@ class AlienwareArena:
         keys_tier = []
         tier_arp = {2: " (2500 ARP)", 3: " (7000 ARP)", 4: " (12000 ARP)", 5: " (18000 ARP)"}
         if not self.country_with_keys:
-            return keys_tier.append(['0', '0'])
+            keys_tier.append(['0', '0'])
+            return keys_tier
 
         country = self.country_with_keys[0]
         for tier in self.countrykeys[country]:
