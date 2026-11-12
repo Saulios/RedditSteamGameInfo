@@ -90,7 +90,9 @@ class AlienwareArena:
 
     def arp_requirement(self):
         bs_giveawaypage = BeautifulSoup(self.giveawayPage, "html.parser")
-        arp_box = bs_giveawaypage.find('div', {"id": "arp-confirmation-modal"}).text
-        match = re.search(r'(\d+)\s+ARP', arp_box)
+        arp_box = bs_giveawaypage.find('div', {"id": "arp-confirmation-modal"})
+        if arp_box is None:
+            return 0
+        match = re.search(r'(\d+)\s+ARP', arp_box.text)
         arp = int(match.group(1)) if match else 0
         return arp
